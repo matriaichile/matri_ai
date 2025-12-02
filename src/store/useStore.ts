@@ -17,3 +17,4 @@ export const useStore = create<AppState>((set) => ({
   resetWizard: () => set({ wizardStep: 0, userType: null }),
 }));
 
+

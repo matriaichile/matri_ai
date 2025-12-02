@@ -24,7 +24,7 @@
 /* Contenedor para recortar el espacio vertical del logo */
 .logoContainer {
   position: relative;
-  height: 28px; /* Altura visible deseada */
+  height: 44px; /* Altura visible deseada */
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -33,9 +33,9 @@
 
 .logoImage {
   /* La imagen es más grande pero el contenedor la recorta */
-  height: 70px !important;
+  height: 80px !important;
   width: auto !important;
-  margin-top: -8px; /* Ajuste para centrar verticalmente el contenido visible */
+  margin-top: -6px; /* Ajuste para centrar verticalmente el contenido visible */
 }
 
 .logo {
