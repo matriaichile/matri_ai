@@ -22,8 +22,8 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Always solid if not on home page, or if scrolled
-  const navbarClass = `${styles.navbar} ${isScrolled || !isHomePage ? styles.scrolled : ''}`;
+  // Animation logic: always animate on scroll
+  const navbarClass = `${styles.navbar} ${isScrolled ? styles.scrolled : ''}`;
 
   return (
     <nav className={navbarClass}>

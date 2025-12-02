@@ -1,5 +1,5 @@
 import { Users, BarChart, Calendar } from 'lucide-react';
-import styles from './Features.module.css'; // Reusing styling structure but can customize if needed
+import styles from './Features.module.css';
 
 export default function ProveedoresFeatures() {
   const features = [
@@ -21,13 +21,15 @@ export default function ProveedoresFeatures() {
   ];
 
   return (
-    <section className={styles.features} id="benefits">
+    <section className={styles.section} id="benefits">
       <div className={styles.container}>
-        <h2 className={styles.heading}>Herramientas para el éxito</h2>
+        <div className={styles.header}>
+            <h2 className={styles.title}>Herramientas para el éxito</h2>
+        </div>
         <div className={styles.grid}>
           {features.map((feature, index) => (
             <div key={index} className={styles.card}>
-              <div className={styles.icon} style={{ color: 'var(--color-secondary)' }}>{feature.icon}</div>
+              <div className={styles.iconWrapper}>{feature.icon}</div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </div>

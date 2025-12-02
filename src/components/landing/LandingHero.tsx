@@ -16,11 +16,11 @@ export default function LandingHero() {
       <div className={styles.content}>
         <h1 className={styles.title}>
           La boda de tus sueños,<br />
-          <span className={styles.highlight}>diseñada por Inteligencia Artificial</span>
+          <span className={styles.highlight}>encuentra tu match perfecto</span>
         </h1>
         
         <p className={styles.subtitle}>
-          Conectamos tus emociones con los proveedores perfectos para crear un evento inolvidable.
+          Conectamos tus emociones con los proveedores ideales para crear un evento único, tal como lo imaginaste.
         </p>
 
         <div className={styles.actions}>

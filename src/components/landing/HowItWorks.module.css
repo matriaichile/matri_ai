@@ -1,6 +1,6 @@
 .section {
   padding: 8rem 2rem;
-  background-color: var(--color-secondary);
+  background-color: #0b1120; /* Darker background matching updated Features */
   color: white;
 }
 

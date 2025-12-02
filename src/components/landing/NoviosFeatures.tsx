@@ -1,5 +1,5 @@
 import { Star, Clock, ShieldCheck } from 'lucide-react';
-import styles from './Features.module.css'; // Reusing or creating new? I'll create NoviosFeatures.module.css
+import styles from './Features.module.css';
 
 export default function NoviosFeatures() {
   const features = [
@@ -21,13 +21,15 @@ export default function NoviosFeatures() {
   ];
 
   return (
-    <section className={styles.features}>
+    <section className={styles.section}>
       <div className={styles.container}>
-        <h2 className={styles.heading}>Por qué elegir Matri.AI</h2>
+        <div className={styles.header}>
+            <h2 className={styles.title}>Por qué elegir Matri.AI</h2>
+        </div>
         <div className={styles.grid}>
           {features.map((feature, index) => (
             <div key={index} className={styles.card}>
-              <div className={styles.icon}>{feature.icon}</div>
+              <div className={styles.iconWrapper}>{feature.icon}</div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </div>

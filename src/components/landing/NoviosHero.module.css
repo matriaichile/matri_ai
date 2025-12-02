@@ -3,10 +3,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8rem 2rem 4rem; /* Top padding for fixed navbar */
+  padding: 8rem 2rem 4rem;
   max-width: 1200px;
   margin: 0 auto;
   gap: 4rem;
+  /* Dark Theme */
+  color: white;
 }
 
 .content {
@@ -16,8 +18,8 @@
 
 .tag {
   display: inline-block;
-  background-color: var(--color-accent);
-  color: var(--color-secondary);
+  background-color: rgba(212, 175, 55, 0.15); /* Gold tint */
+  color: var(--color-primary);
   padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 0.9rem;
@@ -25,6 +27,7 @@
   margin-bottom: 1.5rem;
   letter-spacing: 1px;
   text-transform: uppercase;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .title {
@@ -32,12 +35,12 @@
   font-size: 3.5rem;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  color: var(--color-secondary);
+  color: white; /* Force white */
 }
 
 .subtitle {
   font-size: 1.1rem;
-  color: #666;
+  color: #cbd5e1; /* Slate 300 */
   margin-bottom: 2.5rem;
   line-height: 1.6;
 }
@@ -49,12 +52,13 @@
   padding: 1rem 2.5rem;
   border-radius: 50px;
   font-weight: 600;
-  transition: transform 0.2s, background-color 0.2s;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
 }
 
 .button:hover {
   transform: translateY(-2px);
   background-color: #b59020;
+  box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
 }
 
 .imageContainer {
@@ -66,13 +70,13 @@
 .imagePlaceholder {
   width: 100%;
   height: 100%;
-  background-color: #eee;
+  background-color: #1e293b; /* Dark placeholder */
   border-radius: 20px;
-  /* Add image later */
   background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=2070&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
-  box-shadow: 20px 20px 0 var(--color-accent);
+  box-shadow: 20px 20px 0 rgba(255, 255, 255, 0.05); /* Subtle shadow */
+  filter: brightness(0.8); /* Dim image slightly */
 }
 
 @media (max-width: 968px) {

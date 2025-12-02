@@ -1,7 +1,8 @@
 .section {
   padding: 8rem 2rem 6rem;
-  background-color: var(--color-background);
+  background-color: #0b1120; /* Very dark background */
   min-height: 80vh;
+  color: white;
 }
 
 .container {
@@ -18,12 +19,12 @@
   font-family: var(--font-playfair);
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: var(--color-secondary);
+  color: var(--color-primary);
 }
 
 .subtitle {
   font-size: 1.2rem;
-  color: #666;
+  color: #94a3b8; /* Slate 400 */
 }
 
 .steps {
@@ -40,7 +41,7 @@
   bottom: 0;
   left: 50px;
   width: 2px;
-  background-color: var(--color-accent);
+  background-color: rgba(212, 175, 55, 0.2); /* Faint gold line */
   z-index: 0;
 }
 
@@ -48,17 +49,20 @@
   display: flex;
   align-items: flex-start;
   gap: 2rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
   z-index: 1;
-  transition: transform 0.3s;
+  transition: transform 0.3s, background-color 0.3s;
 }
 
 .stepCard:hover {
   transform: translateX(10px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .number {
@@ -66,9 +70,9 @@
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--color-primary);
-  background: white;
+  background: #0b1120; /* Match section bg to hide line behind */
   padding: 0.5rem;
-  border: 2px solid var(--color-accent);
+  border: 2px solid rgba(212, 175, 55, 0.5);
   border-radius: 50%;
   width: 80px;
   height: 80px;
@@ -82,12 +86,12 @@
   font-family: var(--font-playfair);
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
-  color: var(--color-secondary);
+  color: #f1f5f9;
 }
 
 .stepDesc {
   font-size: 1.05rem;
-  color: #555;
+  color: #94a3b8;
   line-height: 1.6;
 }
 

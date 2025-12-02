@@ -7,7 +7,8 @@
   max-width: 1200px;
   margin: 0 auto;
   gap: 4rem;
-  background-color: #FAFAFA; /* Slightly different bg */
+  /* Dark Theme */
+  color: white;
 }
 
 .content {
@@ -17,8 +18,8 @@
 
 .tag {
   display: inline-block;
-  background-color: #E8EAF6; /* Blueish tint */
-  color: var(--color-secondary);
+  background-color: rgba(212, 175, 55, 0.15);
+  color: var(--color-primary);
   padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 0.9rem;
@@ -26,6 +27,7 @@
   margin-bottom: 1.5rem;
   letter-spacing: 1px;
   text-transform: uppercase;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .title {
@@ -33,12 +35,12 @@
   font-size: 3.5rem;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  color: var(--color-secondary);
+  color: white;
 }
 
 .subtitle {
   font-size: 1.1rem;
-  color: #666;
+  color: #cbd5e1; /* Slate 300 */
   margin-bottom: 2.5rem;
   line-height: 1.6;
 }
@@ -59,24 +61,27 @@
 }
 
 .primary {
-  background-color: var(--color-secondary);
+  background-color: var(--color-primary);
   color: white;
-  border: 2px solid var(--color-secondary);
+  border: 2px solid var(--color-primary);
 }
 
 .primary:hover {
-  background-color: #1a252f;
+  background-color: #b59020;
+  border-color: #b59020;
   transform: translateY(-2px);
 }
 
 .secondary {
   background-color: transparent;
-  color: var(--color-secondary);
-  border: 2px solid var(--color-secondary);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .secondary:hover {
-  background-color: rgba(44, 62, 80, 0.05);
+  background-color: white;
+  color: #0f172a;
+  transform: translateY(-2px);
 }
 
 .imageContainer {
@@ -88,12 +93,13 @@
 .imagePlaceholder {
   width: 100%;
   height: 100%;
-  background-color: #ddd;
+  background-color: #1e293b;
   border-radius: 20px;
   background-image: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2032&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
-  box-shadow: -20px 20px 0 #E8EAF6;
+  box-shadow: -20px 20px 0 rgba(255, 255, 255, 0.05);
+  filter: brightness(0.8);
 }
 
 @media (max-width: 968px) {

@@ -31,3 +31,28 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px; /* Thinner */
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4AF37; /* Gold */
+  border-radius: 0; /* No rounding, pure bar */
+  border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b59020; 
+}
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #D4AF37 #0f172a;
+}

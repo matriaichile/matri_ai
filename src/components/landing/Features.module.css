@@ -1,10 +1,11 @@
 .section {
   padding: 8rem 2rem;
-  background-color: white;
+  background-color: #0f172a; /* Dark background */
+  color: #f1f5f9;
 }
 
 .altBackground {
-  background-color: var(--color-accent);
+  background-color: #1e293b; /* Slightly lighter dark */
 }
 
 .container {
@@ -21,8 +22,9 @@
 .tag {
   display: inline-block;
   padding: 0.5rem 1.5rem;
-  background-color: rgba(212, 175, 55, 0.1);
+  background-color: rgba(212, 175, 55, 0.15);
   color: var(--color-primary);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 50px;
   font-weight: 600;
   font-size: 0.85rem;
@@ -33,14 +35,14 @@
 
 .title {
   font-size: 3rem;
-  color: var(--color-secondary);
+  color: #f8fafc;
   margin-bottom: 1.5rem;
   line-height: 1.2;
 }
 
 .description {
   font-size: 1.2rem;
-  color: #666;
+  color: #94a3b8;
   font-weight: 300;
 }
 
@@ -52,31 +54,34 @@
 
 .card {
   padding: 2.5rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
   border-radius: 20px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .altBackground .card {
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .iconWrapper {
   width: 70px;
   height: 70px;
-  background-color: var(--color-accent);
+  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   margin-bottom: 2rem;
   transition: all 0.3s ease;
 }
@@ -88,13 +93,13 @@
 
 .card h3 {
   font-size: 1.5rem;
-  color: var(--color-secondary);
+  color: #f1f5f9;
   margin-bottom: 1rem;
   font-family: var(--font-playfair);
 }
 
 .card p {
-  color: #666;
+  color: #94a3b8;
   line-height: 1.6;
 }
 

@@ -1,16 +1,19 @@
+"use client";
+
 import styles from './HowItWorks.module.css';
+import { motion } from 'framer-motion';
 
 export default function HowItWorks() {
   const steps = [
     {
       number: '01',
       title: 'Cuéntanos tu Sueño',
-      desc: 'Responde nuestro wizard inteligente sobre tus preferencias, estilo y presupuesto.'
+      desc: 'Responde nuestro wizard sobre tus preferencias, estilo y presupuesto.'
     },
     {
       number: '02',
       title: 'Recibe Matches',
-      desc: 'Nuestra IA selecciona los 3 mejores proveedores disponibles para tu fecha.'
+      desc: 'Seleccionamos los mejores proveedores disponibles para tu fecha.'
     },
     {
       number: '03',
@@ -19,24 +22,51 @@ export default function HowItWorks() {
     }
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
+
   return (
     <section id="how-it-works" className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.header}>
+        <motion.div 
+          className={styles.header}
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
           <h2 className={styles.title}>¿Cómo Funciona?</h2>
           <p className={styles.subtitle}>Tres simples pasos para la boda perfecta.</p>
-        </div>
+        </motion.div>
 
-        <div className={styles.steps}>
+        <motion.div 
+          className={styles.steps}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
           {steps.map((step, index) => (
-            <div key={index} className={styles.step}>
+            <motion.div key={index} className={styles.step} variants={itemVariants}>
               <div className={styles.number}>{step.number}</div>
               <h3 className={styles.stepTitle}>{step.title}</h3>
               <p className={styles.stepDesc}>{step.desc}</p>
               {index !== steps.length - 1 && <div className={styles.connector} />}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
