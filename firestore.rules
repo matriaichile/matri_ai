@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is accessing their own document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, update: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated(); // Allow creation on sign up
+    }
+
+    // Providers collection
+    match /providers/{providerId} {
+      allow read: if true; // Public profiles (filtered fields in client)
+      allow write: if isAuthenticated() && isOwner(providerId);
+    }
+
+    // Leads/Matches collection
+    match /leads/{leadId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.providerId == request.auth.uid);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.providerId == request.auth.uid);
+    }
+  }
+}
+

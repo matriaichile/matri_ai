@@ -1,66 +1,60 @@
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./page.module.css";
+import { Heart, Users, Calendar, Sparkles, CheckCircle, Search } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.container}>
+      <header className={styles.hero}>
+        <h1 className={styles.title}>Matri.AI</h1>
+        <p className={styles.subtitle}>
+          Conectando sueños con realidad. La plataforma inteligente que une a parejas con los proveedores perfectos para su boda.
+        </p>
+        
+        <div className={styles.buttonGroup}>
+          <Link href="/register/user" className={`${styles.button} ${styles.primaryButton}`}>
+            Soy Usuario
+          </Link>
+          <Link href="/register/provider" className={`${styles.button} ${styles.secondaryButton}`}>
+            Soy Proveedor
+          </Link>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <section className={styles.features}>
+        <h2 className={styles.featuresTitle}>¿Por qué elegir Matri.AI?</h2>
+        
+        <div className={styles.grid}>
+          <div className={styles.card}>
+            <Sparkles className={styles.cardIcon} size={48} />
+            <h3 className={styles.cardTitle}>Matchmaking Inteligente</h3>
+            <p className={styles.cardText}>
+              Nuestro sistema utiliza algoritmos avanzados para conectarte con proveedores que se ajustan exactamente a tu estilo, presupuesto y fecha.
+            </p>
+          </div>
+
+          <div className={styles.card}>
+            <CheckCircle className={styles.cardIcon} size={48} />
+            <h3 className={styles.cardTitle}>Proveedores Verificados</h3>
+            <p className={styles.cardText}>
+              Trabajamos solo con los mejores profesionales del sector para garantizar que tu día especial sea impecable.
+            </p>
+          </div>
+
+          <div className={styles.card}>
+            <Users className={styles.cardIcon} size={48} />
+            <h3 className={styles.cardTitle}>Gestión Simplificada</h3>
+            <p className={styles.cardText}>
+              Administra todas tus cotizaciones, citas y contratos desde un solo lugar. Sin estrés, solo disfrute.
+            </p>
+          </div>
         </div>
-      </main>
+      </section>
+
+      <footer className={styles.footer}>
+        <p>© {new Date().getFullYear()} Matri.AI. Todos los derechos reservados.</p>
+      </footer>
     </div>
   );
 }
