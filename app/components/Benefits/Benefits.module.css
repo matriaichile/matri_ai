@@ -1,0 +1,327 @@
+/* Benefits Section */
+.benefits {
+  position: relative;
+  padding: 8rem 0;
+  background: var(--cream);
+  overflow: hidden;
+}
+
+.bgPattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(183, 110, 121, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(253, 164, 175, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--rose-gold);
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+.titleMain {
+  color: var(--soft-black);
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, var(--rose-gold) 0%, var(--rose-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.titleDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.dividerLine {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rose-gold-light), transparent);
+}
+
+.dividerIcon {
+  color: var(--rose-gold);
+}
+
+/* Benefits Grid */
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4rem;
+  margin-bottom: 5rem;
+}
+
+/* Column */
+.benefitsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.columnHeader {
+  text-align: center;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(183, 110, 121, 0.15);
+}
+
+.columnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--rose-100) 0%, var(--blush) 100%);
+  border-radius: 50%;
+  color: var(--rose-gold);
+  margin-bottom: 1rem;
+}
+
+.columnTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--soft-black);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.columnSubtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--warm-gray);
+}
+
+/* Benefits List */
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Benefit Card */
+.benefitCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid rgba(183, 110, 121, 0.08);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.benefitCard:hover {
+  border-color: var(--rose-gold-light);
+  box-shadow: 0 15px 40px rgba(183, 110, 121, 0.1);
+}
+
+.benefitIcon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--rose-50) 0%, var(--rose-100) 100%);
+  border-radius: 12px;
+  color: var(--rose-gold);
+  transition: all 0.3s ease;
+}
+
+.benefitCard:hover .benefitIcon {
+  background: var(--rose-gold);
+  color: white;
+  transform: scale(1.05);
+}
+
+.benefitContent {
+  flex: 1;
+}
+
+.benefitTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--soft-black);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.benefitDescription {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: var(--warm-gray);
+  line-height: 1.6;
+}
+
+.benefitNumber {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  color: var(--rose-200);
+  letter-spacing: 0.1em;
+  transition: color 0.3s ease;
+}
+
+.benefitCard:hover .benefitNumber {
+  color: var(--rose-gold-light);
+}
+
+/* Categories Section */
+.categoriesSection {
+  text-align: center;
+  padding-top: 3rem;
+  border-top: 1px solid rgba(183, 110, 121, 0.1);
+}
+
+.categoriesLabel {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--warm-gray);
+  letter-spacing: 0.15em;
+  margin-bottom: 2rem;
+}
+
+.categoriesGrid {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.categoryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border: 1px solid rgba(183, 110, 121, 0.1);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.categoryItem:hover {
+  border-color: var(--rose-gold);
+  box-shadow: 0 10px 30px rgba(183, 110, 121, 0.12);
+}
+
+.categoryIcon {
+  color: var(--rose-gold);
+  transition: transform 0.3s ease;
+}
+
+.categoryItem:hover .categoryIcon {
+  transform: scale(1.15);
+}
+
+.categoryName {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  color: var(--charcoal);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .benefitsGrid {
+    gap: 3rem;
+  }
+  
+  .categoriesGrid {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .benefits {
+    padding: 5rem 0;
+  }
+
+  .benefitsGrid {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+
+  .header {
+    margin-bottom: 3rem;
+  }
+
+  .categoriesGrid {
+    gap: 1rem;
+  }
+
+  .categoryItem {
+    padding: 1rem 1.5rem;
+  }
+
+  .categoryName {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+
+  .benefitCard {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .benefitIcon {
+    margin: 0 auto;
+  }
+
+  .benefitNumber {
+    position: static;
+    margin-top: 1rem;
+  }
+
+  .categoriesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

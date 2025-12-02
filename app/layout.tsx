@@ -1,26 +1,15 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Lato, Cinzel } from "next/font/google";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-});
-
-const lato = Lato({
-  variable: "--font-lato",
-  weight: ["300", "400", "700"],
-  subsets: ["latin"],
-});
-
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Matri.AI - Matchmaking Inteligente para Bodas",
-  description: "Conectamos novios con los mejores proveedores para su boda ideal.",
+  title: "Matri.AI | Tu Boda Perfecta",
+  description: "Conectamos parejas con los mejores proveedores de bodas a través de matchmaking inteligente. Encuentra fotógrafos, banquetería, DJ y más para tu día especial.",
+  keywords: ["bodas", "matrimonio", "proveedores", "wedding planner", "fotógrafo bodas", "banquetería", "DJ bodas"],
+  openGraph: {
+    title: "Matri.AI | Tu Boda Perfecta",
+    description: "Conectamos parejas con los mejores proveedores de bodas a través de matchmaking inteligente.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -30,9 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body
-        className={`${playfair.variable} ${lato.variable} ${cinzel.variable} antialiased`}
-      >
+      <body className="antialiased">
         {children}
       </body>
     </html>

@@ -1,0 +1,287 @@
+/* How It Works Section */
+.howItWorks {
+  position: relative;
+  padding: 8rem 0;
+  background: white;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--rose-gold);
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.titleMain {
+  color: var(--soft-black);
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, var(--rose-gold) 0%, var(--rose-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  color: var(--warm-gray);
+  margin-bottom: 1.5rem;
+}
+
+.titleDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.dividerLine {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rose-gold-light), transparent);
+}
+
+.dividerIcon {
+  color: var(--rose-gold);
+}
+
+/* Steps Container */
+.stepsContainer {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+/* Connecting Line */
+.connectingLine {
+  position: absolute;
+  top: 80px;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--rose-gold-light),
+    var(--rose-gold),
+    var(--rose-gold-light)
+  );
+  transform-origin: left center;
+  z-index: 0;
+}
+
+/* Step */
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Step Badge */
+.stepBadge {
+  position: absolute;
+  top: -10px;
+  right: 20%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rose-gold);
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.stepNumber {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 0.05em;
+}
+
+/* Step Icon Wrapper */
+.stepIconWrapper {
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--rose-50) 0%, var(--rose-100) 100%);
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  border: 2px solid white;
+  box-shadow: 0 10px 30px rgba(183, 110, 121, 0.15);
+  transition: all 0.4s ease;
+}
+
+.step:hover .stepIconWrapper {
+  background: linear-gradient(135deg, var(--rose-100) 0%, var(--rose-200) 100%);
+  box-shadow: 0 15px 40px rgba(183, 110, 121, 0.2);
+}
+
+.stepIcon {
+  color: var(--rose-gold);
+}
+
+/* Step Content */
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--soft-black);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.stepDescription {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: var(--warm-gray);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  max-width: 220px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stepDetail {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--rose-gold);
+  padding: 0.35rem 1rem;
+  background: var(--rose-50);
+  border-radius: 20px;
+}
+
+/* Step Arrow */
+.stepArrow {
+  display: none;
+  position: absolute;
+  right: -1.5rem;
+  top: 40px;
+  color: var(--rose-gold-light);
+}
+
+/* CTA Container */
+.ctaContainer {
+  text-align: center;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.2rem 3rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--rose-gold);
+  color: white;
+  border: 1px solid var(--rose-gold);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta:hover {
+  background: var(--rose-500);
+  border-color: var(--rose-500);
+  box-shadow: 0 15px 40px rgba(244, 63, 94, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .stepsContainer {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem 2rem;
+  }
+
+  .connectingLine {
+    display: none;
+  }
+
+  .stepArrow {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .howItWorks {
+    padding: 5rem 0;
+  }
+
+  .header {
+    margin-bottom: 3rem;
+  }
+
+  .stepsContainer {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .step {
+    max-width: 350px;
+    margin: 0 auto;
+  }
+
+  .stepBadge {
+    right: auto;
+    left: calc(50% + 30px);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+
+  .stepIconWrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .stepIcon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
