@@ -91,7 +91,7 @@ export default function Benefits() {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as const,
       },
     },
   };
@@ -107,7 +107,7 @@ export default function Benefits() {
           className={styles.header}
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
         >
           <span className={styles.eyebrow}>¿Por qué elegirnos?</span>
           <h2 className={styles.title}>
@@ -205,7 +205,7 @@ export default function Benefits() {
           className={styles.categoriesSection}
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1, delay: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
         >
           <p className={styles.categoriesLabel}>Categorías disponibles</p>
           <div className={styles.categoriesGrid}>

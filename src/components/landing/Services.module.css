@@ -1,0 +1,341 @@
+/* Sección de Servicios - Minimalista con Animaciones */
+.section {
+  padding: var(--space-2xl) var(--space-md);
+  background-color: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decoración de fondo */
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-champagne-light) 50%, transparent);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header de sección */
+.header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto var(--space-xl);
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.label {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-champagne);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.header.visible .label {
+  animation: fadeInUp 0.6s 0.2s forwards;
+}
+
+.title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+  opacity: 0;
+}
+
+.header.visible .title {
+  animation: fadeInUp 0.6s 0.3s forwards;
+}
+
+.description {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  opacity: 0;
+}
+
+.header.visible .description {
+  animation: fadeInUp 0.6s 0.4s forwards;
+}
+
+/* Grid de categorías */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.grid.visible .card {
+  animation: cardReveal 0.8s forwards;
+}
+
+/* Tarjeta de categoría */
+.card {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+}
+
+.cardImage {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.5s;
+}
+
+.card:hover .cardImage {
+  transform: scale(1.1);
+}
+
+.card:hover .cardImage img {
+  filter: brightness(0.8);
+}
+
+/* Overlay elegante */
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.3) 40%,
+    transparent 100%
+  );
+  transition: opacity var(--transition-medium);
+}
+
+.card:hover .cardOverlay {
+  opacity: 0.9;
+}
+
+/* Efecto de brillo */
+.cardShine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.card:hover .cardShine {
+  transform: translateX(100%);
+}
+
+/* Contenido de la tarjeta */
+.cardContent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-md);
+  color: white;
+  z-index: 1;
+}
+
+.cardNumber {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  opacity: 0.6;
+  margin-bottom: 0.5rem;
+  display: block;
+  transform: translateY(10px);
+  transition: all var(--transition-medium);
+}
+
+.card:hover .cardNumber {
+  transform: translateY(0);
+  opacity: 1;
+  color: var(--color-champagne);
+}
+
+.cardTitle {
+  font-size: 1.375rem;
+  font-weight: 400;
+  color: white;
+  margin-bottom: 0.5rem;
+  transform: translateY(10px);
+  transition: transform var(--transition-medium);
+}
+
+.card:hover .cardTitle {
+  transform: translateY(0);
+}
+
+.cardDesc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all var(--transition-medium);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.card:hover .cardDesc {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 100px;
+}
+
+/* Flecha */
+.cardArrow {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: var(--radius-full);
+  color: var(--color-charcoal);
+  opacity: 0;
+  transform: translateY(10px) rotate(-45deg);
+  transition: all var(--transition-medium);
+}
+
+.card:hover .cardArrow {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+.cardArrow:hover {
+  background-color: var(--color-champagne);
+  transform: scale(1.1);
+}
+
+/* Stats section */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.stats.visible .stat {
+  animation: fadeInUp 0.6s forwards;
+}
+
+.stat {
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.statNumber {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 300;
+  color: var(--color-champagne);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.statLabel {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+/* Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: var(--space-xl) var(--space-sm);
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+  
+  .card {
+    aspect-ratio: 16/10;
+  }
+  
+  .cardDesc {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: none;
+  }
+  
+  .cardArrow {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}
