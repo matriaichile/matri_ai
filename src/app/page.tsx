@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<'novios' | 'proveedores'>('novios');
 
   const heroRef = useRef<HTMLDivElement>(null);
-  const navRef = useRef<HTMLNavElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -48,20 +48,26 @@ export default function LandingPage() {
       const cta = navRef.current?.querySelector('.nav-cta');
       
       const tlNav = gsap.timeline();
-      tlNav.fromTo(logo, 
-        { y: -50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-      )
-      .fromTo(navItems, 
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)" },
-        "-=0.6"
-      )
-      .fromTo(cta,
-        { scale: 0.8, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" },
-        "-=0.4"
-      );
+      if (logo) {
+        tlNav.fromTo(logo, 
+          { y: -50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+        );
+      }
+      if (navItems && navItems.length > 0) {
+        tlNav.fromTo(navItems, 
+          { y: -20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)" },
+          "-=0.6"
+        );
+      }
+      if (cta) {
+        tlNav.fromTo(cta,
+          { scale: 0.8, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" },
+          "-=0.4"
+        );
+      }
 
       // 2. Hero Animations
       const tlHero = gsap.timeline({ delay: 0.2 });
