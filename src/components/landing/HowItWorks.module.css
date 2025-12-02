@@ -1,7 +1,9 @@
 .section {
   padding: 8rem 2rem;
-  background-color: var(--color-background-elevated);
+  background-color: #FFFBF7; /* Un tono crema muy claro como en la imagen de referencia, o mantener oscuro si el usuario prefiere. Pero dijo "Mira como se veia" y era claro. Voy a usar un tono oscuro pero con la estructura de la imagen */
+  background-color: var(--color-background); /* Mantenemos dark mode por consistencia */
   color: var(--color-text);
+  position: relative;
 }
 
 .container {
@@ -11,22 +13,52 @@
 
 .header {
   text-align: center;
-  margin-bottom: 6rem;
+  margin-bottom: 5rem;
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 3.5rem;
   margin-bottom: 1rem;
-  color: var(--color-primary);
-  font-weight: 700;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.title span {
+  color: #D4AF37; /* Color rosado/rojo de la imagen referencia, adaptado a dorado */
 }
 
 .subtitle {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   color: var(--color-text-secondary);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 400;
+  margin-bottom: 1.5rem;
+}
+
+.separatorIcon {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.stepsWrapper {
+  position: relative;
+  padding-top: 2rem;
+}
+
+.mainConnector {
+  position: absolute;
+  top: 55px; /* Alineado con el centro de los círculos */
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(212, 175, 55, 0.3) 15%, 
+    rgba(212, 175, 55, 0.3) 85%, 
+    transparent 100%
+  );
+  z-index: 0;
 }
 
 .steps {
@@ -34,68 +66,117 @@
   justify-content: space-between;
   gap: 2rem;
   position: relative;
+  z-index: 1;
 }
 
 .step {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  position: relative;
-  z-index: 2;
 }
 
-.number {
-  font-family: var(--font-display);
-  font-size: 4rem;
-  color: rgba(212, 175, 55, 0.15);
-  font-weight: 700;
-  margin-bottom: 1rem;
-  line-height: 1;
+.iconContainer {
+  position: relative;
+  margin-bottom: 2rem;
+  width: 90px; /* Espacio para el badge */
+  height: 70px;
+  display: flex;
+  justify-content: center;
+}
+
+.iconCircle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: #FFF0F0; /* Color rosado claro de fondo */
+  background-color: rgba(212, 175, 55, 0.1); /* Dorado muy sutil para dark mode */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.step:hover .iconCircle {
+  transform: translateY(-5px);
+  background-color: var(--color-primary);
+  color: #000;
+  box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+}
+
+.stepNumber {
+  position: absolute;
+  top: -5px;
+  right: 0;
+  background-color: #A05E5E; /* Color de la imagen referencia */
+  background-color: var(--color-primary-dark);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  border: 2px solid var(--color-background);
 }
 
 .stepTitle {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   margin-bottom: 1rem;
   color: var(--color-text);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .stepDesc {
   font-family: var(--font-body);
   color: var(--color-text-secondary);
-  line-height: 1.7;
-  max-width: 300px;
-  margin: 0 auto;
-  font-weight: 400;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  max-width: 250px;
 }
 
-.connector {
-  position: absolute;
-  top: 2rem;
-  right: -50%;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(to right, var(--color-border), transparent);
-  z-index: 1;
-  display: none;
-}
-
-@media (min-width: 900px) {
-  .step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 25%;
-    right: -10%;
-    width: 20%;
-    height: 2px;
-    background: linear-gradient(90deg, var(--color-primary), transparent);
-    opacity: 0.5;
-  }
+.stepTag {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  background-color: rgba(212, 175, 55, 0.1);
+  color: var(--color-primary);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-style: italic;
+  font-family: var(--font-display);
 }
 
 @media (max-width: 768px) {
   .steps {
     flex-direction: column;
-    gap: 4rem;
+    gap: 3rem;
+  }
+  
+  .mainConnector {
+    width: 1px;
+    height: 80%;
+    top: 0;
+    left: 50%;
+    background: linear-gradient(180deg, 
+      transparent 0%, 
+      rgba(212, 175, 55, 0.3) 15%, 
+      rgba(212, 175, 55, 0.3) 85%, 
+      transparent 100%
+    );
+  }
+
+  .iconContainer {
+    margin-bottom: 1rem;
   }
 }

@@ -2,6 +2,8 @@ import Navbar from '@/components/landing/Navbar';
 import LandingHero from '@/components/landing/LandingHero';
 import Features from '@/components/landing/Features';
 import HowItWorks from '@/components/landing/HowItWorks';
+import Testimonials from '@/components/landing/Testimonials';
+import FinalCallToAction from '@/components/landing/FinalCallToAction';
 import Footer from '@/components/landing/Footer';
 import styles from './page.module.css';
 
@@ -12,6 +14,8 @@ export default function Home() {
       <LandingHero />
       <HowItWorks />
       <Features />
+      <Testimonials />
+      <FinalCallToAction />
       <Footer />
     </main>
   );

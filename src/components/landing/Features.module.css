@@ -1,11 +1,8 @@
 .section {
-  padding: 8rem 2rem;
+  padding: 6rem 2rem;
   background-color: var(--color-background);
   color: var(--color-text);
-}
-
-.altBackground {
-  background-color: var(--color-background-elevated);
+  overflow: hidden;
 }
 
 .container {
@@ -13,159 +10,332 @@
   margin: 0 auto;
 }
 
-.header {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto 5rem;
+.toggleWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4rem;
 }
 
-.tag {
-  display: inline-block;
-  padding: 0.5rem 1.5rem;
-  background-color: rgba(212, 175, 55, 0.1);
-  color: var(--color-primary);
+.toggleContainer {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--color-border);
   border-radius: 50px;
+  padding: 0.5rem;
+  width: fit-content;
+  gap: 0.5rem;
+}
+
+.toggleButton {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0.8rem 2.5rem;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.3s ease;
+  min-width: 180px;
+  border-radius: 40px;
+  outline: none;
+  /* Ensure text is above the background */
+  z-index: 2;
+}
+
+.toggleButton.active {
+  color: #000000;
+}
+
+.activeBackground {
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  border-radius: 40px;
+  z-index: -1;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* ... rest of the file unchanged ... */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.textContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
   color: var(--color-text);
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
+  font-weight: 500;
+}
+
+.highlight {
+  color: var(--color-primary);
   font-weight: 700;
 }
 
 .description {
   font-family: var(--font-body);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
   color: var(--color-text-secondary);
-  font-weight: 400;
-  line-height: 1.7;
+  max-width: 500px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 3rem;
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.card {
-  padding: 2.5rem;
-  background: var(--color-background-elevated);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--color-border-subtle);
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  font-size: 1.05rem;
 }
 
-.altBackground .card {
-  background: rgba(212, 175, 55, 0.03);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
-              0 0 40px rgba(212, 175, 55, 0.2);
-  border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
-}
-
-.iconWrapper {
-  width: 70px;
-  height: 70px;
+.checkIcon {
+  color: var(--color-primary);
   background: rgba(212, 175, 55, 0.1);
+  padding: 0.4rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
-  margin-bottom: 2rem;
-  transition: all 0.4s ease;
-  border: 2px solid var(--color-border);
 }
 
-.card:hover .iconWrapper {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: #000000;
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
-}
-
-.card h3 {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: var(--color-text);
-  margin-bottom: 1rem;
-  font-weight: 700;
-}
-
-.card p {
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  color: black;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  width: fit-content;
+  transition: all 0.3s ease;
   font-family: var(--font-body);
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-  font-weight: 400;
 }
 
-.visualBreak {
-  height: 400px;
-  background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center;
+.ctaButton:hover {
+  transform: translateX(5px);
+  background: var(--color-primary);
+}
+
+/* Mock Dashboard Styles */
+.imageWrapper {
+  perspective: 1000px;
+}
+
+.dashboardCard {
+  background: #EAEAEA;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  background: #DADADA;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.addressBar {
+  background: rgba(0,0,0,0.05);
+  padding: 0.2rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #666;
+  flex: 1;
+  text-align: center;
+  font-family: monospace;
+}
+
+.cardBody {
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #333;
+}
+
+/* Couples Mock */
+.mockContentCouples {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.mockStat {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.progressBar {
+  height: 8px;
+  background: #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressBar div {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.mockRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.mockItem {
+  background: rgba(255,255,255,0.8);
+  padding: 1rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mockItem span:first-child {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.statusSuccess {
+  color: green;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.statusSuccess::before {
+  content: '✓';
+}
+
+.statusPending {
+  color: #333;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.badge {
+  background: var(--color-primary);
+  color: black;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.2rem;
+}
+
+/* Providers Mock */
+.mockContentProviders {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.mockStatsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.mockStatBox {
+  background: #d1e7dd;
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.mockStatBox:nth-child(2) {
+  background: #e2e3e5;
+}
+
+.bigNum {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.mockList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mockListItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255,255,255,0.8);
+  padding: 0.8rem;
+  border-radius: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-}
-
-.visualBreak::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
-}
-
-.visualContent {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  color: white;
-  padding: 2rem;
-}
-
-.visualContent h2 {
-  font-family: var(--font-display);
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: white;
 }
 
-.visualContent p {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-style: italic;
-  color: var(--color-primary);
-  font-weight: 400;
-}
-
-@media (max-width: 768px) {
-  .title {
-    font-size: 2.2rem;
+@media (max-width: 900px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
   }
-  .visualContent h2 {
-    font-size: 2.5rem;
+  
+  .imageWrapper {
+    order: -1;
   }
 }

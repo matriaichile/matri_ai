@@ -15,12 +15,12 @@ export default function LandingHero() {
 
       <div className={styles.content}>
         <h1 className={styles.title}>
-          La boda de tus sueños,<br />
-          <span className={styles.highlight}>encuentra tu match perfecto</span>
+          El Match Perfecto<br />
+          <span className={styles.highlight}>para tu Matrimonio.</span>
         </h1>
         
         <p className={styles.subtitle}>
-          Conectamos tus emociones con los proveedores ideales para crear un evento único, tal como lo imaginaste.
+          Olvídate de buscar entre miles de opciones. Nuestro algoritmo inteligente conecta novios con los proveedores ideales basándose en estilo, presupuesto y fecha.
         </p>
 
         <div className={styles.actions}>

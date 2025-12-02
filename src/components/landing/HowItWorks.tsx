@@ -2,23 +2,37 @@
 
 import styles from './HowItWorks.module.css';
 import { motion } from 'framer-motion';
+import { UserPlus, FileText, Sparkles, HeartHandshake } from 'lucide-react';
 
 export default function HowItWorks() {
   const steps = [
     {
       number: '01',
-      title: 'Cuéntanos tu Sueño',
-      desc: 'Responde nuestro wizard sobre tus preferencias, estilo y presupuesto.'
+      title: 'Crea tu usuario',
+      desc: 'Regístrate y cuéntanos sobre tu boda soñada a través de un wizard interactivo y personalizado.',
+      icon: UserPlus,
+      tag: '5 minutos'
     },
     {
       number: '02',
-      title: 'Recibe Matches',
-      desc: 'Seleccionamos los mejores proveedores disponibles para tu fecha.'
+      title: 'Responde el cuestionario',
+      desc: 'Nuestras preguntas inteligentes capturan tus preferencias, estilo, presupuesto y visión única.',
+      icon: FileText,
+      tag: 'Paso a paso'
     },
     {
       number: '03',
-      title: 'Conecta y Celebra',
-      desc: 'Revisa perfiles, agenda citas y cierra contratos en una plataforma segura.'
+      title: 'Recibe recomendaciones',
+      desc: 'Nuestra IA analiza tu perfil y te presenta los 3 proveedores más compatibles para cada categoría.',
+      icon: Sparkles,
+      tag: 'IA Avanzada'
+    },
+    {
+      number: '04',
+      title: 'Conecta y celebra',
+      desc: 'Elige tus proveedores favoritos, coordina los detalles y prepárate para tu día especial.',
+      icon: HeartHandshake,
+      tag: '¡Tu boda!'
     }
   ];
 
@@ -48,27 +62,42 @@ export default function HowItWorks() {
           transition={{ duration: 0.8 }}
         >
           <h2 className={styles.title}>¿Cómo Funciona?</h2>
-          <p className={styles.subtitle}>Tres simples pasos para la boda perfecta.</p>
+          <p className={styles.subtitle}>Cuatro simples pasos hacia tu boda perfecta</p>
+          <div className={styles.separatorIcon}>✨</div>
         </motion.div>
 
         <motion.div 
-          className={styles.steps}
+          className={styles.stepsWrapper}
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
-          {steps.map((step, index) => (
-            <motion.div key={index} className={styles.step} variants={itemVariants}>
-              <div className={styles.number}>{step.number}</div>
-              <h3 className={styles.stepTitle}>{step.title}</h3>
-              <p className={styles.stepDesc}>{step.desc}</p>
-              {index !== steps.length - 1 && <div className={styles.connector} />}
-            </motion.div>
-          ))}
+           {/* Connector Line */}
+           <div className={styles.mainConnector} />
+
+          <div className={styles.steps}>
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <motion.div key={index} className={styles.step} variants={itemVariants}>
+                  <div className={styles.iconContainer}>
+                    <div className={styles.iconCircle}>
+                      <Icon size={28} strokeWidth={1.5} />
+                    </div>
+                    <div className={styles.stepNumber}>{step.number}</div>
+                  </div>
+                  
+                  <h3 className={styles.stepTitle}>{step.title}</h3>
+                  <p className={styles.stepDesc}>{step.desc}</p>
+                  
+                  <span className={styles.stepTag}>{step.tag}</span>
+                </motion.div>
+              );
+            })}
+          </div>
         </motion.div>
       </div>
     </section>
   );
 }
-

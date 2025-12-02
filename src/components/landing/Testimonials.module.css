@@ -1,0 +1,132 @@
+.section {
+  padding: 8rem 0;
+  background-color: var(--color-background);
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  margin-bottom: 4rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.carouselWrapper {
+  width: 100%;
+  overflow: hidden;
+  padding: 2rem 0;
+}
+
+.carouselTrack {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scroll 40s linear infinite;
+}
+
+.carouselWrapper:hover .carouselTrack {
+  animation-play-state: paused;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%); /* Adjust based on how many sets you have (3 sets -> 1/3 is one full loop) */
+  }
+}
+
+.cardWrapper {
+  perspective: 1000px;
+  width: 300px;
+  height: 400px;
+  flex-shrink: 0;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.cardWrapper:hover .card {
+  transform: rotateY(180deg);
+}
+
+.cardFront, .cardBack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.cardFront {
+  background-color: #333;
+}
+
+.cardOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  color: white;
+  text-align: left;
+}
+
+.cardOverlay h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.date {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.cardBack {
+  background-color: var(--color-background-elevated);
+  color: var(--color-text);
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.cardBack p {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
+}
+
+.cardBack .names {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-primary);
+}
