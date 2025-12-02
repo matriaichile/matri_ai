@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Lato } from "next/font/google";
+import { Cormorant_Garamond, Outfit } from "next/font/google";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+const cormorant = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
-const lato = Lato({
-  weight: ["300", "400", "700"],
+const outfit = Outfit({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-lato",
+  variable: "--font-outfit",
   display: "swap",
 });
 
@@ -27,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${playfair.variable} ${lato.variable}`}>
+      <body className={`${cormorant.variable} ${outfit.variable}`}>
         {children}
       </body>
     </html>

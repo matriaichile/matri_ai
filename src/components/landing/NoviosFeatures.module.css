@@ -1,6 +1,6 @@
 .features {
   padding: 6rem 2rem;
-  background-color: #fff;
+  background-color: var(--color-background-elevated);
 }
 
 .container {
@@ -10,10 +10,11 @@
 }
 
 .heading {
-  font-family: var(--font-playfair);
+  font-family: var(--font-display);
   font-size: 2.5rem;
   margin-bottom: 4rem;
-  color: var(--color-secondary);
+  color: var(--color-text);
+  font-weight: 700;
 }
 
 .grid {
@@ -24,15 +25,18 @@
 
 .card {
   padding: 2rem;
-  border-radius: 16px;
-  transition: transform 0.3s;
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--color-background);
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border-subtle);
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  transform: translateY(-10px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+              0 0 40px rgba(212, 175, 55, 0.2);
+  border-color: var(--color-primary);
+  background: rgba(212, 175, 55, 0.05);
 }
 
 .icon {
@@ -40,19 +44,30 @@
   margin-bottom: 1.5rem;
   display: inline-flex;
   padding: 1rem;
-  background: var(--color-accent);
+  background: rgba(212, 175, 55, 0.1);
   border-radius: 50%;
+  border: 2px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.card:hover .icon {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: #000000;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
 }
 
 .card h3 {
-  font-family: var(--font-playfair);
+  font-family: var(--font-display);
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: var(--color-secondary);
+  color: var(--color-text);
+  font-weight: 700;
 }
 
 .card p {
-  color: #666;
-  line-height: 1.6;
+  font-family: var(--font-body);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  font-weight: 400;
 }
-

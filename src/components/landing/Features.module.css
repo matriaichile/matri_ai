@@ -1,11 +1,11 @@
 .section {
   padding: 8rem 2rem;
-  background-color: #0f172a; /* Dark background */
-  color: #f1f5f9;
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
 .altBackground {
-  background-color: #1e293b; /* Slightly lighter dark */
+  background-color: var(--color-background-elevated);
 }
 
 .container {
@@ -22,28 +22,33 @@
 .tag {
   display: inline-block;
   padding: 0.5rem 1.5rem;
-  background-color: rgba(212, 175, 55, 0.15);
+  background-color: rgba(212, 175, 55, 0.1);
   color: var(--color-primary);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 50px;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   margin-bottom: 1.5rem;
 }
 
 .title {
-  font-size: 3rem;
-  color: #f8fafc;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--color-text);
   margin-bottom: 1.5rem;
   line-height: 1.2;
+  font-weight: 700;
 }
 
 .description {
+  font-family: var(--font-body);
   font-size: 1.2rem;
-  color: #94a3b8;
-  font-weight: 300;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
 }
 
 .grid {
@@ -54,53 +59,60 @@
 
 .card {
   padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-background-elevated);
   backdrop-filter: blur(10px);
   border-radius: 20px;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .altBackground .card {
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(212, 175, 55, 0.03);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+              0 0 40px rgba(212, 175, 55, 0.2);
   border-color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(212, 175, 55, 0.05);
 }
 
 .iconWrapper {
   width: 70px;
   height: 70px;
-  background-color: rgba(255, 255, 255, 0.05);
+  background: rgba(212, 175, 55, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-primary);
   margin-bottom: 2rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  border: 2px solid var(--color-border);
 }
 
 .card:hover .iconWrapper {
-  background-color: var(--color-primary);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: #000000;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
 }
 
 .card h3 {
+  font-family: var(--font-display);
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--color-text);
   margin-bottom: 1rem;
-  font-family: var(--font-playfair);
+  font-weight: 700;
 }
 
 .card p {
-  color: #94a3b8;
-  line-height: 1.6;
+  font-family: var(--font-body);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  font-weight: 400;
 }
 
 .visualBreak {
@@ -122,7 +134,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .visualContent {
@@ -134,14 +146,19 @@
 }
 
 .visualContent h2 {
+  font-family: var(--font-display);
   font-size: 3.5rem;
   margin-bottom: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .visualContent p {
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-style: italic;
-  font-family: var(--font-playfair);
+  color: var(--color-primary);
+  font-weight: 400;
 }
 
 @media (max-width: 768px) {
@@ -152,4 +169,3 @@
     font-size: 2.5rem;
   }
 }
-

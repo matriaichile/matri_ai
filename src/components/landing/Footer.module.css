@@ -1,8 +1,8 @@
 .footer {
-  background-color: #020617; /* Very dark */
-  color: white;
+  background-color: var(--color-background);
+  color: var(--color-text);
   padding: 2rem 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--color-border);
 }
 
 .container {
@@ -22,14 +22,15 @@
 }
 
 .logo {
-  font-family: var(--font-playfair);
+  font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--color-primary);
   margin: 0;
+  font-weight: 700;
 }
 
 .tagline {
-  display: none; /* Hide tagline for compactness */
+  display: none;
 }
 
 .links {
@@ -44,13 +45,15 @@
 }
 
 .column h3 {
-  display: none; /* Hide headers */
+  display: none;
 }
 
 .column a {
-  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-body);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
-  transition: color 0.2s;
+  font-weight: 500;
+  transition: all 0.3s;
 }
 
 .column a:hover {
@@ -58,7 +61,7 @@
 }
 
 .contactLink {
-  display: none !important; /* Hide email for now to save space, or move to icon */
+  display: none !important;
 }
 
 .social {
@@ -69,27 +72,28 @@
 
 .social svg {
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
-  transition: color 0.2s;
+  color: var(--color-text-secondary);
+  transition: all 0.3s;
   width: 18px;
   height: 18px;
 }
 
 .social svg:hover {
   color: var(--color-primary);
+  transform: scale(1.1);
 }
 
 .copyright {
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.3);
+  border-top: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
   font-size: 0.75rem;
-  display: none; /* Hide extra line, merge with main if possible or keep minimal */
+  font-weight: 400;
+  display: none;
 }
-
-/* We can put copyright next to logo or at the end */
 
 @media (max-width: 768px) {
   .container {
@@ -108,4 +112,3 @@
     gap: 1rem;
   }
 }
-

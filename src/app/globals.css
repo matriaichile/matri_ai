@@ -1,12 +1,23 @@
 :root {
-  --font-playfair: 'Playfair Display', serif;
-  --font-lato: 'Lato', sans-serif;
+  /* Tipografías elegantes */
+  --font-display: var(--font-cormorant);
+  --font-body: var(--font-outfit);
+  --font-cormorant: 'Cormorant Garamond', serif;
+  --font-outfit: 'Outfit', sans-serif;
   
-  --color-primary: #D4AF37; /* Gold */
-  --color-secondary: #2C3E50; /* Dark Slate Blue */
-  --color-accent: #E8F6F3; /* Soft Mint/White */
-  --color-text: #333333;
-  --color-background: #FFFFFF;
+  /* Paleta Negro y Dorado Elegante (Lamborghini/Louis Vuitton) */
+  --color-primary: #D4AF37; /* Gold elegante */
+  --color-primary-dark: #B8941E; /* Gold oscuro para hover */
+  --color-primary-light: #E8D090; /* Gold claro para acentos */
+  --color-secondary: #000000; /* Negro profundo */
+  --color-background: #0A0A0A; /* Negro carbón */
+  --color-background-elevated: #1A1A1A; /* Negro elevado para cards */
+  --color-background-glass: rgba(26, 26, 26, 0.7); /* Glass effect */
+  --color-text: #FFFFFF; /* Texto blanco */
+  --color-text-secondary: #CCCCCC; /* Texto gris claro */
+  --color-text-muted: #888888; /* Texto gris medio */
+  --color-border: rgba(212, 175, 55, 0.2); /* Bordes dorados sutiles */
+  --color-border-subtle: rgba(255, 255, 255, 0.1); /* Bordes blancos sutiles */
 }
 
 * {
@@ -16,15 +27,17 @@
 }
 
 body {
-  font-family: var(--font-lato);
+  font-family: var(--font-body);
   color: var(--color-text);
   background-color: var(--color-background);
   line-height: 1.6;
+  font-weight: 400;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-playfair);
+  font-family: var(--font-display);
   font-weight: 700;
+  color: var(--color-text);
 }
 
 a {
@@ -32,27 +45,27 @@ a {
   text-decoration: none;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Elegante Negro y Dorado */
 ::-webkit-scrollbar {
-  width: 8px; /* Thinner */
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a; 
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D4AF37; /* Gold */
-  border-radius: 0; /* No rounding, pure bar */
+  background: var(--color-primary);
+  border-radius: 0;
   border: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b59020; 
+  background: var(--color-primary-dark);
 }
 
 /* Firefox */
 html {
   scrollbar-width: thin;
-  scrollbar-color: #D4AF37 #0f172a;
+  scrollbar-color: var(--color-primary) var(--color-background);
 }
