@@ -9,6 +9,7 @@ interface Option {
   label: string;
   description?: string;
   icon?: ReactNode | string;
+  iconType?: string;
 }
 
 interface SelectionGridProps {
@@ -53,6 +54,7 @@ export default function SelectionGrid({
           label={option.label}
           description={option.description}
           icon={option.icon}
+          iconType={option.iconType}
           isSelected={isSelected(option.id)}
           onClick={onSelect}
           animationDelay={index * 50}
@@ -62,4 +64,3 @@ export default function SelectionGrid({
     </div>
   );
 }
-

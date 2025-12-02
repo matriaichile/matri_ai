@@ -7,31 +7,37 @@ import { create } from 'zustand';
 export interface UserWizardData {
   // Paso 1: Información básica
   coupleNames: string;
-  eventDate: string;
-  isDateTentative: boolean;
   email: string;
+  password: string; // Nuevo: contraseña para usuarios
   phone: string;
   
-  // Paso 2: Detalles del evento
+  // Paso 2: Fecha del evento
+  eventDate: string;
+  isDateTentative: boolean;
+  
+  // Paso 3: Detalles del evento
   budget: string;
   guestCount: string;
   region: string;
   
-  // Paso 3: Tipo de ceremonia
+  // Paso 4: Tipo de ceremonia
   ceremonyTypes: string[]; // Civil, Religiosa, Simbólica
   
-  // Paso 4: Estilo del evento
+  // Paso 5: Estilo del evento
   eventStyle: string;
   
-  // Paso 5: Nivel de avance
+  // Paso 6: Nivel de avance
   planningProgress: string;
   completedItems: string[]; // DJ/VJ, Fotografía, Video, Lugar, Banquetería
   
-  // Paso 6: Categorías prioritarias
+  // Paso 7: Categorías prioritarias
   priorityCategories: string[];
   
-  // Paso 7: Vinculación con el proceso
+  // Paso 8: Vinculación con el proceso
   involvementLevel: string;
+  
+  // Paso 9: Expectativas y preferencias (para IA)
+  expectations: string;
 }
 
 // ============================================
@@ -45,19 +51,21 @@ export interface ProviderWizardData {
   providerName: string;
   phone: string;
   
-  // Paso 2: Categoría y estilo
-  category: string;
+  // Paso 2: Categorías (ahora múltiples)
+  categories: string[];
+  
+  // Paso 3: Estilo del servicio
   serviceStyle: string;
   
-  // Paso 3: Precios y ubicación
+  // Paso 4: Precios y ubicación
   priceRange: string;
   workRegion: string;
   acceptsOutsideZone: boolean;
   
-  // Paso 4: Descripción
+  // Paso 5: Descripción
   description: string;
   
-  // Paso 5: Redes y portfolio
+  // Paso 6: Redes y portfolio
   website: string;
   instagram: string;
   facebook: string;
@@ -115,10 +123,11 @@ interface WizardState {
 
 const initialUserData: UserWizardData = {
   coupleNames: '',
+  email: '',
+  password: '',
+  phone: '',
   eventDate: '',
   isDateTentative: true,
-  email: '',
-  phone: '',
   budget: '',
   guestCount: '',
   region: '',
@@ -128,6 +137,7 @@ const initialUserData: UserWizardData = {
   completedItems: [],
   priorityCategories: [],
   involvementLevel: '',
+  expectations: '',
 };
 
 const initialProviderData: ProviderWizardData = {
@@ -135,7 +145,7 @@ const initialProviderData: ProviderWizardData = {
   password: '',
   providerName: '',
   phone: '',
-  category: '',
+  categories: [],
   serviceStyle: '',
   priceRange: '',
   workRegion: '',
@@ -155,7 +165,7 @@ const initialProviderData: ProviderWizardData = {
 export const useWizardStore = create<WizardState>((set, get) => ({
   wizardType: null,
   currentStep: 0,
-  totalSteps: 8, // Se ajusta según el tipo de wizard
+  totalSteps: 9, // Usuario ahora tiene 9 pasos (se agregó expectativas)
   
   userData: initialUserData,
   providerData: initialProviderData,
@@ -166,7 +176,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   
   setWizardType: (type) => set({ 
     wizardType: type,
-    totalSteps: type === 'user' ? 8 : 6,
+    totalSteps: type === 'user' ? 9 : 6, // 9 para usuarios, 6 para proveedores
     currentStep: 0,
     showWelcome: true,
   }),
@@ -202,7 +212,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   resetWizard: () => set({
     wizardType: null,
     currentStep: 0,
-    totalSteps: 8,
+    totalSteps: 9,
     userData: initialUserData,
     providerData: initialProviderData,
     isLoading: false,
@@ -212,16 +222,29 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 }));
 
 // ============================================
-// CONSTANTES PARA LOS WIZARDS
+// TIPOS PARA LAS CONSTANTES
 // ============================================
 
-export const CEREMONY_TYPES = [
-  { id: 'civil', label: 'Civil', icon: '📜' },
-  { id: 'religious', label: 'Religiosa', icon: '⛪' },
-  { id: 'symbolic', label: 'Simbólica', icon: '💫' },
+export interface WizardOption {
+  id: string;
+  label: string;
+  description?: string;
+  percentage?: number;
+  iconType?: string; // Identificador del tipo de icono
+}
+
+// ============================================
+// CONSTANTES PARA LOS WIZARDS
+// Los iconos se renderizan en los componentes usando iconType
+// ============================================
+
+export const CEREMONY_TYPES: WizardOption[] = [
+  { id: 'civil', label: 'Civil', iconType: 'document' },
+  { id: 'religious', label: 'Religiosa', iconType: 'church' },
+  { id: 'symbolic', label: 'Simbólica', iconType: 'star' },
 ];
 
-export const EVENT_STYLES = [
+export const EVENT_STYLES: WizardOption[] = [
   { id: 'classic', label: 'Clásico & Elegante', description: 'Tradición y sofisticación' },
   { id: 'rustic', label: 'Rústico & Natural', description: 'Campo y naturaleza' },
   { id: 'modern', label: 'Moderno & Minimalista', description: 'Líneas limpias y contemporáneo' },
@@ -232,7 +255,7 @@ export const EVENT_STYLES = [
   { id: 'industrial', label: 'Industrial & Urbano', description: 'Lofts y espacios únicos' },
 ];
 
-export const PLANNING_PROGRESS = [
+export const PLANNING_PROGRESS: WizardOption[] = [
   { id: 'nothing', label: 'Nada', percentage: 0 },
   { id: 'little', label: 'Poco', percentage: 25 },
   { id: 'half', label: 'La mitad', percentage: 50 },
@@ -240,26 +263,26 @@ export const PLANNING_PROGRESS = [
   { id: 'almost', label: 'Casi listo', percentage: 95 },
 ];
 
-export const COMPLETED_ITEMS = [
-  { id: 'dj', label: 'DJ/VJ', icon: '🎵' },
-  { id: 'photography', label: 'Fotografía', icon: '📷' },
-  { id: 'video', label: 'Video', icon: '🎬' },
-  { id: 'venue', label: 'Lugar', icon: '🏛️' },
-  { id: 'catering', label: 'Banquetería', icon: '🍽️' },
+export const COMPLETED_ITEMS: WizardOption[] = [
+  { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
+  { id: 'photography', label: 'Fotografía', iconType: 'camera' },
+  { id: 'video', label: 'Video', iconType: 'video' },
+  { id: 'venue', label: 'Lugar', iconType: 'building' },
+  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
 ];
 
-export const PRIORITY_CATEGORIES = [
-  { id: 'photography', label: 'Fotografía', icon: '📷' },
-  { id: 'video', label: 'Video', icon: '🎬' },
-  { id: 'dj', label: 'DJ/VJ', icon: '🎵' },
-  { id: 'catering', label: 'Banquetería', icon: '🍽️' },
-  { id: 'venue', label: 'Centro de Eventos', icon: '🏛️' },
-  { id: 'decoration', label: 'Decoración', icon: '🌸' },
-  { id: 'wedding_planner', label: 'Wedding Planner', icon: '📋' },
-  { id: 'makeup', label: 'Maquillaje & Peinado', icon: '💄' },
+export const PRIORITY_CATEGORIES: WizardOption[] = [
+  { id: 'photography', label: 'Fotografía', iconType: 'camera' },
+  { id: 'video', label: 'Video', iconType: 'video' },
+  { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
+  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
+  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
+  { id: 'decoration', label: 'Decoración', iconType: 'flower' },
+  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
+  { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
 ];
 
-export const INVOLVEMENT_LEVELS = [
+export const INVOLVEMENT_LEVELS: WizardOption[] = [
   { id: '100', label: '100% Vinculados', description: 'Queremos participar en cada detalle' },
   { id: '80', label: '80% Vinculados', description: 'Muy involucrados pero delegamos algo' },
   { id: '60', label: '60% Vinculados', description: 'Balance entre participación y delegación' },
@@ -268,7 +291,7 @@ export const INVOLVEMENT_LEVELS = [
   { id: '0', label: 'Todo delegado', description: 'Confío completamente en los profesionales' },
 ];
 
-export const BUDGET_RANGES = [
+export const BUDGET_RANGES: WizardOption[] = [
   { id: 'under_5m', label: 'Menos de $5.000.000' },
   { id: '5m_10m', label: '$5.000.000 - $10.000.000' },
   { id: '10m_15m', label: '$10.000.000 - $15.000.000' },
@@ -278,16 +301,16 @@ export const BUDGET_RANGES = [
   { id: 'over_50m', label: 'Más de $50.000.000' },
 ];
 
-export const GUEST_COUNTS = [
-  { id: 'intimate', label: 'Íntimo (menos de 50)', icon: '👥' },
-  { id: 'small', label: 'Pequeño (50-100)', icon: '👥' },
-  { id: 'medium', label: 'Mediano (100-150)', icon: '👥' },
-  { id: 'large', label: 'Grande (150-200)', icon: '👥' },
-  { id: 'xlarge', label: 'Muy grande (200-300)', icon: '👥' },
-  { id: 'massive', label: 'Masivo (más de 300)', icon: '👥' },
+export const GUEST_COUNTS: WizardOption[] = [
+  { id: 'intimate', label: 'Íntimo (menos de 50)', iconType: 'users' },
+  { id: 'small', label: 'Pequeño (50-100)', iconType: 'users' },
+  { id: 'medium', label: 'Mediano (100-150)', iconType: 'users' },
+  { id: 'large', label: 'Grande (150-200)', iconType: 'users' },
+  { id: 'xlarge', label: 'Muy grande (200-300)', iconType: 'users' },
+  { id: 'massive', label: 'Masivo (más de 300)', iconType: 'users' },
 ];
 
-export const REGIONS = [
+export const REGIONS: WizardOption[] = [
   { id: 'rm', label: 'Región Metropolitana' },
   { id: 'valparaiso', label: 'Valparaíso' },
   { id: 'ohiggins', label: "O'Higgins" },
@@ -306,22 +329,22 @@ export const REGIONS = [
   { id: 'nuble', label: 'Ñuble' },
 ];
 
-export const PROVIDER_CATEGORIES = [
-  { id: 'photography', label: 'Fotografía', icon: '📷' },
-  { id: 'video', label: 'Videografía', icon: '🎬' },
-  { id: 'dj', label: 'DJ/VJ', icon: '🎵' },
-  { id: 'catering', label: 'Banquetería', icon: '🍽️' },
-  { id: 'venue', label: 'Centro de Eventos', icon: '🏛️' },
-  { id: 'decoration', label: 'Decoración & Florería', icon: '🌸' },
-  { id: 'wedding_planner', label: 'Wedding Planner', icon: '📋' },
-  { id: 'makeup', label: 'Maquillaje & Peinado', icon: '💄' },
-  { id: 'dress', label: 'Vestidos & Trajes', icon: '👗' },
-  { id: 'cake', label: 'Tortas & Dulces', icon: '🎂' },
-  { id: 'transport', label: 'Transporte', icon: '🚗' },
-  { id: 'invitations', label: 'Invitaciones', icon: '💌' },
+export const PROVIDER_CATEGORIES: WizardOption[] = [
+  { id: 'photography', label: 'Fotografía', iconType: 'camera' },
+  { id: 'video', label: 'Videografía', iconType: 'video' },
+  { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
+  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
+  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
+  { id: 'decoration', label: 'Decoración & Florería', iconType: 'flower' },
+  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
+  { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
+  { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
+  { id: 'cake', label: 'Tortas & Dulces', iconType: 'cake' },
+  { id: 'transport', label: 'Transporte', iconType: 'car' },
+  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
 ];
 
-export const SERVICE_STYLES = [
+export const SERVICE_STYLES: WizardOption[] = [
   { id: 'traditional', label: 'Tradicional', description: 'Estilo clásico y atemporal' },
   { id: 'modern', label: 'Moderno', description: 'Tendencias actuales' },
   { id: 'artistic', label: 'Artístico', description: 'Creativo y único' },
@@ -330,10 +353,9 @@ export const SERVICE_STYLES = [
   { id: 'editorial', label: 'Editorial', description: 'Estilo revista de moda' },
 ];
 
-export const PRICE_RANGES_PROVIDER = [
+export const PRICE_RANGES_PROVIDER: WizardOption[] = [
   { id: 'budget', label: 'Económico', description: 'Precios accesibles' },
   { id: 'mid', label: 'Rango Medio', description: 'Calidad-precio equilibrado' },
   { id: 'premium', label: 'Premium', description: 'Servicio de alta gama' },
   { id: 'luxury', label: 'Lujo', description: 'Exclusividad total' },
 ];
-

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { WizardContainer, WizardStep, SelectionGrid, WizardInput } from '@/components/wizard';
+import { WizardContainer, WizardStep, SelectionGrid, WizardInput, CustomDropdown } from '@/components/wizard';
 import { useWizardStore, PROVIDER_CATEGORIES, SERVICE_STYLES, PRICE_RANGES_PROVIDER, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
 import { Eye, EyeOff } from 'lucide-react';
@@ -60,6 +60,16 @@ export default function ProviderRegisterPage() {
     updateProviderData({ [field]: value });
   };
 
+  // Manejar selección múltiple para categorías
+  const handleCategorySelect = (value: string) => {
+    playUiClick();
+    const currentCategories = providerData.categories;
+    const newCategories = currentCategories.includes(value)
+      ? currentCategories.filter((v) => v !== value)
+      : [...currentCategories, value];
+    updateProviderData({ categories: newCategories });
+  };
+
   // Manejar finalización del wizard
   const handleComplete = async () => {
     playSuccessSound();
@@ -81,7 +91,7 @@ export default function ProviderRegisterPage() {
     providerData.providerName.trim().length >= 2 &&
     providerData.phone.length >= 8;
   
-  const isStep2Valid = providerData.category.length > 0;
+  const isStep2Valid = providerData.categories.length > 0; // Ahora múltiples categorías
   const isStep3Valid = providerData.serviceStyle.length > 0;
   const isStep4Valid = providerData.priceRange.length > 0 && providerData.workRegion.length > 0;
   const isStep5Valid = providerData.description.trim().length >= 20;
@@ -172,10 +182,10 @@ export default function ProviderRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 2: Categoría */}
+        {/* Paso 2: Categorías (ahora múltiples) */}
         <WizardStep
-          title="¿Qué servicio ofreces?"
-          subtitle="Selecciona tu categoría principal"
+          title="¿Qué servicios ofreces?"
+          subtitle="Selecciona todas las categorías que apliquen a tu negocio"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 1}
@@ -183,12 +193,38 @@ export default function ProviderRegisterPage() {
           onBack={handleBack}
           nextDisabled={!isStep2Valid}
         >
-          <SelectionGrid
-            options={PROVIDER_CATEGORIES}
-            selected={providerData.category}
-            onSelect={(id) => handleSingleSelect('category', id)}
-            columns={3}
-          />
+          <div className={styles.categoriesSection}>
+            <div className={styles.categoriesNote}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <span>Puedes seleccionar múltiples categorías si ofreces varios servicios</span>
+            </div>
+            <SelectionGrid
+              options={PROVIDER_CATEGORIES}
+              selected={providerData.categories}
+              onSelect={handleCategorySelect}
+              multiple
+              columns={3}
+            />
+            {providerData.categories.length > 0 && (
+              <div className={styles.selectedCategories}>
+                <span className={styles.selectedLabel}>Seleccionadas:</span>
+                <div className={styles.selectedTags}>
+                  {providerData.categories.map((catId) => {
+                    const category = PROVIDER_CATEGORIES.find((c) => c.id === catId);
+                    return category ? (
+                      <span key={catId} className={styles.selectedTag}>
+                        {category.label}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </WizardStep>
 
         {/* Paso 3: Estilo del servicio */}
@@ -210,7 +246,7 @@ export default function ProviderRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 4: Precios y ubicación */}
+        {/* Paso 4: Precios y ubicación con dropdown personalizado */}
         <WizardStep
           title="Precios y ubicación"
           subtitle="Define tu rango de precios y zona de trabajo"
@@ -235,20 +271,18 @@ export default function ProviderRegisterPage() {
 
             <div className={styles.fieldSection}>
               <h3 className={styles.fieldTitle}>Región donde trabajas</h3>
-              <div className={styles.selectWrapper}>
-                <select
-                  value={providerData.workRegion}
-                  onChange={(e) => updateProviderData({ workRegion: e.target.value })}
-                  className={styles.select}
-                >
-                  <option value="">Selecciona una región</option>
-                  {REGIONS.map((region) => (
-                    <option key={region.id} value={region.id}>
-                      {region.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomDropdown
+                options={REGIONS}
+                value={providerData.workRegion}
+                onChange={(value) => updateProviderData({ workRegion: value })}
+                placeholder="Selecciona una región"
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                }
+              />
             </div>
 
             <label className={styles.checkboxLabel}>
