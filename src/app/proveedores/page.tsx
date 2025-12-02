@@ -1,12 +1,16 @@
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import ProveedoresHero from '@/components/landing/ProveedoresHero';
 import ProveedoresFeatures from '@/components/landing/ProveedoresFeatures';
-import styles from './page.module.css';
+import Footer from '@/components/landing/Footer';
+
+export const metadata = {
+  title: "Matri | Para Proveedores - Haz crecer tu negocio de bodas",
+  description: "Conecta con parejas que buscan tus servicios. Leads cualificados, dashboard profesional y más. Únete a la comunidad de proveedores de bodas.",
+};
 
 export default function ProveedoresPage() {
   return (
-    <main className={styles.main}>
+    <main>
       <Navbar />
       <ProveedoresHero />
       <ProveedoresFeatures />
@@ -14,4 +18,3 @@ export default function ProveedoresPage() {
     </main>
   );
 }
-

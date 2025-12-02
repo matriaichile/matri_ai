@@ -1,17 +1,18 @@
 import Navbar from '@/components/landing/Navbar';
-import LandingHero from '@/components/landing/LandingHero';
-import Features from '@/components/landing/Features';
-import HowItWorks from '@/components/landing/HowItWorks';
+import Hero from '@/components/landing/Hero';
+import Services from '@/components/landing/Services';
+import Process from '@/components/landing/Process';
+import Gallery from '@/components/landing/Gallery';
 import Footer from '@/components/landing/Footer';
-import styles from './page.module.css';
 
 export default function Home() {
   return (
-    <main className={styles.main}>
+    <main>
       <Navbar />
-      <LandingHero />
-      <HowItWorks />
-      <Features />
+      <Hero />
+      <Services />
+      <Process />
+      <Gallery />
       <Footer />
     </main>
   );
