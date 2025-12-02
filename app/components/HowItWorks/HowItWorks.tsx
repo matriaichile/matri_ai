@@ -54,7 +54,7 @@ export default function HowItWorks() {
           className={styles.header}
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
         >
           <span className={styles.eyebrow}>Proceso simple</span>
           <h2 className={styles.title}>
@@ -78,7 +78,7 @@ export default function HowItWorks() {
             className={styles.connectingLine}
             initial={{ scaleX: 0 }}
             animate={isInView ? { scaleX: 1 } : {}}
-            transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
           />
 
           {steps.map((step, index) => (
@@ -90,7 +90,7 @@ export default function HowItWorks() {
               transition={{ 
                 duration: 0.8, 
                 delay: 0.2 + index * 0.15,
-                ease: [0.22, 1, 0.36, 1] 
+                ease: [0.22, 1, 0.36, 1] as const
               }}
             >
               {/* Step number badge */}

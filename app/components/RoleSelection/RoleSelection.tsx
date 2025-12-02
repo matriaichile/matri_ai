@@ -43,7 +43,7 @@ export default function RoleSelection() {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as const,
       },
     },
   };
@@ -60,7 +60,7 @@ export default function RoleSelection() {
           className={styles.header}
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
         >
           <span className={styles.eyebrow}>Comienza tu viaje</span>
           <h2 className={styles.title}>

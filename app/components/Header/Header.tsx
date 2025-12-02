@@ -29,7 +29,7 @@ export default function Header() {
     <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
       className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}
     >
       <div className={styles.container}>
@@ -59,7 +59,7 @@ export default function Header() {
               transition={{ 
                 duration: 0.6, 
                 delay: 0.1 * index,
-                ease: [0.22, 1, 0.36, 1]
+                ease: [0.22, 1, 0.36, 1] as const
               }}
               whileHover={{ y: -2 }}
             >
@@ -102,7 +102,7 @@ export default function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
           >
             <nav className={styles.mobileNav}>
               {navItems.map((item, index) => (
@@ -138,7 +138,7 @@ export default function Header() {
         className={styles.decorativeLine}
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 1.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
       />
     </motion.header>
   );
