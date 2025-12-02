@@ -1,9 +1,9 @@
 .section {
-  padding: 8rem 2rem;
-  background-color: #FFFBF7; /* Un tono crema muy claro como en la imagen de referencia, o mantener oscuro si el usuario prefiere. Pero dijo "Mira como se veia" y era claro. Voy a usar un tono oscuro pero con la estructura de la imagen */
-  background-color: var(--color-background); /* Mantenemos dark mode por consistencia */
+  padding: 4rem 2rem;
+  background-color: var(--color-background);
   color: var(--color-text);
   position: relative;
+  scroll-margin-top: 80px; /* Adjust for fixed header */
 }
 
 .container {
@@ -25,7 +25,7 @@
 }
 
 .title span {
-  color: #D4AF37; /* Color rosado/rojo de la imagen referencia, adaptado a dorado */
+  color: #D4AF37;
 }
 
 .subtitle {
@@ -36,11 +36,6 @@
   margin-bottom: 1.5rem;
 }
 
-.separatorIcon {
-  font-size: 1.5rem;
-  color: var(--color-primary);
-}
-
 .stepsWrapper {
   position: relative;
   padding-top: 2rem;
@@ -48,7 +43,7 @@
 
 .mainConnector {
   position: absolute;
-  top: 55px; /* Alineado con el centro de los círculos */
+  top: 77px; /* 2rem (32px) padding + 45px (center of 90px icon container) */
   left: 10%;
   right: 10%;
   height: 1px;
@@ -75,44 +70,54 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  cursor: default;
 }
 
 .iconContainer {
   position: relative;
   margin-bottom: 2rem;
-  width: 90px; /* Espacio para el badge */
-  height: 70px;
+  width: 90px;
+  height: 90px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.step:hover .iconContainer {
+  transform: scale(1.08);
 }
 
 .iconCircle {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background-color: #FFF0F0; /* Color rosado claro de fondo */
-  background-color: rgba(212, 175, 55, 0.1); /* Dorado muy sutil para dark mode */
+  background-color: var(--color-background); /* Solid background to hide line behind */
+  box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.05); /* Subtle inner glow for depth */
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-primary);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  z-index: 1; /* Ensure it sits on top of the line */
 }
 
 .step:hover .iconCircle {
-  transform: translateY(-5px);
   background-color: var(--color-primary);
   color: #000;
-  box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+  /* Stronger glow/shine and light border */
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.6), 0 0 15px rgba(255, 255, 255, 0.4);
+  border-color: var(--color-primary-light);
+  /* Rotation added for elegance */
+  transform: rotate(15deg) scale(1.05);
 }
 
 .stepNumber {
   position: absolute;
-  top: -5px;
+  top: 0;
   right: 0;
-  background-color: #A05E5E; /* Color de la imagen referencia */
   background-color: var(--color-primary-dark);
   color: white;
   width: 28px;
@@ -124,7 +129,16 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-body);
-  border: 2px solid var(--color-background);
+  border: 3px solid var(--color-background);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 2;
+}
+
+.step:hover .stepNumber {
+  background-color: var(--color-text); /* White background */
+  color: var(--color-background); /* Black text for contrast */
+  transform: translate(5px, -5px) scale(1.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .stepTitle {
@@ -134,6 +148,11 @@
   color: var(--color-text);
   font-weight: 600;
   letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.step:hover .stepTitle {
+  color: var(--color-primary);
 }
 
 .stepDesc {
@@ -148,13 +167,21 @@
 .stepTag {
   display: inline-block;
   padding: 0.4rem 1rem;
-  background-color: rgba(212, 175, 55, 0.1);
-  color: var(--color-primary);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
   font-style: italic;
   font-family: var(--font-display);
+  transition: all 0.3s ease;
+}
+
+.step:hover .stepTag {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: rgba(212, 175, 55, 0.05);
 }
 
 @media (max-width: 768px) {

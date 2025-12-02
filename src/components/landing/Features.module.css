@@ -3,6 +3,7 @@
   background-color: var(--color-background);
   color: var(--color-text);
   overflow: hidden;
+  scroll-margin-top: 60px; /* Adjust for fixed header */
 }
 
 .container {
@@ -90,6 +91,9 @@
   line-height: 1.6;
   color: var(--color-text-secondary);
   max-width: 500px;
+  min-height: 6rem; /* Prevent layout shift between tabs */
+  display: flex;
+  align-items: center; /* Optional: center text vertically if desired, or remove for top align */
 }
 
 .featureList {

@@ -68,4 +68,6 @@ a {
 html {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary) var(--color-background);
+  scroll-behavior: smooth;
+  /* Removed scroll-padding-top to fix gap issue, handled in CSS modules */
 }

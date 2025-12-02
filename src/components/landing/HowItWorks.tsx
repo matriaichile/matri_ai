@@ -63,7 +63,6 @@ export default function HowItWorks() {
         >
           <h2 className={styles.title}>¿Cómo Funciona?</h2>
           <p className={styles.subtitle}>Cuatro simples pasos hacia tu boda perfecta</p>
-          <div className={styles.separatorIcon}>✨</div>
         </motion.div>
 
         <motion.div 

@@ -25,6 +25,19 @@ export default function Navbar() {
   // Animation logic: always animate on scroll
   const navbarClass = `${styles.navbar} ${isScrolled ? styles.scrolled : ''}`;
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    // Only handle scroll if on home page
+    if (isHomePage) {
+      e.preventDefault();
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    // If not on home page, the default Link behavior will work (href="/#id")
+    setMobileMenuOpen(false);
+  };
+
   return (
     <nav className={navbarClass}>
       <div className={styles.container}>
@@ -33,9 +46,27 @@ export default function Navbar() {
         </Link>
 
         <div className={styles.desktopMenu}>
-          <Link href="/novios" className={styles.navLink}>Para Novios</Link>
-          <Link href="/proveedores" className={styles.navLink}>Para Proveedores</Link>
-          <Link href="/como-funciona" className={styles.navLink}>Cómo Funciona</Link>
+          <Link 
+            href="/#how-it-works" 
+            className={styles.navLink}
+            onClick={(e) => scrollToSection(e, 'how-it-works')}
+          >
+            Cómo Funciona
+          </Link>
+          <Link 
+            href="/#features" 
+            className={styles.navLink}
+            onClick={(e) => scrollToSection(e, 'features')}
+          >
+            Para quién es
+          </Link>
+          <Link 
+            href="/#testimonials" 
+            className={styles.navLink}
+            onClick={(e) => scrollToSection(e, 'testimonials')}
+          >
+            Testimonios
+          </Link>
         </div>
 
         <div className={styles.authButtons}>
@@ -53,12 +84,30 @@ export default function Navbar() {
 
       {mobileMenuOpen && (
         <div className={styles.mobileMenu}>
-          <Link href="/novios" onClick={() => setMobileMenuOpen(false)}>Para Novios</Link>
-          <Link href="/proveedores" onClick={() => setMobileMenuOpen(false)}>Para Proveedores</Link>
-          <Link href="/como-funciona" onClick={() => setMobileMenuOpen(false)}>Cómo Funciona</Link>
+          <Link 
+            href="/#how-it-works" 
+            onClick={(e) => scrollToSection(e, 'how-it-works')}
+            className={styles.navLink}
+          >
+            Cómo Funciona
+          </Link>
+          <Link 
+            href="/#features" 
+            onClick={(e) => scrollToSection(e, 'features')}
+            className={styles.navLink}
+          >
+            Para quién es
+          </Link>
+          <Link 
+            href="/#testimonials" 
+            onClick={(e) => scrollToSection(e, 'testimonials')}
+            className={styles.navLink}
+          >
+            Testimonios
+          </Link>
           <hr />
-          <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Iniciar Sesión</Link>
-          <Link href="/register/user" onClick={() => setMobileMenuOpen(false)}>Registrarse</Link>
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className={styles.navLink}>Iniciar Sesión</Link>
+          <Link href="/register/user" onClick={() => setMobileMenuOpen(false)} className={styles.navLink}>Registrarse</Link>
         </div>
       )}
     </nav>
