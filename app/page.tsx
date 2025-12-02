@@ -57,15 +57,17 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <header className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
+        {/* Background Video with Overlay */}
         <div className="absolute inset-0 z-0">
-          <Image 
-            src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop" 
-            alt="Wedding Background" 
-            fill
-            className="object-cover"
-            priority
-          />
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover"
+          >
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#FDFAF6]"></div>
         </div>
 
