@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './DatePicker.module.css';
 
 interface DatePickerProps {
@@ -23,6 +24,7 @@ const WEEKDAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
 /**
  * DatePicker personalizado ultra elegante.
  * Diseño premium con animaciones suaves.
+ * Usa portal para renderizar el calendario fuera del contenedor padre.
  */
 export default function DatePicker({
   value,
@@ -33,15 +35,41 @@ export default function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Parsear el valor actual
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
+  // Calcular posición del calendario cuando se abre (centrado)
+  const updateCalendarPosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const calendarWidth = 280;
+      // Centrar el calendario respecto al trigger
+      const triggerCenter = rect.left + (rect.width / 2);
+      const calendarLeft = triggerCenter - (calendarWidth / 2);
+      
+      setCalendarPosition({
+        top: rect.bottom + 4, // 4px de gap
+        left: Math.max(8, calendarLeft), // Mínimo 8px del borde izquierdo
+        width: calendarWidth,
+      });
+    }
+  }, []);
+
   // Cerrar al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      // Verificar si el click fue fuera del container Y fuera del calendario
+      const calendarElement = document.getElementById('datepicker-calendar');
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(target) &&
+        (!calendarElement || !calendarElement.contains(target))
+      ) {
         setIsOpen(false);
       }
     };
@@ -51,6 +79,19 @@ export default function DatePicker({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
+
+  // Actualizar posición cuando se abre o cambia el tamaño de ventana
+  useEffect(() => {
+    if (isOpen) {
+      updateCalendarPosition();
+      window.addEventListener('resize', updateCalendarPosition);
+      window.addEventListener('scroll', updateCalendarPosition, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updateCalendarPosition);
+      window.removeEventListener('scroll', updateCalendarPosition, true);
+    };
+  }, [isOpen, updateCalendarPosition]);
 
   // Inicializar el mes actual basado en el valor seleccionado
   useEffect(() => {
@@ -148,6 +189,7 @@ export default function DatePicker({
       {label && <label className={styles.label}>{label}</label>}
       
       <button
+        ref={triggerRef}
         type="button"
         className={`${styles.trigger} ${isOpen ? styles.triggerActive : ''} ${value ? styles.triggerFilled : ''}`}
         onClick={() => setIsOpen(!isOpen)}
@@ -170,8 +212,18 @@ export default function DatePicker({
         </div>
       </button>
 
-      {isOpen && (
-        <div className={styles.calendar}>
+      {/* Calendario renderizado en portal para escapar del overflow del padre */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          id="datepicker-calendar"
+          className={styles.calendar}
+          style={{
+            position: 'fixed',
+            top: calendarPosition.top,
+            left: calendarPosition.left,
+            width: calendarPosition.width,
+          }}
+        >
           {/* Cabecera del calendario */}
           <div className={styles.calendarHeader}>
             <button
@@ -257,7 +309,8 @@ export default function DatePicker({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

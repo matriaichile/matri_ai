@@ -85,16 +85,17 @@ export default function UserRegisterPage() {
     }, 2000);
   };
 
-  // Validaciones por paso
+  // Validaciones por paso (ahora son 10 pasos)
   const isStep1Valid = userData.coupleNames.trim().length >= 3 && userData.email.includes('@') && userData.password.length >= 6 && userData.phone.length >= 8;
   const isStep2Valid = userData.eventDate.length > 0;
-  const isStep3Valid = userData.budget.length > 0 && userData.guestCount.length > 0 && userData.region.length > 0;
-  const isStep4Valid = userData.ceremonyTypes.length > 0;
-  const isStep5Valid = userData.eventStyle.length > 0;
-  const isStep6Valid = userData.planningProgress.length > 0;
-  const isStep7Valid = userData.priorityCategories.length > 0;
-  const isStep8Valid = userData.involvementLevel.length > 0;
-  const isStep9Valid = true; // Expectativas son opcionales
+  const isStep3Valid = userData.budget.length > 0 && userData.guestCount.length > 0; // Presupuesto e invitados
+  const isStep4Valid = userData.region.length > 0; // Ubicación separada
+  const isStep5Valid = userData.ceremonyTypes.length > 0;
+  const isStep6Valid = userData.eventStyle.length > 0;
+  const isStep7Valid = userData.planningProgress.length > 0;
+  const isStep8Valid = userData.priorityCategories.length > 0;
+  const isStep9Valid = userData.involvementLevel.length > 0;
+  const isStep10Valid = true; // Expectativas son opcionales
 
   return (
     <main className={styles.main}>
@@ -211,10 +212,10 @@ export default function UserRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 3: Presupuesto, invitados y región con dropdown personalizado */}
+        {/* Paso 3: Presupuesto e invitados */}
         <WizardStep
           title="Detalles del evento"
-          subtitle="Presupuesto aproximado, número de invitados y ubicación"
+          subtitle="Presupuesto aproximado y número de invitados"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 2}
@@ -244,35 +245,47 @@ export default function UserRegisterPage() {
                 cardSize="small"
               />
             </div>
-
-            <div className={styles.fieldSection}>
-              <h3 className={styles.fieldTitle}>Región del evento</h3>
-              <CustomDropdown
-                options={REGIONS}
-                value={userData.region}
-                onChange={(value) => updateUserData({ region: value })}
-                placeholder="Selecciona una región"
-                icon={
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                }
-              />
-            </div>
           </div>
         </WizardStep>
 
-        {/* Paso 4: Tipo de ceremonia */}
+        {/* Paso 4: Ubicación del evento */}
         <WizardStep
-          title="Tipo de ceremonia"
-          subtitle="Puedes seleccionar más de una opción"
+          title="¿Dónde será tu boda?"
+          subtitle="Selecciona la región donde se realizará el evento"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 3}
           onNext={handleNext}
           onBack={handleBack}
           nextDisabled={!isStep4Valid}
+        >
+          <div className={styles.locationSection}>
+            <CustomDropdown
+              options={REGIONS}
+              value={userData.region}
+              onChange={(value) => updateUserData({ region: value })}
+              placeholder="Selecciona una región"
+              label="Región del evento"
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              }
+            />
+          </div>
+        </WizardStep>
+
+        {/* Paso 5: Tipo de ceremonia */}
+        <WizardStep
+          title="Tipo de ceremonia"
+          subtitle="Puedes seleccionar más de una opción"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 4}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep5Valid}
         >
           <SelectionGrid
             options={CEREMONY_TYPES}
@@ -284,16 +297,16 @@ export default function UserRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 5: Estilo del evento */}
+        {/* Paso 6: Estilo del evento */}
         <WizardStep
           title="¿Qué estilo define tu boda?"
           subtitle="Selecciona el estilo que más te representa"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 4}
+          isVisible={currentStep === 5}
           onNext={handleNext}
           onBack={handleBack}
-          nextDisabled={!isStep5Valid}
+          nextDisabled={!isStep6Valid}
         >
           <SelectionGrid
             options={EVENT_STYLES}
@@ -303,16 +316,16 @@ export default function UserRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 6: Nivel de avance */}
+        {/* Paso 7: Nivel de avance */}
         <WizardStep
           title="¿Cuánto han avanzado?"
           subtitle="Nivel de avance en la planificación"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 5}
+          isVisible={currentStep === 6}
           onNext={handleNext}
           onBack={handleBack}
-          nextDisabled={!isStep6Valid}
+          nextDisabled={!isStep7Valid}
         >
           <div className={styles.progressSection}>
             <SelectionGrid
@@ -339,16 +352,16 @@ export default function UserRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 7: Categorías prioritarias */}
+        {/* Paso 8: Categorías prioritarias */}
         <WizardStep
           title="¿Qué proveedores necesitas?"
           subtitle="Selecciona las categorías que más te interesan"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 6}
+          isVisible={currentStep === 7}
           onNext={handleNext}
           onBack={handleBack}
-          nextDisabled={!isStep7Valid}
+          nextDisabled={!isStep8Valid}
         >
           <SelectionGrid
             options={PRIORITY_CATEGORIES}
@@ -359,16 +372,16 @@ export default function UserRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 8: Nivel de vinculación */}
+        {/* Paso 9: Nivel de vinculación */}
         <WizardStep
           title="¿Qué tan involucrados quieren estar?"
           subtitle="Tu nivel de participación en el proceso"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 7}
+          isVisible={currentStep === 8}
           onNext={handleNext}
           onBack={handleBack}
-          nextDisabled={!isStep8Valid}
+          nextDisabled={!isStep9Valid}
         >
           <SelectionGrid
             options={INVOLVEMENT_LEVELS}
@@ -378,16 +391,16 @@ export default function UserRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 9: Expectativas y preferencias (para IA) */}
+        {/* Paso 10: Expectativas y preferencias (para IA) */}
         <WizardStep
           title="Cuéntanos tus expectativas"
           subtitle="Opcional - Describe qué buscas para ayudarnos a encontrar proveedores perfectos"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 8}
+          isVisible={currentStep === 9}
           onNext={handleComplete}
           onBack={handleBack}
-          nextDisabled={!isStep9Valid}
+          nextDisabled={!isStep10Valid}
           nextLabel="Crear mi cuenta"
           showSkip
           onSkip={handleComplete}

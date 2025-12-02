@@ -92,19 +92,16 @@
   transform: rotate(180deg);
 }
 
-/* Dropdown desplegable - compacto */
+/* Dropdown desplegable - usa portal, posición fija */
 .dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
+  /* La posición se aplica inline desde el componente */
   max-height: 240px;
   overflow-y: auto;
   background: rgba(20, 20, 20, 0.98);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 10px;
   padding: 0.375rem;
-  z-index: 1000;
+  z-index: 99999; /* Muy alto para estar por encima de todo */
   box-shadow: 
     0 15px 40px rgba(0, 0, 0, 0.5),
     0 0 1px rgba(212, 175, 55, 0.3),

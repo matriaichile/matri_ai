@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './CustomDropdown.module.css';
 
 interface DropdownOption {
@@ -21,6 +22,7 @@ interface CustomDropdownProps {
 /**
  * Dropdown personalizado ultra elegante.
  * Reemplaza el select nativo del navegador.
+ * Usa portal para renderizar el menú fuera del contenedor padre.
  */
 export default function CustomDropdown({
   options,
@@ -32,16 +34,37 @@ export default function CustomDropdown({
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   // Obtener la opción seleccionada
   const selectedOption = options.find((opt) => opt.id === value);
 
+  // Calcular posición del dropdown cuando se abre
+  const updateDropdownPosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4, // 4px de gap
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
   // Cerrar al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      // Verificar si el click fue fuera del container Y fuera del dropdown
+      const dropdownElement = document.getElementById('custom-dropdown-menu');
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(target) &&
+        (!dropdownElement || !dropdownElement.contains(target))
+      ) {
         setIsOpen(false);
       }
     };
@@ -51,6 +74,19 @@ export default function CustomDropdown({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
+
+  // Actualizar posición cuando se abre o cambia el tamaño de ventana
+  useEffect(() => {
+    if (isOpen) {
+      updateDropdownPosition();
+      window.addEventListener('resize', updateDropdownPosition);
+      window.addEventListener('scroll', updateDropdownPosition, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+    };
+  }, [isOpen, updateDropdownPosition]);
 
   // Navegación con teclado
   useEffect(() => {
@@ -117,6 +153,7 @@ export default function CustomDropdown({
       {label && <label className={styles.label}>{label}</label>}
       
       <button
+        ref={triggerRef}
         type="button"
         className={`${styles.trigger} ${isOpen ? styles.triggerActive : ''} ${value ? styles.triggerFilled : ''}`}
         onClick={() => setIsOpen(!isOpen)}
@@ -138,8 +175,20 @@ export default function CustomDropdown({
         </div>
       </button>
 
-      {isOpen && (
-        <div className={styles.dropdown} role="listbox" ref={listRef}>
+      {/* Dropdown renderizado en portal para escapar del overflow del padre */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          id="custom-dropdown-menu"
+          className={styles.dropdown} 
+          role="listbox" 
+          ref={listRef}
+          style={{
+            position: 'fixed',
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+          }}
+        >
           {options.map((option, index) => (
             <button
               key={option.id}
@@ -167,7 +216,8 @@ export default function CustomDropdown({
               )}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

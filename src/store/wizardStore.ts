@@ -165,7 +165,7 @@ const initialProviderData: ProviderWizardData = {
 export const useWizardStore = create<WizardState>((set, get) => ({
   wizardType: null,
   currentStep: 0,
-  totalSteps: 9, // Usuario ahora tiene 9 pasos (se agregó expectativas)
+  totalSteps: 10, // Usuario ahora tiene 10 pasos (se separó ubicación)
   
   userData: initialUserData,
   providerData: initialProviderData,
@@ -176,7 +176,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   
   setWizardType: (type) => set({ 
     wizardType: type,
-    totalSteps: type === 'user' ? 9 : 6, // 9 para usuarios, 6 para proveedores
+    totalSteps: type === 'user' ? 10 : 6, // 10 para usuarios, 6 para proveedores
     currentStep: 0,
     showWelcome: true,
   }),
@@ -212,7 +212,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   resetWizard: () => set({
     wizardType: null,
     currentStep: 0,
-    totalSteps: 9,
+    totalSteps: 10,
     userData: initialUserData,
     providerData: initialProviderData,
     isLoading: false,

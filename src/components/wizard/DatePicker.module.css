@@ -92,23 +92,21 @@
   transform: rotate(180deg);
 }
 
-/* Calendario desplegable - compacto */
+/* Calendario desplegable - usa portal, posición fija, COMPACTO VERTICALMENTE */
 .calendar {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
-  min-width: 280px;
+  /* La posición se aplica inline desde el componente */
+  width: 280px;
+  max-width: 280px;
   background: rgba(20, 20, 20, 0.98);
   border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 12px;
-  padding: 0.875rem;
-  z-index: 1000;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  z-index: 99999; /* Muy alto para estar por encima de todo */
   box-shadow: 
-    0 15px 40px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(0, 0, 0, 0.5),
     0 0 1px rgba(212, 175, 55, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  animation: calendarAppear 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: calendarAppear 250ms cubic-bezier(0.16, 1, 0.3, 1);
   backdrop-filter: blur(20px);
 }
 
@@ -123,13 +121,13 @@
   }
 }
 
-/* Cabecera del calendario */
+/* Cabecera del calendario - compacta verticalmente */
 .calendarHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.625rem;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.375rem;
   border-bottom: 1px solid rgba(212, 175, 55, 0.15);
 }
 
@@ -137,25 +135,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   background: rgba(212, 175, 55, 0.1);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--color-primary);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .navButton svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .navButton:hover:not(:disabled) {
   background: rgba(212, 175, 55, 0.2);
   border-color: var(--color-primary);
-  transform: scale(1.05);
 }
 
 .navButtonDisabled {
@@ -172,25 +169,27 @@
 
 .month {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text);
   letter-spacing: 0.02em;
+  line-height: 1.1;
 }
 
 .year {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--color-primary);
   font-weight: 500;
+  line-height: 1.1;
 }
 
-/* Días de la semana */
+/* Días de la semana - compactos verticalmente */
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
 }
 
 .weekday {
@@ -198,15 +197,15 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--color-primary);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.25rem 0;
+  letter-spacing: 0.05em;
+  padding: 0.125rem 0;
 }
 
-/* Grid de días */
+/* Grid de días - compacto verticalmente */
 .daysGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -214,25 +213,24 @@
 }
 
 .dayCell {
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .day {
-  width: 100%;
-  height: 100%;
+  width: 32px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 200ms ease;
 }
@@ -263,25 +261,25 @@
   color: var(--color-text-muted);
 }
 
-/* Footer del calendario */
+/* Footer del calendario - compacto verticalmente */
 .calendarFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 0.625rem;
-  padding-top: 0.625rem;
+  margin-top: 0.375rem;
+  padding-top: 0.375rem;
   border-top: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .quickAction {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: var(--color-primary);
   background: rgba(212, 175, 55, 0.1);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 6px;
-  padding: 0.375rem 0.75rem;
+  border-radius: 5px;
+  padding: 0.25rem 0.625rem;
   cursor: pointer;
   transition: all 200ms ease;
 }
@@ -293,7 +291,7 @@
 
 .clearButton {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: var(--color-text-muted);
   background: transparent;
@@ -309,15 +307,18 @@
 /* Responsive */
 @media (max-width: 640px) {
   .calendar {
-    min-width: 260px;
-    padding: 0.75rem;
+    width: 260px;
+    max-width: 260px;
+    padding: 0.5rem 0.625rem;
   }
 
   .day {
-    font-size: 0.75rem;
+    width: 30px;
+    height: 26px;
+    font-size: 0.7rem;
   }
 
   .month {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 }

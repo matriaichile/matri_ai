@@ -66,77 +66,85 @@ export default function WizardStep({
         {/* Contenido del paso */}
         <div className={styles.content}>{children}</div>
 
-        {/* Navegación */}
-        <div className={styles.navigation}>
-          {showBack && currentStep > 0 && (
+        {/* Barra de progreso y navegación */}
+        <div className={styles.bottomBar}>
+          {/* Contenedor principal centrado: Atrás - Progreso - Siguiente */}
+          <div className={styles.mainNav}>
+            {/* Botón Atrás a la izquierda */}
+            <div className={styles.leftNav}>
+              {showBack && currentStep > 0 && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className={styles.backButton}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Atrás
+                </button>
+              )}
+            </div>
+
+            {/* Indicadores de progreso en el centro */}
+            <div className={styles.progressContainer}>
+              <div className={styles.progressBar}>
+                <div
+                  className={styles.progressFill}
+                  style={{
+                    width: `${((currentStep + 1) / totalSteps) * 100}%`,
+                  }}
+                />
+              </div>
+              <div className={styles.progressText}>
+                Paso {currentStep + 1} de {totalSteps}
+              </div>
+            </div>
+
+            {/* Botón Siguiente a la derecha */}
+            <div className={styles.rightNav}>
+              {onNext && (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  disabled={nextDisabled}
+                  className={`${styles.nextButton} ${
+                    nextDisabled ? styles.nextButtonDisabled : ''
+                  }`}
+                >
+                  {nextLabel}
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Botón Omitir separado, a la derecha absoluta */}
+          {showSkip && onSkip && (
             <button
               type="button"
-              onClick={onBack}
-              className={styles.backButton}
+              onClick={onSkip}
+              className={styles.skipButton}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Atrás
+              Omitir
             </button>
           )}
-
-          <div className={styles.rightButtons}>
-            {showSkip && onSkip && (
-              <button
-                type="button"
-                onClick={onSkip}
-                className={styles.skipButton}
-              >
-                Omitir
-              </button>
-            )}
-
-            {onNext && (
-              <button
-                type="button"
-                onClick={onNext}
-                disabled={nextDisabled}
-                className={`${styles.nextButton} ${
-                  nextDisabled ? styles.nextButtonDisabled : ''
-                }`}
-              >
-                {nextLabel}
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Indicadores de progreso */}
-        <div className={styles.progressContainer}>
-          <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{
-                width: `${((currentStep + 1) / totalSteps) * 100}%`,
-              }}
-            />
-          </div>
-          <div className={styles.progressText}>
-            Paso {currentStep + 1} de {totalSteps}
-          </div>
         </div>
       </div>
     </div>
