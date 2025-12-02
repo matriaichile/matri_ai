@@ -1,7 +1,7 @@
 "use client";
 
 import { useAnimateOnScroll } from '@/hooks/useAnimateOnScroll';
-import { ReactNode, CSSProperties, useState, useEffect } from 'react';
+import { ReactNode, CSSProperties, useState, useEffect, ElementType } from 'react';
 
 type AnimationType = 
   | 'fadeIn' 
@@ -20,7 +20,7 @@ interface AnimatedSectionProps {
   threshold?: number;
   className?: string;
   style?: CSSProperties;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
 }
 
 export default function AnimatedSection({
