@@ -1,4 +1,4 @@
-# Matri.AI MVP
+# MatriMatch MVP
 
 Platform for connecting wedding planners/couples with service providers using intelligent matchmaking.
 

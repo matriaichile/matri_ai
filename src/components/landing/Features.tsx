@@ -12,7 +12,7 @@ export default function Features() {
   const content = {
     couples: {
       title: "Planifica sin estrés,\ndisfruta el proceso.",
-      description: "Matri.AI elimina las interminables cadenas de correos y las planillas de excel complicadas. Te damos control total en un solo Dashboard.",
+      description: "MatriMatch elimina las interminables cadenas de correos y las planillas de excel complicadas. Te damos control total en un solo Dashboard.",
       features: [
         "Recomendaciones 100% personalizadas por IA.",
         "Gestión de presupuesto automatizada.",
@@ -24,7 +24,7 @@ export default function Features() {
     },
     providers: {
       title: "Leads de calidad,\ncierre de ventas efectivo.",
-      description: "Deja de perder tiempo cotizando para clientes que no tienen tu presupuesto o fecha disponible. Matri.AI filtra por ti.",
+      description: "Deja de perder tiempo cotizando para clientes que no tienen tu presupuesto o fecha disponible. MatriMatch filtra por ti.",
       features: [
         "Leads pre-calificados (Fecha y Presupuesto OK).",
         "Calendario de disponibilidad inteligente.",

@@ -8,7 +8,7 @@ export default function NoviosHero() {
         <span className={styles.tag}>Para Parejas</span>
         <h1 className={styles.title}>Planifica la boda perfecta,<br />sin el estrés.</h1>
         <p className={styles.subtitle}>
-          Matri.AI te ayuda a encontrar los proveedores ideales que se ajustan a tu estilo, presupuesto y visión.
+          MatriMatch te ayuda a encontrar los proveedores ideales que se ajustan a tu estilo, presupuesto y visión.
         </p>
         <Link href="/register/user" className={styles.button}>
           Crear mi perfil gratis

@@ -23,7 +23,7 @@ export default function HowItWorksSteps() {
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1 className={styles.title}>Cómo funciona Matri.AI</h1>
+          <h1 className={styles.title}>Cómo funciona MatriMatch</h1>
           <p className={styles.subtitle}>Tu camino hacia el altar, simplificado en tres pasos.</p>
         </div>
 

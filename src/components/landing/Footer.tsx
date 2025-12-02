@@ -1,5 +1,6 @@
 import styles from './Footer.module.css';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Instagram, Facebook, Twitter, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -7,8 +8,15 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.brand}>
-          <h2 className={styles.logo}>Matri.AI</h2>
-          <span className={styles.copyright}>© {new Date().getFullYear()}</span>
+          <div className={styles.logoContainer}>
+            <Image 
+              src="/logo.png" 
+              alt="MatriMatch" 
+              width={400} 
+              height={100} 
+              className={styles.logoImage}
+            />
+          </div>
         </div>
 
         <div className={styles.links}>
@@ -20,7 +28,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.social}>
-            <a href="mailto:hola@matri.ai" aria-label="Email"><Mail /></a>
+            <a href="mailto:hola@matrimatch.com" aria-label="Email"><Mail /></a>
             <Instagram />
             <Facebook />
             <Twitter />

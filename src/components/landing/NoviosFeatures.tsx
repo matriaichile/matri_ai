@@ -24,7 +24,7 @@ export default function NoviosFeatures() {
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.header}>
-            <h2 className={styles.title}>Por qué elegir Matri.AI</h2>
+            <h2 className={styles.title}>Por qué elegir MatriMatch</h2>
         </div>
         <div className={styles.grid}>
           {features.map((feature, index) => (

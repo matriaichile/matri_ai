@@ -17,8 +17,11 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Matri.AI | Conectando Sueños",
+  title: "MatriMatch | Conectando Sueños",
   description: "La plataforma inteligente para planificar tu boda perfecta.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

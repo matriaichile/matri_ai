@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css';
 import { Menu, X } from 'lucide-react';
@@ -42,7 +43,17 @@ export default function Navbar() {
     <nav className={navbarClass}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          Matri.AI
+          {/* Contenedor con overflow hidden para recortar el espacio vertical del logo */}
+          <div className={styles.logoWrapper}>
+            <Image 
+              src="/logo.png" 
+              alt="MatriMatch" 
+              width={60} 
+              height={60} 
+              className={styles.logoImage}
+              priority
+            />
+          </div>
         </Link>
 
         <div className={styles.desktopMenu}>

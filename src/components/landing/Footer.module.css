@@ -21,6 +21,23 @@
   gap: 1rem;
 }
 
+/* Contenedor para recortar el espacio vertical del logo */
+.logoContainer {
+  position: relative;
+  height: 28px; /* Altura visible deseada */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.logoImage {
+  /* La imagen es más grande pero el contenedor la recorta */
+  height: 70px !important;
+  width: auto !important;
+  margin-top: -8px; /* Ajuste para centrar verticalmente el contenido visible */
+}
+
 .logo {
   font-family: var(--font-display);
   font-size: 1.5rem;
@@ -84,15 +101,10 @@
 }
 
 .copyright {
-  text-align: center;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 400;
-  display: none;
 }
 
 @media (max-width: 768px) {
@@ -110,5 +122,9 @@
   .column {
     flex-direction: column;
     gap: 1rem;
+  }
+  
+  .logoContainer {
+    justify-content: center;
   }
 }
