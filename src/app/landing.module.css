@@ -1,0 +1,628 @@
+/* Landing Page Styles adapted for Matri.AI */
+
+/* --- Layout Utilities --- */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.section {
+  padding: 5rem 0;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flexCol {
+  flex-direction: column;
+}
+
+.itemsCenter {
+  align-items: center;
+}
+
+.justifyBetween {
+  justify-content: space-between;
+}
+
+.justifyCenter {
+  justify-content: center;
+}
+
+.gap2 { gap: 0.5rem; }
+.gap4 { gap: 1rem; }
+.gap6 { gap: 1.5rem; }
+.gap8 { gap: 2rem; }
+
+/* --- Navbar --- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  transition: all 0.3s ease;
+  padding: 1.5rem 0;
+  background-color: transparent;
+}
+
+.navScrolled {
+  background-color: var(--overlay-light); /* Uses rgba(255,255,255,0.8) in Light, rgba(0,0,0,0.6) in Dark */
+  backdrop-filter: blur(10px);
+  padding: 1rem 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoIcon {
+  background: linear-gradient(135deg, var(--color-champagne), var(--color-champagne-dark));
+  color: white; /* Icon text always white */
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLinks {
+  display: none;
+}
+
+.navCta {
+  display: block; /* Visible always */
+}
+
+.navLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.navLink:hover {
+  color: var(--color-champagne);
+}
+
+.navBtn {
+  background-color: var(--text-primary); /* Charcoal in light, White in dark */
+  color: var(--bg-primary); /* Cream in light, Dark in dark */
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: transform 0.2s, background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  background-color: var(--color-champagne);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+/* --- Hero --- */
+.hero {
+  padding-top: 6rem;
+  padding-bottom: 5rem;
+  text-align: center;
+  position: relative;
+  background-color: var(--bg-primary);
+}
+
+.heroBlob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.blob1 {
+  top: 0;
+  right: -5rem;
+  width: 24rem;
+  height: 24rem;
+  background-color: var(--color-champagne-light);
+}
+
+.blob2 {
+  top: 0;
+  left: -5rem;
+  width: 24rem;
+  height: 24rem;
+  background-color: var(--color-sage-light);
+}
+
+.blob3 {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24rem;
+  height: 24rem;
+  background-color: var(--color-champagne-light); /* Replacing hardcoded indigo */
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0.75rem;
+}
+
+.heroBadgeDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-sage);
+}
+
+.heroBadgeText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+  letter-spacing: -0.02em;
+}
+
+.gradientText {
+  background: linear-gradient(to right, var(--color-champagne-dark), var(--color-sage));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.heroText {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  max-width: 42rem;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.heroButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroBtnPrimary {
+  position: relative;
+  padding: 1rem 2rem;
+  background: linear-gradient(to right, var(--color-champagne), var(--color-champagne-dark));
+  color: white; /* Always white for readability on champagne */
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow: 0 10px 15px -3px rgba(201, 169, 98, 0.3);
+  transition: all 0.3s;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  min-width: 200px;
+  text-align: left;
+}
+
+.heroBtnPrimaryContent {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.heroBtnPrimary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(201, 169, 98, 0.4);
+}
+
+.heroBtnSub {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.9;
+  font-weight: 400;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.heroBtnSecondary {
+  position: relative;
+  padding: 1rem 2rem;
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s;
+  cursor: pointer;
+  min-width: 200px;
+  text-align: left;
+}
+
+.heroBtnSecondary:hover {
+  border-color: var(--color-sage);
+  color: var(--color-sage);
+  transform: translateY(-4px);
+}
+
+/* --- Steps / How It Works --- */
+.stepsSection {
+  background-color: var(--bg-secondary);
+  padding: 5rem 0;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sectionSubtitle {
+  color: var(--text-secondary);
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.stepCard {
+  background-color: var(--card-bg);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.3s;
+  position: relative;
+}
+
+.stepCard:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.stepIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s;
+}
+
+.stepCard:hover .stepIcon {
+  transform: scale(1.1);
+}
+
+.iconRose { background-color: var(--color-champagne-light); color: var(--color-champagne-dark); }
+.iconPurple { background-color: var(--color-sage-light); color: var(--color-sage); }
+.iconIndigo { background-color: var(--bg-accent); color: var(--text-primary); }
+
+.stepTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.stepDesc {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* --- Benefits (Tabs) --- */
+.benefitsSection {
+  background-color: var(--bg-inverse); /* Dark in Light, Light in Dark */
+  color: var(--text-inverse);
+  padding: 6rem 0;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.tabContainer {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+}
+
+/* Fix for dark mode contrast in tab container background if needed */
+[data-theme="dark"] .tabContainer {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.tabBtn {
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: all 0.3s;
+  background: transparent;
+  color: var(--text-secondary); /* Updated to variable */
+  border: none;
+  cursor: pointer;
+}
+
+/* In the dark inverse section, we need specific colors */
+.benefitsSection .tabBtn {
+  color: var(--text-secondary); /* Ensure it's visible on inverse bg */
+}
+
+/* Wait, text-secondary on inverse bg might be poor contrast if inverse is dark and secondary is dark grey.
+   In light mode: bg-inverse is dark (#2C2C2C), text-secondary is dark grey (#5A5A5A). Bad.
+   We need text-inverse-secondary if it existed.
+   I'll use opacity on text-inverse.
+*/
+
+.benefitsSection .tabBtn {
+  color: var(--text-inverse);
+  opacity: 0.6;
+}
+
+.tabBtnActive {
+  background-color: var(--color-champagne);
+  color: white !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tabBtnActiveProvider {
+  background-color: var(--color-sage);
+  color: white !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4rem;
+  align-items: center;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.benefitsContent h2 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  color: var(--text-inverse);
+}
+
+.accentText {
+  color: var(--color-champagne);
+}
+.accentTextProvider {
+  color: var(--color-sage);
+}
+
+.benefitsDesc {
+  color: var(--text-inverse);
+  opacity: 0.8;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.checkIcon {
+  margin-top: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-champagne);
+}
+
+.checkIconProvider {
+  color: var(--color-sage);
+}
+
+.benefitText {
+  color: var(--text-inverse);
+  opacity: 0.9;
+}
+
+.ctaBtn {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  padding: 0.75rem 2rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.ctaBtnProvider {
+  background-color: var(--color-sage);
+  color: white;
+}
+
+.ctaBtn:hover {
+  background-color: var(--bg-secondary);
+}
+.ctaBtnProvider:hover {
+  background-color: #8da37d;
+}
+
+/* --- Dashboard Mockup --- */
+.mockupContainer {
+  position: relative;
+}
+
+.mockupGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.2), transparent 70%);
+  filter: blur(40px);
+  border-radius: 50%;
+}
+
+.glassCard {
+  position: relative;
+  background-color: var(--overlay-light); /* Adaptive glass */
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.mockupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.windowDots {
+  display: flex;
+  gap: 0.5rem;
+}
+.dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
+.red { background-color: #ef4444; }
+.yellow { background-color: #eab308; }
+.green { background-color: #22c55e; }
+
+.mockupUrl {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* --- Footer --- */
+.footer {
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 4rem 0 2rem;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.footerCol h4 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.footerLinks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerLink {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footerLink:hover {
+  color: var(--color-champagne);
+}
+
+.copyright {
+  border-top: 1px solid var(--border-color);
+  padding-top: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (min-width: 768px) {
+  .navLinks { display: flex; align-items: center; gap: 2rem; }
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .heroButtons { flex-direction: row; }
+  .stepsGrid { grid-template-columns: repeat(3, 1fr); }
+  .benefitsGrid { grid-template-columns: 1fr 1fr; }
+  .footerGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .heroTitle { font-size: 2.5rem; }
+  .benefitsContent { text-align: center; }
+  .benefitItem { justify-content: center; }
+}
