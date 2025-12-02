@@ -35,7 +35,7 @@ export default function Hero() {
       y: 0,
       transition: {
         duration: 1,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as const,
       },
     },
   };
@@ -46,7 +46,7 @@ export default function Hero() {
       scaleX: 1,
       transition: {
         duration: 1.5,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as const,
       },
     },
   };
