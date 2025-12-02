@@ -1,0 +1,92 @@
+/* ====================================
+   WIZARD INPUT - ESTILO ELEGANTE
+   Negro y Dorado Premium - Matri.AI
+   ==================================== */
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #CCCCCC;
+  letter-spacing: 0.02em;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color 300ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(26, 26, 26, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  transition: all 300ms ease;
+  outline: none;
+}
+
+.inputWithIcon {
+  padding-left: 2.75rem;
+}
+
+.input::placeholder {
+  color: #888888;
+}
+
+.input:focus {
+  border-color: #D4AF37;
+  background: rgba(212, 175, 55, 0.05);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.input:focus + .icon,
+.inputWrapper:focus-within .icon {
+  color: #D4AF37;
+}
+
+.inputError {
+  border-color: #ef4444;
+}
+
+.inputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+}
+
+/* Textarea variant */
+.input[type="textarea"],
+textarea.input {
+  min-height: 120px;
+  resize: vertical;
+}
+

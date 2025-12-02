@@ -1,0 +1,238 @@
+/* ====================================
+   WIZARD STEP - ESTILO ELEGANTE
+   Negro y Dorado Premium - Matri.AI
+   ==================================== */
+
+.stepContainer {
+  width: 100%;
+  max-width: 700px;
+  padding: 2rem 1.5rem;
+  transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stepContainerHidden {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.stepContainerVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Encabezado */
+.header {
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-size: 1.75rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #E8D090, #D4AF37);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 2.25rem;
+  }
+}
+
+.subtitle {
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.95rem;
+  color: #CCCCCC;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Contenido */
+.content {
+  width: 100%;
+}
+
+/* Navegación */
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.rightButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* Botón de atrás */
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.backButton:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.backButton svg {
+  transition: transform 300ms ease;
+}
+
+.backButton:hover svg {
+  transform: translateX(-3px);
+}
+
+/* Botón de omitir */
+.skipButton {
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.skipButton:hover {
+  color: var(--color-text-secondary);
+}
+
+/* Botón de siguiente */
+.nextButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8941E 100%);
+  border: none;
+  border-radius: 50px;
+  color: #000000;
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 300ms ease;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+}
+
+.nextButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+}
+
+.nextButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nextButton svg {
+  transition: transform 300ms ease;
+}
+
+.nextButton:hover:not(:disabled) svg {
+  transform: translateX(3px);
+}
+
+.nextButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Indicadores de progreso */
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.progressBar {
+  width: 100%;
+  max-width: 300px;
+  height: 4px;
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: 2px;
+  transition: width 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+.progressText {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .stepContainer {
+    padding: 1.5rem 1rem;
+  }
+
+  .navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .backButton {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rightButtons {
+    order: 1;
+    width: 100%;
+    flex-direction: column;
+    margin-left: 0;
+  }
+
+  .nextButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .skipButton {
+    width: 100%;
+    text-align: center;
+  }
+}
+

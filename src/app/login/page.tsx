@@ -199,13 +199,21 @@ export default function LoginPage() {
               </div>
             </form>
 
-            {/* Link de registro */}
-            <p className={styles.registerLink}>
-              ¿No tienes una cuenta?{' '}
-              <Link href="/register/user" className={styles.registerLinkHighlight}>
-                Regístrate aquí
-              </Link>
-            </p>
+            {/* Links de registro */}
+            <div className={styles.registerLinks}>
+              <p className={styles.registerLink}>
+                ¿No tienes una cuenta?
+              </p>
+              <div className={styles.registerOptions}>
+                <Link href="/register/user" className={styles.registerLinkHighlight}>
+                  Soy Novio/a
+                </Link>
+                <span className={styles.registerDivider}>|</span>
+                <Link href="/register/provider" className={styles.registerLinkSecondary}>
+                  Soy Proveedor
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

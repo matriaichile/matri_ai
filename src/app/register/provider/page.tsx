@@ -1,10 +1,377 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { WizardContainer, WizardStep, SelectionGrid, WizardInput } from '@/components/wizard';
+import { useWizardStore, PROVIDER_CATEGORIES, SERVICE_STYLES, PRICE_RANGES_PROVIDER, REGIONS } from '@/store/wizardStore';
+import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
+import { Eye, EyeOff } from 'lucide-react';
+import styles from './page.module.css';
+
+/**
+ * Wizard de registro para proveedores.
+ * Flujo paso a paso con animaciones elegantes.
+ */
 export default function ProviderRegisterPage() {
+  const router = useRouter();
+  const {
+    currentStep,
+    totalSteps,
+    providerData,
+    showWelcome,
+    setWizardType,
+    setShowWelcome,
+    nextStep,
+    prevStep,
+    updateProviderData,
+    resetWizard,
+  } = useWizardStore();
+
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Inicializar el wizard como tipo proveedor
+  useEffect(() => {
+    setWizardType('provider');
+    return () => resetWizard();
+  }, [setWizardType, resetWizard]);
+
+  // Manejar inicio del wizard
+  const handleStartWizard = () => {
+    playTransitionSound();
+    setShowWelcome(false);
+  };
+
+  // Manejar siguiente paso con sonido
+  const handleNext = () => {
+    playUiClick();
+    nextStep();
+  };
+
+  // Manejar paso anterior con sonido
+  const handleBack = () => {
+    playUiClick({ frequency: 440 });
+    prevStep();
+  };
+
+  // Manejar selección simple
+  const handleSingleSelect = (field: keyof typeof providerData, value: string) => {
+    playUiClick();
+    updateProviderData({ [field]: value });
+  };
+
+  // Manejar finalización del wizard
+  const handleComplete = async () => {
+    playSuccessSound();
+    setIsTransitioning(true);
+    
+    // Aquí se enviaría la data al backend
+    console.log('Provider wizard completed:', providerData);
+    
+    // Simular guardado y redirigir
+    setTimeout(() => {
+      router.push('/login');
+    }, 2000);
+  };
+
+  // Validaciones por paso
+  const isStep1Valid = 
+    providerData.email.includes('@') && 
+    providerData.password.length >= 6 && 
+    providerData.providerName.trim().length >= 2 &&
+    providerData.phone.length >= 8;
+  
+  const isStep2Valid = providerData.category.length > 0;
+  const isStep3Valid = providerData.serviceStyle.length > 0;
+  const isStep4Valid = providerData.priceRange.length > 0 && providerData.workRegion.length > 0;
+  const isStep5Valid = providerData.description.trim().length >= 20;
+  const isStep6Valid = true; // Redes sociales son opcionales
+
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>Registro de Proveedores</h1>
-      <p>Wizard paso a paso para proveedores (Próximamente)</p>
-    </div>
+    <main className={styles.main}>
+      <WizardContainer
+        showWelcome={showWelcome}
+        welcomeTitle="Únete como Proveedor"
+        welcomeSubtitle="Conecta con parejas que buscan exactamente tus servicios. Completa tu perfil y comienza a recibir leads cualificados."
+        onStartWizard={handleStartWizard}
+        startButtonText="Crear mi perfil"
+      >
+        {/* Paso 1: Datos básicos */}
+        <WizardStep
+          title="Datos de tu cuenta"
+          subtitle="Información básica para crear tu perfil de proveedor"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 0}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep1Valid}
+          showBack={false}
+        >
+          <div className={styles.formGrid}>
+            <WizardInput
+              label="Nombre del proveedor o empresa"
+              placeholder="Ej: Fotografía Elegante"
+              value={providerData.providerName}
+              onChange={(e) => updateProviderData({ providerName: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              }
+            />
+            <WizardInput
+              label="Correo electrónico"
+              type="email"
+              placeholder="tu@email.com"
+              value={providerData.email}
+              onChange={(e) => updateProviderData({ email: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              }
+            />
+            <div className={styles.passwordField}>
+              <WizardInput
+                label="Contraseña"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Mínimo 6 caracteres"
+                value={providerData.password}
+                onChange={(e) => updateProviderData({ password: e.target.value })}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={styles.passwordToggle}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            <WizardInput
+              label="Teléfono de contacto"
+              type="tel"
+              placeholder="+56 9 1234 5678"
+              value={providerData.phone}
+              onChange={(e) => updateProviderData({ phone: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              }
+            />
+          </div>
+        </WizardStep>
+
+        {/* Paso 2: Categoría */}
+        <WizardStep
+          title="¿Qué servicio ofreces?"
+          subtitle="Selecciona tu categoría principal"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 1}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep2Valid}
+        >
+          <SelectionGrid
+            options={PROVIDER_CATEGORIES}
+            selected={providerData.category}
+            onSelect={(id) => handleSingleSelect('category', id)}
+            columns={3}
+          />
+        </WizardStep>
+
+        {/* Paso 3: Estilo del servicio */}
+        <WizardStep
+          title="¿Cuál es tu estilo?"
+          subtitle="Define el estilo de tu trabajo"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 2}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep3Valid}
+        >
+          <SelectionGrid
+            options={SERVICE_STYLES}
+            selected={providerData.serviceStyle}
+            onSelect={(id) => handleSingleSelect('serviceStyle', id)}
+            columns={2}
+          />
+        </WizardStep>
+
+        {/* Paso 4: Precios y ubicación */}
+        <WizardStep
+          title="Precios y ubicación"
+          subtitle="Define tu rango de precios y zona de trabajo"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 3}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep4Valid}
+        >
+          <div className={styles.detailsSection}>
+            <div className={styles.fieldSection}>
+              <h3 className={styles.fieldTitle}>Rango de precios</h3>
+              <SelectionGrid
+                options={PRICE_RANGES_PROVIDER}
+                selected={providerData.priceRange}
+                onSelect={(id) => handleSingleSelect('priceRange', id)}
+                columns={2}
+                cardSize="small"
+              />
+            </div>
+
+            <div className={styles.fieldSection}>
+              <h3 className={styles.fieldTitle}>Región donde trabajas</h3>
+              <div className={styles.selectWrapper}>
+                <select
+                  value={providerData.workRegion}
+                  onChange={(e) => updateProviderData({ workRegion: e.target.value })}
+                  className={styles.select}
+                >
+                  <option value="">Selecciona una región</option>
+                  {REGIONS.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={providerData.acceptsOutsideZone}
+                onChange={(e) => updateProviderData({ acceptsOutsideZone: e.target.checked })}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxCustom} />
+              <span>Acepto trabajos fuera de mi zona</span>
+            </label>
+          </div>
+        </WizardStep>
+
+        {/* Paso 5: Descripción */}
+        <WizardStep
+          title="Cuéntanos sobre ti"
+          subtitle="Una breve descripción de tu servicio (mínimo 20 caracteres)"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 4}
+          onNext={handleNext}
+          onBack={handleBack}
+          nextDisabled={!isStep5Valid}
+        >
+          <div className={styles.textareaSection}>
+            <textarea
+              value={providerData.description}
+              onChange={(e) => updateProviderData({ description: e.target.value })}
+              placeholder="Describe tu servicio, experiencia, qué te hace único..."
+              className={styles.textarea}
+              rows={5}
+            />
+            <span className={styles.charCount}>
+              {providerData.description.length} caracteres
+            </span>
+          </div>
+        </WizardStep>
+
+        {/* Paso 6: Redes sociales y portfolio */}
+        <WizardStep
+          title="Redes sociales y portfolio"
+          subtitle="Opcional - Ayuda a los novios a conocerte mejor"
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isVisible={currentStep === 5}
+          onNext={handleComplete}
+          onBack={handleBack}
+          nextDisabled={!isStep6Valid}
+          nextLabel="Crear mi cuenta"
+          showSkip
+          onSkip={handleComplete}
+        >
+          <div className={styles.formGrid}>
+            <WizardInput
+              label="Sitio web"
+              type="url"
+              placeholder="https://tusitio.com"
+              value={providerData.website}
+              onChange={(e) => updateProviderData({ website: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              }
+            />
+            <WizardInput
+              label="Instagram"
+              placeholder="@tuusuario"
+              value={providerData.instagram}
+              onChange={(e) => updateProviderData({ instagram: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              }
+            />
+            <WizardInput
+              label="Facebook"
+              placeholder="facebook.com/tupagina"
+              value={providerData.facebook}
+              onChange={(e) => updateProviderData({ facebook: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              }
+            />
+            <WizardInput
+              label="TikTok"
+              placeholder="@tuusuario"
+              value={providerData.tiktok}
+              onChange={(e) => updateProviderData({ tiktok: e.target.value })}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                </svg>
+              }
+            />
+          </div>
+        </WizardStep>
+      </WizardContainer>
+
+      {/* Overlay de transición final */}
+      {isTransitioning && (
+        <div className={styles.completionOverlay}>
+          <div className={styles.completionContent}>
+            <div className={styles.completionIcon}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h2 className={styles.completionTitle}>¡Cuenta Creada!</h2>
+            <p className={styles.completionText}>Tu perfil está pendiente de aprobación</p>
+            <p className={styles.completionSubtext}>Te notificaremos cuando esté activo</p>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }
-
-

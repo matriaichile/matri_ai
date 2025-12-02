@@ -562,23 +562,54 @@
   height: 16px;
 }
 
-/* Link de registro */
-.registerLink {
+/* Links de registro */
+.registerLinks {
   text-align: center;
   margin-top: 1rem;
+}
+
+.registerLink {
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.registerOptions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 .registerLinkHighlight {
   color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .registerLinkHighlight:hover {
   color: var(--color-primary-light);
+  text-decoration: underline;
+}
+
+.registerDivider {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.registerLinkSecondary {
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.registerLinkSecondary:hover {
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
