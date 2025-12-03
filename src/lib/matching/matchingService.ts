@@ -1,19 +1,27 @@
 /**
- * Servicio de Matchmaking por Categoría
+ * Servicio de Matchmaking por Categoría - VERSIÓN AVANZADA
  * Matri.AI - Sistema de cálculo de compatibilidad entre usuarios y proveedores
  * 
  * Este servicio calcula el match score basándose en:
  * 1. Datos del wizard inicial (perfil general del usuario y proveedor)
  * 2. Respuestas de mini-encuestas por categoría
- * 3. Criterios de matching definidos para cada categoría
+ * 3. Criterios de matching EXPLÍCITOS definidos para cada categoría
  * 4. Pesos asignados a cada criterio
+ * 5. BONUS por especificidad del proveedor (proveedores nicho)
+ * 6. COBERTURA - qué tan bien el proveedor cubre las necesidades
  * 
- * El sistema combina información de ambas fuentes para generar un score más preciso.
+ * MEJORAS PRINCIPALES:
+ * - Criterios de matching explícitos por categoría (no automáticos)
+ * - Mejor comparación de rangos numéricos con strings
+ * - Sistema de especificidad: proveedores nicho obtienen bonus
+ * - Penalización suave para proveedores "hace todo" vs. especialistas
+ * - Lógica de contains mejorada con coincidencia exacta
+ * - Tipos de comparación "threshold" para preguntas de umbral
  */
 
 import { CategoryId } from '@/store/authStore';
 import { CATEGORY_SURVEYS } from '@/lib/surveys';
-import { MatchingCriterion, SurveyResponses, SurveyQuestion } from '@/lib/surveys/types';
+import { SurveyResponses, SurveyQuestion } from '@/lib/surveys/types';
 
 // ============================================
 // TIPOS PARA DATOS DEL WIZARD
@@ -43,6 +51,18 @@ export interface ProviderWizardProfile {
 // TIPOS PARA EL MATCHING
 // ============================================
 
+// Tipos de match disponibles
+type MatchType = 
+  | 'exact'              // Coincidencia exacta
+  | 'contains'           // Usuario multiple, proveedor multiple - % de cobertura
+  | 'range_overlap'      // Superposición de rangos (presupuesto)
+  | 'boolean_match'      // Si usuario necesita, proveedor debe ofrecer
+  | 'single_in_multiple' // Usuario elige uno, proveedor ofrece varios
+  | 'preference_match'   // Mapeo de preferencias a scores
+  | 'threshold_at_least' // Proveedor debe ofrecer AL MENOS lo que usuario pide (ej: horas, fotos)
+  | 'threshold_at_most'  // Proveedor debe poder entregar ANTES/MENOS de lo que usuario pide (ej: tiempo entrega)
+  | 'threshold_can_accommodate'; // Proveedor debe poder acomodar lo que usuario necesita (ej: capacidad)
+
 // Tipos para el resultado del matching
 export interface MatchResult {
   providerId: string;
@@ -50,7 +70,9 @@ export interface MatchResult {
   category: CategoryId;
   matchScore: number;
   matchDetails: MatchDetail[];
-  wizardMatchDetails?: WizardMatchDetail[]; // Detalles del match basado en wizard
+  wizardMatchDetails?: WizardMatchDetail[];
+  specificityBonus: number; // Bonus por ser especialista
+  coverageScore: number; // Qué tan bien cubre las necesidades
   createdAt: Date;
 }
 
@@ -62,7 +84,8 @@ export interface MatchDetail {
   providerValue: string | string[] | number | boolean | undefined;
   score: number;
   weight: number;
-  matchType: 'exact' | 'contains' | 'range_overlap' | 'boolean_match';
+  matchType: MatchType;
+  explanation?: string; // Explicación legible del match
 }
 
 // Detalles del match basado en datos del wizard
@@ -74,43 +97,869 @@ export interface WizardMatchDetail {
   weight: number;
 }
 
+// ============================================
+// CRITERIOS DE MATCHING EXPLÍCITOS POR CATEGORÍA
+// ============================================
+
+interface ExplicitMatchCriterion {
+  userQuestionId: string;
+  providerQuestionId: string;
+  providerQuestionIdMax?: string; // Para rangos con min/max
+  weight: number;
+  matchType: MatchType;
+  // Para rangos numéricos, mapeo de opciones del usuario a valores
+  userRangeMapping?: Record<string, { min: number; max: number }>;
+  // Para mapeos ordenados (tiempo de entrega, horarios)
+  orderedMapping?: Record<string, number>; // Mapea opciones a valores numéricos para comparar
+  // Para preference_match (required/preferred/not_needed vs boolean/options)
+  preferenceMapping?: Record<string, number>; // Mapea respuestas del proveedor a scores
+}
+
+// ============================================
+// MAPEOS DE TIEMPO DE ENTREGA (ordenados de más rápido a más lento)
+// ============================================
+const DELIVERY_TIME_ORDER: Record<string, number> = {
+  '2_weeks': 14,
+  '1_month': 30,
+  '2_months': 60,
+  '3_months': 90,
+  '6_months': 180,
+  'flexible': 365, // Flexible significa que acepta cualquier tiempo
+};
+
+// Mapeo de horarios de término (ordenados de más temprano a más tarde)
+const END_TIME_ORDER: Record<string, number> = {
+  'midnight': 0,
+  '2am': 2,
+  '4am': 4,
+  'sunrise': 6,
+  'flexible': 24, // Flexible significa que puede ser cualquier hora
+};
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA FOTOGRAFÍA
+// ============================================
+const PHOTOGRAPHY_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    // Estilo: usuario elige uno, proveedor ofrece múltiples
+    userQuestionId: 'photo_u_style',
+    providerQuestionId: 'photo_p_styles',
+    weight: 25,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Horas: usuario necesita X horas, proveedor debe poder ofrecer AL MENOS esas horas
+    // Si usuario quiere 8h y proveedor ofrece hasta 12h → PERFECTO
+    userQuestionId: 'photo_u_hours',
+    providerQuestionId: 'photo_p_hours_min',
+    providerQuestionIdMax: 'photo_p_hours_max',
+    weight: 15,
+    matchType: 'threshold_can_accommodate',
+    userRangeMapping: {
+      '4': { min: 4, max: 4 },
+      '6': { min: 6, max: 6 },
+      '8': { min: 8, max: 8 },
+      '10': { min: 10, max: 10 },
+      'full_day': { min: 12, max: 24 },
+    },
+  },
+  {
+    // Presupuesto: superposición de rangos
+    userQuestionId: 'photo_u_budget',
+    providerQuestionId: 'photo_p_price_min',
+    providerQuestionIdMax: 'photo_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_500k': { min: 0, max: 500000 },
+      '500k_800k': { min: 500000, max: 800000 },
+      '800k_1200k': { min: 800000, max: 1200000 },
+      '1200k_1800k': { min: 1200000, max: 1800000 },
+      'over_1800k': { min: 1800000, max: 10000000 },
+    },
+  },
+  {
+    // Pre-boda: boolean match
+    userQuestionId: 'photo_u_preboda',
+    providerQuestionId: 'photo_p_preboda',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Post-boda: boolean match
+    userQuestionId: 'photo_u_postboda',
+    providerQuestionId: 'photo_p_postboda',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Segundo fotógrafo: preference match
+    userQuestionId: 'photo_u_second_shooter',
+    providerQuestionId: 'photo_p_second_shooter',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 1.0,
+      'extra_cost': 0.8,
+      'included': 1.0,
+      'always': 1.0,
+    },
+  },
+  {
+    // Tiempo de entrega: proveedor debe entregar ANTES O IGUAL de cuando el usuario lo necesita
+    // Si usuario quiere en 2 meses y proveedor entrega en 2 semanas → PERFECTO
+    userQuestionId: 'photo_u_delivery_time',
+    providerQuestionId: 'photo_p_delivery_time',
+    weight: 5,
+    matchType: 'threshold_at_most',
+    orderedMapping: DELIVERY_TIME_ORDER,
+  },
+  {
+    // Formato de entrega: múltiple vs múltiple
+    userQuestionId: 'photo_u_delivery_format',
+    providerQuestionId: 'photo_p_delivery_formats',
+    weight: 5,
+    matchType: 'contains',
+  },
+  {
+    // Cantidad de fotos: proveedor debe poder entregar AL MENOS lo que el usuario quiere
+    // Si usuario quiere 400 y proveedor entrega hasta 800 → PERFECTO
+    userQuestionId: 'photo_u_photo_count',
+    providerQuestionId: 'photo_p_photo_count_min',
+    providerQuestionIdMax: 'photo_p_photo_count_max',
+    weight: 5,
+    matchType: 'threshold_at_least',
+    userRangeMapping: {
+      'under_200': { min: 100, max: 200 },
+      '200_400': { min: 200, max: 400 },
+      '400_600': { min: 400, max: 600 },
+      'over_600': { min: 600, max: 2000 },
+      'unlimited': { min: 500, max: 10000 }, // "Sin límite" = quiere muchas fotos
+    },
+  },
+  {
+    // Nivel de retoque
+    userQuestionId: 'photo_u_retouching',
+    providerQuestionId: 'photo_p_retouching_levels',
+    weight: 5,
+    matchType: 'single_in_multiple',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA VIDEO
+// ============================================
+const VIDEO_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    userQuestionId: 'video_u_style',
+    providerQuestionId: 'video_p_styles',
+    weight: 25,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'video_u_duration',
+    providerQuestionId: 'video_p_durations',
+    weight: 15,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'video_u_budget',
+    providerQuestionId: 'video_p_price_min',
+    providerQuestionIdMax: 'video_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_600k': { min: 0, max: 600000 },
+      '600k_1000k': { min: 600000, max: 1000000 },
+      '1000k_1500k': { min: 1000000, max: 1500000 },
+      '1500k_2500k': { min: 1500000, max: 2500000 },
+      'over_2500k': { min: 2500000, max: 10000000 },
+    },
+  },
+  {
+    // Horas de cobertura: proveedor debe poder ofrecer AL MENOS las horas que el usuario necesita
+    userQuestionId: 'video_u_hours',
+    providerQuestionId: 'video_p_hours_min',
+    providerQuestionIdMax: 'video_p_hours_max',
+    weight: 10,
+    matchType: 'threshold_can_accommodate',
+    userRangeMapping: {
+      '4': { min: 4, max: 4 },
+      '6': { min: 6, max: 6 },
+      '8': { min: 8, max: 8 },
+      '10': { min: 10, max: 10 },
+      'full_day': { min: 12, max: 24 },
+    },
+  },
+  {
+    userQuestionId: 'video_u_second_camera',
+    providerQuestionId: 'video_p_second_camera',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 0.5,
+      'extra_cost': 0.8,
+      'included': 1.0,
+      'always': 1.0,
+    },
+  },
+  {
+    userQuestionId: 'video_u_drone',
+    providerQuestionId: 'video_p_drone',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 0.3,
+      'extra_cost': 0.8,
+      'included': 1.0,
+    },
+  },
+  {
+    userQuestionId: 'video_u_same_day_edit',
+    providerQuestionId: 'video_p_same_day_edit',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'video_u_raw_footage',
+    providerQuestionId: 'video_p_raw_footage',
+    weight: 3,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 0.5,
+      'extra_cost': 0.8,
+      'included': 1.0,
+    },
+  },
+  {
+    userQuestionId: 'video_u_social_reel',
+    providerQuestionId: 'video_p_social_reel',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 0.3,
+      'extra_cost': 0.8,
+      'included': 1.0,
+    },
+  },
+  {
+    // Tiempo de entrega: proveedor debe entregar ANTES O IGUAL
+    userQuestionId: 'video_u_delivery_time',
+    providerQuestionId: 'video_p_delivery_time',
+    weight: 5,
+    matchType: 'threshold_at_most',
+    orderedMapping: DELIVERY_TIME_ORDER,
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA DJ
+// ============================================
+const DJ_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    // Géneros musicales: múltiple vs múltiple
+    userQuestionId: 'dj_u_genres',
+    providerQuestionId: 'dj_p_genres',
+    weight: 25,
+    matchType: 'contains',
+  },
+  {
+    // Estilo de fiesta
+    userQuestionId: 'dj_u_style',
+    providerQuestionId: 'dj_p_styles',
+    weight: 15,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Presupuesto
+    userQuestionId: 'dj_u_budget',
+    providerQuestionId: 'dj_p_price_min',
+    providerQuestionIdMax: 'dj_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_400k': { min: 0, max: 400000 },
+      '400k_600k': { min: 400000, max: 600000 },
+      '600k_900k': { min: 600000, max: 900000 },
+      '900k_1400k': { min: 900000, max: 1400000 },
+      'over_1400k': { min: 1400000, max: 5000000 },
+    },
+  },
+  {
+    // Horas de servicio: proveedor debe poder ofrecer AL MENOS las horas que el usuario necesita
+    userQuestionId: 'dj_u_hours',
+    providerQuestionId: 'dj_p_hours_min',
+    providerQuestionIdMax: 'dj_p_hours_max',
+    weight: 10,
+    matchType: 'threshold_can_accommodate',
+    userRangeMapping: {
+      '3': { min: 3, max: 3 },
+      '4': { min: 4, max: 4 },
+      '5': { min: 5, max: 5 },
+      '6': { min: 6, max: 6 },
+      'unlimited': { min: 6, max: 12 },
+    },
+  },
+  {
+    // Música para ceremonia
+    userQuestionId: 'dj_u_ceremony_music',
+    providerQuestionId: 'dj_p_ceremony_music',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Música para cóctel
+    userQuestionId: 'dj_u_cocktail_music',
+    providerQuestionId: 'dj_p_cocktail_music',
+    weight: 3,
+    matchType: 'boolean_match',
+  },
+  {
+    // Nivel de animación
+    userQuestionId: 'dj_u_mc',
+    providerQuestionId: 'dj_p_mc_levels',
+    weight: 10,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Nivel de iluminación
+    userQuestionId: 'dj_u_lighting',
+    providerQuestionId: 'dj_p_lighting_levels',
+    weight: 5,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Efectos especiales
+    userQuestionId: 'dj_u_effects',
+    providerQuestionId: 'dj_p_effects',
+    weight: 3,
+    matchType: 'contains',
+  },
+  {
+    // Karaoke
+    userQuestionId: 'dj_u_karaoke',
+    providerQuestionId: 'dj_p_karaoke',
+    weight: 2,
+    matchType: 'boolean_match',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA BANQUETERÍA
+// ============================================
+const CATERING_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    // Tipo de servicio
+    userQuestionId: 'catering_u_service_type',
+    providerQuestionId: 'catering_p_service_types',
+    weight: 20,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Tipo de cocina
+    userQuestionId: 'catering_u_cuisine',
+    providerQuestionId: 'catering_p_cuisines',
+    weight: 15,
+    matchType: 'contains',
+  },
+  {
+    // Presupuesto por persona
+    userQuestionId: 'catering_u_budget_pp',
+    providerQuestionId: 'catering_p_price_pp_min',
+    providerQuestionIdMax: 'catering_p_price_pp_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_25k': { min: 0, max: 25000 },
+      '25k_35k': { min: 25000, max: 35000 },
+      '35k_50k': { min: 35000, max: 50000 },
+      '50k_70k': { min: 50000, max: 70000 },
+      'over_70k': { min: 70000, max: 200000 },
+    },
+  },
+  {
+    // Cantidad de invitados: proveedor debe poder ACOMODAR la cantidad que el usuario tiene
+    // Si usuario tiene 150 invitados y proveedor atiende 50-500 → PERFECTO
+    userQuestionId: 'catering_u_guest_count',
+    providerQuestionId: 'catering_p_guests_min',
+    providerQuestionIdMax: 'catering_p_guests_max',
+    weight: 10,
+    matchType: 'threshold_can_accommodate',
+    userRangeMapping: {
+      'under_50': { min: 30, max: 50 },
+      '50_100': { min: 50, max: 100 },
+      '100_150': { min: 100, max: 150 },
+      '150_200': { min: 150, max: 200 },
+      '200_300': { min: 200, max: 300 },
+      'over_300': { min: 300, max: 1000 },
+    },
+  },
+  {
+    // Tiempos de comida
+    userQuestionId: 'catering_u_courses',
+    providerQuestionId: 'catering_p_courses',
+    weight: 5,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Cóctel
+    userQuestionId: 'catering_u_cocktail',
+    providerQuestionId: 'catering_p_cocktail',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Opciones dietéticas
+    userQuestionId: 'catering_u_dietary',
+    providerQuestionId: 'catering_p_dietary',
+    weight: 5,
+    matchType: 'contains',
+  },
+  {
+    // Bebestibles
+    userQuestionId: 'catering_u_beverages',
+    providerQuestionId: 'catering_p_beverages',
+    weight: 5,
+    matchType: 'contains',
+  },
+  {
+    // Degustación
+    userQuestionId: 'catering_u_tasting',
+    providerQuestionId: 'catering_p_tasting',
+    weight: 3,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'yes_free': 1.0,
+      'yes_paid': 0.7,
+      'no': 0.3,
+    },
+  },
+  {
+    // Torta
+    userQuestionId: 'catering_u_cake',
+    providerQuestionId: 'catering_p_cake',
+    weight: 5,
+    matchType: 'exact',
+  },
+  {
+    // Nivel de servicio
+    userQuestionId: 'catering_u_staff',
+    providerQuestionId: 'catering_p_staff_levels',
+    weight: 5,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Montaje de mesas
+    userQuestionId: 'catering_u_setup',
+    providerQuestionId: 'catering_p_setup',
+    weight: 2,
+    matchType: 'boolean_match',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA VENUE
+// ============================================
+const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    // Tipo de lugar
+    userQuestionId: 'venue_u_type',
+    providerQuestionId: 'venue_p_type',
+    weight: 20,
+    matchType: 'exact',
+  },
+  {
+    // Interior/Exterior
+    userQuestionId: 'venue_u_setting',
+    providerQuestionId: 'venue_p_settings',
+    weight: 15,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Presupuesto
+    userQuestionId: 'venue_u_budget',
+    providerQuestionId: 'venue_p_price_min',
+    providerQuestionIdMax: 'venue_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_1m': { min: 0, max: 1000000 },
+      '1m_2m': { min: 1000000, max: 2000000 },
+      '2m_4m': { min: 2000000, max: 4000000 },
+      '4m_7m': { min: 4000000, max: 7000000 },
+      'over_7m': { min: 7000000, max: 20000000 },
+    },
+  },
+  {
+    // Capacidad: venue debe poder ACOMODAR la cantidad de invitados
+    userQuestionId: 'venue_u_capacity',
+    providerQuestionId: 'venue_p_capacity_min',
+    providerQuestionIdMax: 'venue_p_capacity_max',
+    weight: 15,
+    matchType: 'threshold_can_accommodate',
+    userRangeMapping: {
+      'under_50': { min: 30, max: 50 },
+      '50_100': { min: 50, max: 100 },
+      '100_150': { min: 100, max: 150 },
+      '150_200': { min: 150, max: 200 },
+      '200_300': { min: 200, max: 300 },
+      'over_300': { min: 300, max: 1000 },
+    },
+  },
+  {
+    // Exclusividad
+    userQuestionId: 'venue_u_exclusivity',
+    providerQuestionId: 'venue_p_exclusivity',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'true': 1.0,
+      'false': 0.0,
+    },
+  },
+  {
+    // Espacio para ceremonia
+    userQuestionId: 'venue_u_ceremony_space',
+    providerQuestionId: 'venue_p_ceremony_space',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Estacionamiento
+    userQuestionId: 'venue_u_parking',
+    providerQuestionId: 'venue_p_parking',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'yes_free': 1.0,
+      'yes_paid': 0.8,
+      'valet': 0.9,
+      'no': 0.0,
+    },
+  },
+  {
+    // Alojamiento
+    userQuestionId: 'venue_u_accommodation',
+    providerQuestionId: 'venue_p_accommodation',
+    weight: 3,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'yes': 1.0,
+      'nearby': 0.7,
+      'no': 0.0,
+    },
+  },
+  {
+    // Política de catering
+    userQuestionId: 'venue_u_catering_policy',
+    providerQuestionId: 'venue_p_catering_policy',
+    weight: 5,
+    matchType: 'exact',
+  },
+  {
+    // Horario de término: venue debe permitir HASTA O MÁS TARDE de lo que el usuario necesita
+    // Si usuario quiere hasta 2am y venue permite hasta 4am → PERFECTO
+    userQuestionId: 'venue_u_end_time',
+    providerQuestionId: 'venue_p_end_time',
+    weight: 5,
+    matchType: 'threshold_at_least',
+    orderedMapping: END_TIME_ORDER,
+  },
+  {
+    // Accesibilidad
+    userQuestionId: 'venue_u_accessibility',
+    providerQuestionId: 'venue_p_accessibility',
+    weight: 2,
+    matchType: 'boolean_match',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA DECORACIÓN
+// ============================================
+const DECORATION_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    userQuestionId: 'deco_u_style',
+    providerQuestionId: 'deco_p_styles',
+    weight: 25,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'deco_u_colors',
+    providerQuestionId: 'deco_p_color_expertise',
+    weight: 15,
+    matchType: 'contains',
+  },
+  {
+    userQuestionId: 'deco_u_budget',
+    providerQuestionId: 'deco_p_price_min',
+    providerQuestionIdMax: 'deco_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_500k': { min: 0, max: 500000 },
+      '500k_1m': { min: 500000, max: 1000000 },
+      '1m_2m': { min: 1000000, max: 2000000 },
+      '2m_4m': { min: 2000000, max: 4000000 },
+      'over_4m': { min: 4000000, max: 20000000 },
+    },
+  },
+  {
+    userQuestionId: 'deco_u_flowers',
+    providerQuestionId: 'deco_p_flower_types',
+    weight: 10,
+    matchType: 'contains',
+  },
+  {
+    userQuestionId: 'deco_u_bridal_bouquet',
+    providerQuestionId: 'deco_p_bridal_bouquet',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'deco_u_ceremony_deco',
+    providerQuestionId: 'deco_p_ceremony_deco',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'deco_u_table_centerpieces',
+    providerQuestionId: 'deco_p_centerpiece_types',
+    weight: 5,
+    matchType: 'single_in_multiple',
+  },
+  {
+    // Cantidad de mesas: proveedor debe poder decorar AL MENOS las mesas que el usuario tiene
+    userQuestionId: 'deco_u_table_count',
+    providerQuestionId: 'deco_p_table_capacity',
+    weight: 5,
+    matchType: 'threshold_at_least',
+    userRangeMapping: {
+      'under_10': { min: 5, max: 10 },
+      '10_20': { min: 10, max: 20 },
+      '20_30': { min: 20, max: 30 },
+      'over_30': { min: 30, max: 100 },
+    },
+  },
+  {
+    userQuestionId: 'deco_u_extras',
+    providerQuestionId: 'deco_p_extras',
+    weight: 5,
+    matchType: 'contains',
+  },
+  {
+    userQuestionId: 'deco_u_rental',
+    providerQuestionId: 'deco_p_rental',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA WEDDING PLANNER
+// ============================================
+const WEDDING_PLANNER_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    userQuestionId: 'wp_u_service_level',
+    providerQuestionId: 'wp_p_service_levels',
+    weight: 25,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'wp_u_budget',
+    providerQuestionId: 'wp_p_price_min',
+    providerQuestionIdMax: 'wp_p_price_max',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_500k': { min: 0, max: 500000 },
+      '500k_1m': { min: 500000, max: 1000000 },
+      '1m_2m': { min: 1000000, max: 2000000 },
+      '2m_4m': { min: 2000000, max: 4000000 },
+      'over_4m': { min: 4000000, max: 20000000 },
+    },
+  },
+  {
+    userQuestionId: 'wp_u_vendor_help',
+    providerQuestionId: 'wp_p_vendor_network',
+    weight: 15,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'extensive': 1.0,
+      'moderate': 0.7,
+      'limited': 0.4,
+    },
+  },
+  {
+    userQuestionId: 'wp_u_design_help',
+    providerQuestionId: 'wp_p_design_services',
+    weight: 10,
+    matchType: 'contains',
+  },
+  {
+    userQuestionId: 'wp_u_budget_management',
+    providerQuestionId: 'wp_p_budget_management',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'wp_u_timeline_management',
+    providerQuestionId: 'wp_p_timeline_management',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'wp_u_guest_management',
+    providerQuestionId: 'wp_p_guest_management',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'wp_u_rehearsal',
+    providerQuestionId: 'wp_p_rehearsal',
+    weight: 3,
+    matchType: 'boolean_match',
+  },
+];
+
+// ============================================
+// CRITERIOS EXPLÍCITOS PARA MAQUILLAJE
+// ============================================
+const MAKEUP_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
+  {
+    userQuestionId: 'makeup_u_style',
+    providerQuestionId: 'makeup_p_styles',
+    weight: 25,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'makeup_u_budget',
+    providerQuestionId: 'makeup_p_price_bride',
+    weight: 20,
+    matchType: 'range_overlap',
+    userRangeMapping: {
+      'under_100k': { min: 0, max: 100000 },
+      '100k_200k': { min: 100000, max: 200000 },
+      '200k_350k': { min: 200000, max: 350000 },
+      'over_350k': { min: 350000, max: 1000000 },
+    },
+  },
+  {
+    userQuestionId: 'makeup_u_trial',
+    providerQuestionId: 'makeup_p_trial',
+    weight: 10,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'yes_free': 1.0,
+      'yes_paid': 0.7,
+      'no': 0.2,
+    },
+  },
+  {
+    userQuestionId: 'makeup_u_hair',
+    providerQuestionId: 'makeup_p_hair',
+    weight: 15,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'makeup_u_hair_style',
+    providerQuestionId: 'makeup_p_hair_styles',
+    weight: 10,
+    matchType: 'single_in_multiple',
+  },
+  {
+    userQuestionId: 'makeup_u_extensions',
+    providerQuestionId: 'makeup_p_extensions',
+    weight: 3,
+    matchType: 'boolean_match',
+  },
+  {
+    userQuestionId: 'makeup_u_lashes',
+    providerQuestionId: 'makeup_p_lashes',
+    weight: 5,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'no': 0.5,
+      'natural': 0.8,
+      'dramatic': 0.8,
+      'both': 1.0,
+    },
+  },
+  {
+    userQuestionId: 'makeup_u_touch_ups',
+    providerQuestionId: 'makeup_p_touch_ups',
+    weight: 4,
+    matchType: 'exact',
+  },
+  {
+    // Cantidad de personas: proveedor debe poder atender AL MENOS las personas que el usuario necesita
+    userQuestionId: 'makeup_u_bridesmaids',
+    providerQuestionId: 'makeup_p_max_clients',
+    weight: 5,
+    matchType: 'threshold_at_least',
+    userRangeMapping: {
+      'no': { min: 1, max: 1 },
+      'some': { min: 2, max: 5 },
+      'full': { min: 5, max: 15 },
+    },
+  },
+];
+
+// Mapa de criterios por categoría
+const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, ExplicitMatchCriterion[]> = {
+  photography: PHOTOGRAPHY_MATCHING_CRITERIA,
+  video: VIDEO_MATCHING_CRITERIA,
+  dj: DJ_MATCHING_CRITERIA,
+  catering: CATERING_MATCHING_CRITERIA,
+  venue: VENUE_MATCHING_CRITERIA,
+  decoration: DECORATION_MATCHING_CRITERIA,
+  wedding_planner: WEDDING_PLANNER_MATCHING_CRITERIA,
+  makeup: MAKEUP_MATCHING_CRITERIA,
+};
+
+// ============================================
+// FUNCIONES DE CÁLCULO DE MATCH
+// ============================================
+
 /**
  * Calcula el score de matching entre un usuario y un proveedor para una categoría específica
- * 
- * @param userResponses - Respuestas de la encuesta del usuario
- * @param providerResponses - Respuestas de la encuesta del proveedor
- * @param category - Categoría del servicio
- * @returns Score de matching (0-100) y detalles del cálculo
+ * VERSIÓN MEJORADA con criterios explícitos y sistema de especificidad
  */
 export function calculateMatchScore(
   userResponses: SurveyResponses,
   providerResponses: SurveyResponses,
   category: CategoryId
-): { score: number; details: MatchDetail[] } {
-  const surveyConfig = CATEGORY_SURVEYS[category];
+): { score: number; details: MatchDetail[]; specificityBonus: number; coverageScore: number } {
+  const criteria = CATEGORY_MATCHING_CRITERIA[category];
   
-  if (!surveyConfig) {
-    console.warn(`No se encontró configuración de encuesta para la categoría: ${category}`);
-    return { score: 0, details: [] };
+  if (!criteria || criteria.length === 0) {
+    console.warn(`No se encontraron criterios de matching para: ${category}, usando fallback`);
+    return calculateMatchScoreFallback(userResponses, providerResponses, category);
   }
-
-  // Si hay criterios de matching definidos, usarlos
-  // Si no, generar criterios automáticos basados en las preguntas
-  const matchingCriteria = surveyConfig.matchingCriteria || 
-    generateDefaultMatchingCriteria(surveyConfig.userQuestions, surveyConfig.providerQuestions);
 
   const details: MatchDetail[] = [];
   let totalWeight = 0;
   let weightedScore = 0;
+  let matchedCriteria = 0;
+  let totalCriteria = 0;
 
-  for (const criterion of matchingCriteria) {
+  // Calcular especificidad del proveedor (qué tan "nicho" es)
+  const specificityScore = calculateProviderSpecificity(providerResponses, category);
+
+  for (const criterion of criteria) {
     const userValue = userResponses[criterion.userQuestionId];
     const providerValue = providerResponses[criterion.providerQuestionId];
     
-    const criterionScore = calculateCriterionScore(
+    // Obtener también el valor máximo si es un rango
+    const providerMaxValue = criterion.providerQuestionIdMax 
+      ? providerResponses[criterion.providerQuestionIdMax]
+      : undefined;
+
+    const { score, explanation } = calculateCriterionScoreAdvanced(
       userValue,
       providerValue,
-      criterion.matchingLogic
+      providerMaxValue,
+      criterion
     );
 
     details.push({
@@ -119,273 +968,508 @@ export function calculateMatchScore(
       providerQuestionId: criterion.providerQuestionId,
       userValue,
       providerValue,
-      score: criterionScore,
+      score,
       weight: criterion.weight,
-      matchType: criterion.matchingLogic,
+      matchType: criterion.matchType,
+      explanation,
     });
 
     totalWeight += criterion.weight;
-    weightedScore += criterionScore * criterion.weight;
+    weightedScore += score * criterion.weight;
+    totalCriteria++;
+    if (score >= 0.7) matchedCriteria++;
   }
 
-  // Calcular score final (0-100)
-  const finalScore = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
-
-  return { score: finalScore, details };
-}
-
-/**
- * Genera criterios de matching automáticos basados en las preguntas
- * Intenta emparejar preguntas de usuario con preguntas de proveedor que tengan IDs similares
- */
-function generateDefaultMatchingCriteria(
-  userQuestions: SurveyQuestion[],
-  providerQuestions: SurveyQuestion[]
-): MatchingCriterion[] {
-  const criteria: MatchingCriterion[] = [];
+  // Score base (0-100)
+  const baseScore = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
   
-  for (const userQ of userQuestions) {
-    // Buscar pregunta de proveedor con ID similar o relacionado
-    const providerQ = providerQuestions.find(pQ => {
-      // Intentar match por ID similar (ej: user_style -> provider_style)
-      const userBase = userQ.id.replace(/^user_/, '').replace(/^u_/, '');
-      const providerBase = pQ.id.replace(/^provider_/, '').replace(/^p_/, '');
-      return userBase === providerBase || 
-             userQ.id.includes(providerBase) || 
-             pQ.id.includes(userBase);
-    });
+  // Cobertura: qué porcentaje de criterios importantes matchean bien
+  const coverageScore = totalCriteria > 0 ? (matchedCriteria / totalCriteria) * 100 : 0;
+  
+  // Bonus por especificidad (máximo +10 puntos para proveedores muy especializados)
+  const specificityBonus = Math.round(specificityScore * 10);
+  
+  // Score final: base + bonus de especificidad, máximo 100
+  const finalScore = Math.min(100, Math.round(baseScore + specificityBonus));
 
-    if (providerQ) {
-      // Determinar lógica de matching basada en el tipo de pregunta
-      let matchingLogic: 'exact' | 'contains' | 'range_overlap' | 'boolean_match' = 'contains';
-      
-      if (userQ.type === 'boolean' || providerQ.type === 'boolean') {
-        matchingLogic = 'boolean_match';
-      } else if (userQ.type === 'range' || userQ.type === 'number' || 
-                 providerQ.type === 'range' || providerQ.type === 'number') {
-        matchingLogic = 'range_overlap';
-      } else if (userQ.type === 'single' && providerQ.type === 'single') {
-        matchingLogic = 'exact';
-      }
-
-      criteria.push({
-        userQuestionId: userQ.id,
-        providerQuestionId: providerQ.id,
-        weight: userQ.weight || 50,
-        matchingLogic,
-      });
-    }
-  }
-
-  // Si no se encontraron matches, crear criterios básicos
-  if (criteria.length === 0) {
-    // Emparejar por índice
-    const minLength = Math.min(userQuestions.length, providerQuestions.length);
-    for (let i = 0; i < minLength; i++) {
-      criteria.push({
-        userQuestionId: userQuestions[i].id,
-        providerQuestionId: providerQuestions[i].id,
-        weight: userQuestions[i].weight || 50,
-        matchingLogic: 'contains',
-      });
-    }
-  }
-
-  return criteria;
+  return { 
+    score: finalScore, 
+    details, 
+    specificityBonus,
+    coverageScore 
+  };
 }
 
 /**
- * Calcula el score para un criterio individual
- * 
- * @param userValue - Valor de la respuesta del usuario
- * @param providerValue - Valor de la respuesta del proveedor
- * @param matchingLogic - Tipo de lógica de matching a aplicar
- * @returns Score del criterio (0-1)
+ * Calcula qué tan especializado/nicho es un proveedor
  */
-function calculateCriterionScore(
+function calculateProviderSpecificity(
+  providerResponses: SurveyResponses,
+  category: CategoryId
+): number {
+  const surveyConfig = CATEGORY_SURVEYS[category];
+  if (!surveyConfig) return 0.5;
+
+  let totalMultipleQuestions = 0;
+  let totalSpecificityScore = 0;
+
+  for (const question of surveyConfig.providerQuestions) {
+    if (question.type === 'multiple' && question.options) {
+      totalMultipleQuestions++;
+      const response = providerResponses[question.id];
+      
+      if (Array.isArray(response)) {
+        const totalOptions = question.options.length;
+        const selectedOptions = response.length;
+        
+        const rawSpecificity = 1 - (selectedOptions / totalOptions);
+        const adjustedSpecificity = Math.pow(rawSpecificity, 0.7);
+        totalSpecificityScore += adjustedSpecificity;
+      }
+    }
+  }
+
+  if (totalMultipleQuestions === 0) return 0.5;
+  
+  return totalSpecificityScore / totalMultipleQuestions;
+}
+
+/**
+ * Calcula el score para un criterio individual - VERSIÓN AVANZADA
+ */
+function calculateCriterionScoreAdvanced(
   userValue: string | string[] | number | boolean | undefined,
   providerValue: string | string[] | number | boolean | undefined,
-  matchingLogic: 'exact' | 'contains' | 'range_overlap' | 'boolean_match'
-): number {
-  // Si alguno de los valores no existe, score parcial
-  if (userValue === undefined || providerValue === undefined) {
-    return 0.5; // Score neutral si falta información
+  providerMaxValue: string | string[] | number | boolean | undefined,
+  criterion: ExplicitMatchCriterion
+): { score: number; explanation: string } {
+  // Si falta el valor del usuario, score neutral
+  if (userValue === undefined || userValue === null) {
+    return { score: 0.5, explanation: 'Usuario no respondió esta pregunta' };
   }
 
-  switch (matchingLogic) {
+  // Si falta el valor del proveedor, penalización
+  if (providerValue === undefined || providerValue === null) {
+    return { score: 0.3, explanation: 'Proveedor no respondió esta pregunta' };
+  }
+
+  switch (criterion.matchType) {
     case 'exact':
-      return calculateExactMatch(userValue, providerValue);
+      return calculateExactMatchAdvanced(userValue, providerValue);
+    
+    case 'single_in_multiple':
+      return calculateSingleInMultiple(userValue, providerValue);
     
     case 'contains':
-      return calculateContainsMatch(userValue, providerValue);
+      return calculateContainsMatchAdvanced(userValue, providerValue);
     
     case 'range_overlap':
-      return calculateRangeOverlap(userValue, providerValue);
+      return calculateRangeOverlapAdvanced(
+        userValue, 
+        providerValue, 
+        providerMaxValue,
+        criterion.userRangeMapping
+      );
     
     case 'boolean_match':
-      return calculateBooleanMatch(userValue, providerValue);
+      return calculateBooleanMatchAdvanced(userValue, providerValue);
+    
+    case 'preference_match':
+      return calculatePreferenceMatch(userValue, providerValue, criterion.preferenceMapping);
+    
+    case 'threshold_at_least':
+      return calculateThresholdAtLeast(
+        userValue,
+        providerValue,
+        providerMaxValue,
+        criterion.userRangeMapping,
+        criterion.orderedMapping
+      );
+    
+    case 'threshold_at_most':
+      return calculateThresholdAtMost(
+        userValue,
+        providerValue,
+        criterion.orderedMapping
+      );
+    
+    case 'threshold_can_accommodate':
+      return calculateThresholdCanAccommodate(
+        userValue,
+        providerValue,
+        providerMaxValue,
+        criterion.userRangeMapping
+      );
     
     default:
-      return 0.5;
+      return { score: 0.5, explanation: 'Tipo de match no reconocido' };
   }
 }
 
 /**
- * Match exacto - ambos valores deben ser iguales
+ * THRESHOLD_AT_LEAST: El proveedor debe ofrecer AL MENOS lo que el usuario necesita
+ * Ejemplos: cantidad de fotos, capacidad de mesas, horario de término del venue
+ * Si proveedor ofrece MÁS de lo que el usuario necesita → PERFECTO
  */
-function calculateExactMatch(
+function calculateThresholdAtLeast(
   userValue: string | string[] | number | boolean,
-  providerValue: string | string[] | number | boolean
-): number {
-  // Si ambos son arrays, verificar si hay coincidencia
-  if (Array.isArray(userValue) && Array.isArray(providerValue)) {
-    const intersection = userValue.filter(v => providerValue.includes(v));
-    const union = [...new Set([...userValue, ...providerValue])];
-    return union.length > 0 ? intersection.length / union.length : 0;
+  providerValue: string | string[] | number | boolean,
+  providerMaxValue: string | string[] | number | boolean | undefined,
+  userRangeMapping?: Record<string, { min: number; max: number }>,
+  orderedMapping?: Record<string, number>
+): { score: number; explanation: string } {
+  
+  // Si hay orderedMapping, usar ese (para horarios, etc.)
+  if (orderedMapping) {
+    const userOrder = orderedMapping[String(userValue)] ?? 0;
+    const providerOrder = orderedMapping[String(providerValue)] ?? 0;
+    
+    // Si proveedor ofrece igual o más (ej: venue hasta 4am, usuario quiere hasta 2am)
+    if (providerOrder >= userOrder) {
+      return { score: 1.0, explanation: 'El proveedor cumple o supera tu requisito' };
+    }
+    
+    // Si proveedor ofrece menos pero está cerca
+    const diff = userOrder - providerOrder;
+    const maxDiff = Math.max(...Object.values(orderedMapping));
+    const score = Math.max(0, 1 - (diff / maxDiff));
+    return { score, explanation: `El proveedor ofrece menos de lo que necesitas (${Math.round(score * 100)}% compatible)` };
   }
   
-  // Si uno es array y otro no
-  if (Array.isArray(userValue)) {
-    return userValue.includes(String(providerValue)) ? 1 : 0;
+  // Obtener valor numérico del usuario
+  let userNumericValue: number;
+  if (userRangeMapping && typeof userValue === 'string' && userRangeMapping[userValue]) {
+    // Usar el valor máximo del rango del usuario (lo que necesita como mínimo)
+    userNumericValue = userRangeMapping[userValue].max;
+  } else if (typeof userValue === 'number') {
+    userNumericValue = userValue;
+  } else {
+    userNumericValue = parseFloat(String(userValue)) || 0;
   }
+  
+  // Obtener valor máximo del proveedor
+  const providerMin = typeof providerValue === 'number' ? providerValue : parseFloat(String(providerValue)) || 0;
+  const providerMax = providerMaxValue !== undefined
+    ? (typeof providerMaxValue === 'number' ? providerMaxValue : parseFloat(String(providerMaxValue)) || providerMin)
+    : providerMin;
+  
+  // Si el proveedor puede ofrecer al menos lo que el usuario necesita
+  if (providerMax >= userNumericValue) {
+    return { score: 1.0, explanation: 'El proveedor puede ofrecer lo que necesitas o más' };
+  }
+  
+  // Si el proveedor no llega, calcular qué tan cerca está
+  const ratio = providerMax / userNumericValue;
+  const score = Math.max(0, ratio);
+  return { score, explanation: `El proveedor puede ofrecer ${Math.round(ratio * 100)}% de lo que necesitas` };
+}
+
+/**
+ * THRESHOLD_AT_MOST: El proveedor debe entregar/hacer ANTES o igual de cuando el usuario lo necesita
+ * Ejemplos: tiempo de entrega de fotos/video
+ * Si proveedor entrega en 2 semanas y usuario lo quiere en 2 meses → PERFECTO (entrega antes)
+ */
+function calculateThresholdAtMost(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean,
+  orderedMapping?: Record<string, number>
+): { score: number; explanation: string } {
+  
+  if (!orderedMapping) {
+    // Sin mapeo, comparación directa
+    return { score: 0.5, explanation: 'No se pudo comparar los tiempos' };
+  }
+  
+  const userOrder = orderedMapping[String(userValue)] ?? 365;
+  const providerOrder = orderedMapping[String(providerValue)] ?? 365;
+  
+  // "flexible" del usuario significa que acepta cualquier tiempo
+  if (String(userValue) === 'flexible') {
+    return { score: 1.0, explanation: 'Eres flexible con el tiempo de entrega' };
+  }
+  
+  // Si proveedor entrega igual o ANTES de lo que el usuario necesita → PERFECTO
+  if (providerOrder <= userOrder) {
+    return { score: 1.0, explanation: 'El proveedor entrega a tiempo o antes de lo que necesitas' };
+  }
+  
+  // Si proveedor tarda más, calcular penalización
+  const diff = providerOrder - userOrder;
+  const maxDiff = Math.max(...Object.values(orderedMapping));
+  const score = Math.max(0, 1 - (diff / maxDiff) * 2); // Penalización más fuerte
+  return { score, explanation: `El proveedor tarda más de lo que necesitas (${Math.round(score * 100)}% compatible)` };
+}
+
+/**
+ * THRESHOLD_CAN_ACCOMMODATE: El proveedor debe poder acomodar lo que el usuario necesita
+ * Ejemplos: horas de cobertura, capacidad de invitados
+ * Usuario necesita 8 horas, proveedor ofrece 4-12 horas → PERFECTO (8 está en el rango)
+ */
+function calculateThresholdCanAccommodate(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean,
+  providerMaxValue: string | string[] | number | boolean | undefined,
+  userRangeMapping?: Record<string, { min: number; max: number }>
+): { score: number; explanation: string } {
+  
+  // Obtener lo que el usuario necesita
+  let userNeeds: number;
+  if (userRangeMapping && typeof userValue === 'string' && userRangeMapping[userValue]) {
+    // Usar el valor típico/medio del rango del usuario
+    const range = userRangeMapping[userValue];
+    userNeeds = (range.min + range.max) / 2;
+  } else if (typeof userValue === 'number') {
+    userNeeds = userValue;
+  } else {
+    userNeeds = parseFloat(String(userValue)) || 0;
+  }
+  
+  // Obtener rango del proveedor
+  const providerMin = typeof providerValue === 'number' ? providerValue : parseFloat(String(providerValue)) || 0;
+  const providerMax = providerMaxValue !== undefined
+    ? (typeof providerMaxValue === 'number' ? providerMaxValue : parseFloat(String(providerMaxValue)) || providerMin)
+    : providerMin * 3; // Si no hay máximo, asumir flexibilidad
+  
+  // Si lo que el usuario necesita está dentro del rango del proveedor → PERFECTO
+  if (userNeeds >= providerMin && userNeeds <= providerMax) {
+    return { score: 1.0, explanation: 'El proveedor puede acomodar perfectamente lo que necesitas' };
+  }
+  
+  // Si el usuario necesita menos del mínimo del proveedor
+  if (userNeeds < providerMin) {
+    const diff = providerMin - userNeeds;
+    const ratio = diff / providerMin;
+    // Penalización leve - el proveedor puede hacer más de lo necesario
+    const score = Math.max(0.5, 1 - ratio * 0.5);
+    return { score, explanation: `El proveedor normalmente hace más de lo que necesitas, pero podría adaptarse` };
+  }
+  
+  // Si el usuario necesita más del máximo del proveedor
+  if (userNeeds > providerMax) {
+    const ratio = providerMax / userNeeds;
+    const score = Math.max(0, ratio);
+    return { score, explanation: `El proveedor puede cubrir ${Math.round(ratio * 100)}% de lo que necesitas` };
+  }
+  
+  return { score: 0.5, explanation: 'Compatibilidad parcial' };
+}
+
+/**
+ * Match exacto mejorado
+ */
+function calculateExactMatchAdvanced(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean
+): { score: number; explanation: string } {
+  const userStr = String(userValue).toLowerCase();
+  const providerStr = String(providerValue).toLowerCase();
+  
+  if (userStr === providerStr) {
+    return { score: 1.0, explanation: 'Coincidencia exacta' };
+  }
+  
+  if (userStr.includes(providerStr) || providerStr.includes(userStr)) {
+    return { score: 0.7, explanation: 'Coincidencia parcial' };
+  }
+  
+  return { score: 0.0, explanation: 'Sin coincidencia' };
+}
+
+/**
+ * Usuario elige UNA opción, proveedor ofrece MÚLTIPLES
+ */
+function calculateSingleInMultiple(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean
+): { score: number; explanation: string } {
+  const userOption = String(userValue).toLowerCase();
+  
+  let providerOptions: string[];
   if (Array.isArray(providerValue)) {
-    return providerValue.includes(String(userValue)) ? 1 : 0;
+    providerOptions = providerValue.map(v => String(v).toLowerCase());
+  } else {
+    providerOptions = [String(providerValue).toLowerCase()];
   }
   
-  // Comparación directa
-  return userValue === providerValue ? 1 : 0;
-}
-
-/**
- * Match de contención - el proveedor debe ofrecer lo que el usuario busca
- */
-function calculateContainsMatch(
-  userValue: string | string[] | number | boolean,
-  providerValue: string | string[] | number | boolean
-): number {
-  // Convertir a arrays para facilitar la comparación
-  const userArray = Array.isArray(userValue) ? userValue : [String(userValue)];
-  const providerArray = Array.isArray(providerValue) ? providerValue : [String(providerValue)];
-  
-  // Contar cuántos elementos del usuario están en el proveedor
-  const matchCount = userArray.filter(uv => 
-    providerArray.some(pv => 
-      String(pv).toLowerCase().includes(String(uv).toLowerCase()) ||
-      String(uv).toLowerCase().includes(String(pv).toLowerCase())
-    )
-  ).length;
-  
-  return userArray.length > 0 ? matchCount / userArray.length : 0;
-}
-
-/**
- * Match de rango - verificar si los rangos se superponen
- * Útil para presupuestos, número de invitados, etc.
- */
-function calculateRangeOverlap(
-  userValue: string | string[] | number | boolean,
-  providerValue: string | string[] | number | boolean
-): number {
-  // Para rangos numéricos directos
-  if (typeof userValue === 'number' && typeof providerValue === 'number') {
-    // Asumimos que son valores puntuales y calculamos proximidad
-    const diff = Math.abs(userValue - providerValue);
-    const maxDiff = Math.max(userValue, providerValue);
-    return maxDiff > 0 ? Math.max(0, 1 - (diff / maxDiff)) : 1;
+  if (providerOptions.includes(userOption)) {
+    const specificityFactor = providerOptions.length <= 2 ? 1.0 : 
+                              providerOptions.length <= 4 ? 0.95 : 0.9;
+    return { 
+      score: specificityFactor, 
+      explanation: `El proveedor ofrece exactamente lo que buscas${providerOptions.length <= 2 ? ' (especialista)' : ''}`
+    };
   }
   
-  // Para strings que representan rangos (ej: "5m_10m", "budget")
-  const userRangeValue = getRangeValue(String(userValue));
-  const providerRangeValue = getRangeValue(String(providerValue));
-  
-  // Calcular superposición de rangos
-  const overlap = calculateRangeOverlapValue(userRangeValue, providerRangeValue);
-  return overlap;
+  return { score: 0.0, explanation: 'El proveedor no ofrece este estilo/opción' };
 }
 
 /**
- * Match booleano - ambos deben coincidir o ser compatibles
+ * Match de contención mejorado - múltiple vs múltiple
  */
-function calculateBooleanMatch(
+function calculateContainsMatchAdvanced(
   userValue: string | string[] | number | boolean,
   providerValue: string | string[] | number | boolean
-): number {
+): { score: number; explanation: string } {
+  const userArray = Array.isArray(userValue) 
+    ? userValue.map(v => String(v).toLowerCase())
+    : [String(userValue).toLowerCase()];
+  
+  const providerArray = Array.isArray(providerValue)
+    ? providerValue.map(v => String(v).toLowerCase())
+    : [String(providerValue).toLowerCase()];
+  
+  const filteredUserArray = userArray.filter(v => v !== 'none' && v !== '' && v !== 'no_preference');
+  
+  if (filteredUserArray.length === 0) {
+    return { score: 1.0, explanation: 'Usuario no tiene requisitos específicos' };
+  }
+  
+  const matches = filteredUserArray.filter(uv => providerArray.includes(uv));
+  const matchRatio = matches.length / filteredUserArray.length;
+  
+  if (matchRatio === 1) {
+    return { score: 1.0, explanation: 'El proveedor cubre todas tus preferencias' };
+  } else if (matchRatio >= 0.7) {
+    return { score: matchRatio, explanation: `El proveedor cubre ${Math.round(matchRatio * 100)}% de tus preferencias` };
+  } else if (matchRatio >= 0.5) {
+    return { score: matchRatio * 0.9, explanation: `El proveedor cubre ${Math.round(matchRatio * 100)}% de tus preferencias` };
+  } else if (matchRatio > 0) {
+    return { score: matchRatio * 0.7, explanation: `El proveedor cubre solo ${Math.round(matchRatio * 100)}% de tus preferencias` };
+  }
+  
+  return { score: 0.1, explanation: 'El proveedor no cubre tus preferencias' };
+}
+
+/**
+ * Match de rango mejorado
+ */
+function calculateRangeOverlapAdvanced(
+  userValue: string | string[] | number | boolean,
+  providerMinValue: string | string[] | number | boolean,
+  providerMaxValue: string | string[] | number | boolean | undefined,
+  userRangeMapping?: Record<string, { min: number; max: number }>
+): { score: number; explanation: string } {
+  let userRange: { min: number; max: number };
+  
+  if (userRangeMapping && typeof userValue === 'string' && userRangeMapping[userValue]) {
+    userRange = userRangeMapping[userValue];
+  } else if (typeof userValue === 'number') {
+    userRange = { min: userValue, max: userValue };
+  } else {
+    const parsed = parseFloat(String(userValue));
+    if (!isNaN(parsed)) {
+      userRange = { min: parsed, max: parsed };
+    } else {
+      return { score: 0.5, explanation: 'No se pudo interpretar el rango del usuario' };
+    }
+  }
+  
+  const providerMin = typeof providerMinValue === 'number' 
+    ? providerMinValue 
+    : parseFloat(String(providerMinValue)) || 0;
+  
+  const providerMax = providerMaxValue !== undefined
+    ? (typeof providerMaxValue === 'number' ? providerMaxValue : parseFloat(String(providerMaxValue)) || providerMin)
+    : providerMin * 2;
+  
+  const providerRange = { min: providerMin, max: providerMax };
+  
+  const overlapStart = Math.max(userRange.min, providerRange.min);
+  const overlapEnd = Math.min(userRange.max, providerRange.max);
+  
+  if (overlapStart <= overlapEnd) {
+    const overlapSize = overlapEnd - overlapStart;
+    const userRangeSize = userRange.max - userRange.min;
+    
+    if (userRangeSize === 0) {
+      return { score: 1.0, explanation: 'Tu presupuesto/requisito está dentro del rango del proveedor' };
+    }
+    
+    const overlapRatio = overlapSize / userRangeSize;
+    
+    if (overlapRatio >= 0.8) {
+      return { score: 1.0, explanation: 'Excelente coincidencia de rango' };
+    } else if (overlapRatio >= 0.5) {
+      return { score: 0.8, explanation: 'Buena coincidencia de rango' };
+    } else {
+      return { score: 0.6, explanation: 'Coincidencia parcial de rango' };
+    }
+  }
+  
+  const gap = overlapStart - overlapEnd;
+  const userMidpoint = (userRange.min + userRange.max) / 2;
+  const gapRatio = gap / userMidpoint;
+  
+  if (gapRatio <= 0.2) {
+    return { score: 0.5, explanation: 'El proveedor está ligeramente fuera de tu rango' };
+  } else if (gapRatio <= 0.5) {
+    return { score: 0.3, explanation: 'El proveedor está fuera de tu rango' };
+  }
+  
+  return { score: 0.1, explanation: 'El proveedor está muy fuera de tu rango' };
+}
+
+/**
+ * Match booleano mejorado
+ */
+function calculateBooleanMatchAdvanced(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean
+): { score: number; explanation: string } {
   const userBool = toBooleanValue(userValue);
   const providerBool = toBooleanValue(providerValue);
   
-  // Si el usuario quiere algo y el proveedor lo ofrece = match perfecto
-  // Si el usuario no lo quiere, cualquier valor del proveedor está bien
-  if (!userBool) return 1; // Usuario no lo necesita, cualquier valor está bien
-  return providerBool ? 1 : 0; // Usuario lo necesita, proveedor debe ofrecerlo
+  if (!userBool) {
+    return { score: 1.0, explanation: 'No es un requisito para ti' };
+  }
+  
+  if (providerBool) {
+    return { score: 1.0, explanation: 'El proveedor ofrece este servicio' };
+  }
+  
+  return { score: 0.0, explanation: 'El proveedor no ofrece este servicio que necesitas' };
 }
 
 /**
- * Convierte un valor de rango (string) a un objeto con min y max
+ * Match de preferencia
  */
-function getRangeValue(value: string): { min: number; max: number } {
-  // Mapeo de rangos comunes de presupuesto
-  const budgetRanges: Record<string, { min: number; max: number }> = {
-    'under_5m': { min: 0, max: 5000000 },
-    '5m_10m': { min: 5000000, max: 10000000 },
-    '10m_15m': { min: 10000000, max: 15000000 },
-    '15m_20m': { min: 15000000, max: 20000000 },
-    '20m_30m': { min: 20000000, max: 30000000 },
-    '30m_50m': { min: 30000000, max: 50000000 },
-    'over_50m': { min: 50000000, max: 100000000 },
-    'budget': { min: 0, max: 2000000 },
-    'mid': { min: 2000000, max: 5000000 },
-    'premium': { min: 5000000, max: 10000000 },
-    'luxury': { min: 10000000, max: 100000000 },
-  };
-
-  // Mapeo de rangos de invitados
-  const guestRanges: Record<string, { min: number; max: number }> = {
-    'less_50': { min: 0, max: 50 },
-    '50_100': { min: 50, max: 100 },
-    '100_150': { min: 100, max: 150 },
-    '150_200': { min: 150, max: 200 },
-    '200_300': { min: 200, max: 300 },
-    'more_300': { min: 300, max: 500 },
-  };
-
-  // Buscar en ambos mapeos
-  if (budgetRanges[value]) return budgetRanges[value];
-  if (guestRanges[value]) return guestRanges[value];
-
-  // Intentar parsear como número
-  const num = parseFloat(value);
-  if (!isNaN(num)) {
-    return { min: num, max: num };
-  }
-
-  // Valor por defecto
-  return { min: 0, max: 100 };
-}
-
-/**
- * Calcula la superposición entre dos rangos
- */
-function calculateRangeOverlapValue(
-  range1: { min: number; max: number },
-  range2: { min: number; max: number }
-): number {
-  const overlapStart = Math.max(range1.min, range2.min);
-  const overlapEnd = Math.min(range1.max, range2.max);
+function calculatePreferenceMatch(
+  userValue: string | string[] | number | boolean,
+  providerValue: string | string[] | number | boolean,
+  preferenceMapping?: Record<string, number>
+): { score: number; explanation: string } {
+  const userStr = String(userValue).toLowerCase();
+  const providerStr = String(providerValue).toLowerCase();
   
-  if (overlapStart > overlapEnd) {
-    // No hay superposición - calcular qué tan lejos están
-    const gap = overlapStart - overlapEnd;
-    const totalRange = Math.max(range1.max, range2.max) - Math.min(range1.min, range2.min);
-    return Math.max(0, 1 - (gap / totalRange));
+  if (userStr === 'no' || userStr === 'not_needed' || userStr === 'false') {
+    return { score: 1.0, explanation: 'No es un requisito para ti' };
   }
   
-  // Hay superposición - calcular porcentaje
-  const overlapSize = overlapEnd - overlapStart;
-  const smallerRange = Math.min(range1.max - range1.min, range2.max - range2.min);
+  if (preferenceMapping && preferenceMapping[providerStr] !== undefined) {
+    const score = preferenceMapping[providerStr];
+    
+    if (userStr === 'required' || userStr === 'indispensable') {
+      if (score >= 0.8) {
+        return { score: 1.0, explanation: 'El proveedor cumple tu requisito indispensable' };
+      } else if (score >= 0.5) {
+        return { score: score * 0.8, explanation: 'El proveedor cumple parcialmente tu requisito' };
+      } else {
+        return { score: score * 0.5, explanation: 'El proveedor no cumple bien tu requisito indispensable' };
+      }
+    }
+    
+    if (userStr === 'preferred' || userStr === 'preferible') {
+      return { score: score, explanation: score >= 0.7 ? 'El proveedor cumple tu preferencia' : 'El proveedor no cumple completamente tu preferencia' };
+    }
+    
+    return { score: score, explanation: 'Evaluación basada en oferta del proveedor' };
+  }
   
-  if (smallerRange === 0) return 1; // Ambos son puntos
+  if (userStr === providerStr) {
+    return { score: 1.0, explanation: 'Coincidencia exacta' };
+  }
   
-  return Math.min(1, overlapSize / smallerRange);
+  return { score: 0.5, explanation: 'Coincidencia parcial' };
 }
 
 /**
@@ -396,21 +1480,91 @@ function toBooleanValue(value: string | string[] | number | boolean): boolean {
   if (typeof value === 'number') return value > 0;
   if (typeof value === 'string') {
     const lower = value.toLowerCase();
-    return lower === 'true' || lower === 'yes' || lower === 'si' || lower === 'sí';
+    return lower === 'true' || lower === 'yes' || lower === 'si' || lower === 'sí' || 
+           lower === 'required' || lower === 'indispensable' || lower === 'preferred';
   }
   if (Array.isArray(value)) return value.length > 0;
   return false;
 }
 
 /**
+ * Fallback para categorías sin criterios explícitos
+ */
+function calculateMatchScoreFallback(
+  userResponses: SurveyResponses,
+  providerResponses: SurveyResponses,
+  category: CategoryId
+): { score: number; details: MatchDetail[]; specificityBonus: number; coverageScore: number } {
+  const surveyConfig = CATEGORY_SURVEYS[category];
+  
+  if (!surveyConfig) {
+    return { score: 50, details: [], specificityBonus: 0, coverageScore: 50 };
+  }
+
+  const details: MatchDetail[] = [];
+  let totalWeight = 0;
+  let weightedScore = 0;
+
+  for (const userQ of surveyConfig.userQuestions) {
+    const providerQ = surveyConfig.providerQuestions.find(pQ => {
+      const userBase = userQ.id.replace(/^.*_u_/, '');
+      const providerBase = pQ.id.replace(/^.*_p_/, '');
+      return userBase === providerBase;
+    });
+
+    if (providerQ) {
+      const userValue = userResponses[userQ.id];
+      const providerValue = providerResponses[providerQ.id];
+      
+      let score = 0.5;
+      let matchType: MatchType = 'contains';
+      
+      if (userQ.type === 'boolean' || providerQ.type === 'boolean') {
+        const result = calculateBooleanMatchAdvanced(userValue || false, providerValue || false);
+        score = result.score;
+        matchType = 'boolean_match';
+      } else if (userQ.type === 'single' && providerQ.type === 'multiple') {
+        const result = calculateSingleInMultiple(userValue || '', providerValue || []);
+        score = result.score;
+        matchType = 'single_in_multiple';
+      } else if (userQ.type === 'multiple' && providerQ.type === 'multiple') {
+        const result = calculateContainsMatchAdvanced(userValue || [], providerValue || []);
+        score = result.score;
+        matchType = 'contains';
+      } else {
+        const result = calculateExactMatchAdvanced(userValue || '', providerValue || '');
+        score = result.score;
+        matchType = 'exact';
+      }
+
+      details.push({
+        criterionId: `${userQ.id}_${providerQ.id}`,
+        userQuestionId: userQ.id,
+        providerQuestionId: providerQ.id,
+        userValue,
+        providerValue,
+        score,
+        weight: userQ.weight || 50,
+        matchType,
+      });
+
+      totalWeight += userQ.weight || 50;
+      weightedScore += score * (userQ.weight || 50);
+    }
+  }
+
+  const finalScore = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 50;
+
+  return { 
+    score: finalScore, 
+    details, 
+    specificityBonus: 0,
+    coverageScore: finalScore 
+  };
+}
+
+/**
  * Genera matches para un usuario en una categoría específica
- * 
- * @param userId - ID del usuario
- * @param category - Categoría del servicio
- * @param userResponses - Respuestas del usuario
- * @param providers - Lista de proveedores con sus respuestas
- * @param minScore - Score mínimo para considerar un match (default: 50)
- * @returns Lista de matches ordenados por score
  */
 export function generateMatches(
   userId: string,
@@ -422,12 +1576,12 @@ export function generateMatches(
     region?: string;
     priceRange?: string;
   }>,
-  minScore: number = 50
+  minScore: number = 40
 ): MatchResult[] {
   const matches: MatchResult[] = [];
 
   for (const provider of providers) {
-    const { score, details } = calculateMatchScore(
+    const { score, details, specificityBonus, coverageScore } = calculateMatchScore(
       userResponses,
       provider.responses,
       category
@@ -440,12 +1594,13 @@ export function generateMatches(
         category,
         matchScore: score,
         matchDetails: details,
+        specificityBonus,
+        coverageScore,
         createdAt: new Date(),
       });
     }
   }
 
-  // Ordenar por score descendente
   matches.sort((a, b) => b.matchScore - a.matchScore);
 
   return matches;
@@ -455,34 +1610,33 @@ export function generateMatches(
  * Obtiene un resumen textual del match
  */
 export function getMatchSummary(matchResult: MatchResult): string {
-  const { matchScore, matchDetails } = matchResult;
+  const { matchScore, matchDetails, specificityBonus, coverageScore } = matchResult;
   
-  // Encontrar los mejores y peores criterios
   const sortedDetails = [...matchDetails].sort((a, b) => b.score - a.score);
   const topMatches = sortedDetails.slice(0, 3).filter(d => d.score >= 0.7);
-  const weakMatches = sortedDetails.slice(-2).filter(d => d.score < 0.5);
+  const weakMatches = sortedDetails.filter(d => d.score < 0.3);
 
   let summary = `Compatibilidad: ${matchScore}%`;
+  
+  if (specificityBonus > 0) {
+    summary += ` (incluye +${specificityBonus}% por ser especialista)`;
+  }
   
   if (topMatches.length > 0) {
     summary += `. Fortalezas: ${topMatches.length} criterios con alta compatibilidad`;
   }
   
   if (weakMatches.length > 0) {
-    summary += `. Áreas a considerar: ${weakMatches.length} criterios con menor coincidencia`;
+    summary += `. Áreas a considerar: ${weakMatches.length} criterios con baja coincidencia`;
   }
 
   return summary;
 }
 
 // ============================================
-// MATCHING MEJORADO CON DATOS DEL WIZARD
+// MATCHING CON DATOS DEL WIZARD
 // ============================================
 
-/**
- * Mapeo de presupuesto del usuario a rango de precio del proveedor
- * Basado en los rangos definidos en wizardStore.ts
- */
 const BUDGET_TO_PRICE_COMPATIBILITY: Record<string, string[]> = {
   'under_5m': ['budget'],
   '5m_10m': ['budget', 'mid'],
@@ -493,9 +1647,6 @@ const BUDGET_TO_PRICE_COMPATIBILITY: Record<string, string[]> = {
   'over_50m': ['luxury'],
 };
 
-/**
- * Mapeo de estilo del evento del usuario a estilo de servicio del proveedor
- */
 const EVENT_STYLE_TO_SERVICE_STYLE: Record<string, string[]> = {
   'classic': ['traditional', 'classic', 'editorial'],
   'rustic': ['documentary', 'artistic', 'natural'],
@@ -508,13 +1659,7 @@ const EVENT_STYLE_TO_SERVICE_STYLE: Record<string, string[]> = {
 };
 
 /**
- * Calcula el score de matching basado en datos del wizard (perfil general)
- * Este score complementa el score de la mini-encuesta
- * 
- * @param userProfile - Datos del wizard del usuario
- * @param providerProfile - Datos del wizard del proveedor
- * @param category - Categoría del servicio (para contexto)
- * @returns Score (0-100) y detalles del match
+ * Calcula el score de matching basado en datos del wizard
  */
 export function calculateWizardMatchScore(
   userProfile: UserWizardProfile,
@@ -530,11 +1675,11 @@ export function calculateWizardMatchScore(
   let locationScore = 0;
   
   if (userProfile.region === providerProfile.workRegion) {
-    locationScore = 1; // Match perfecto de región
+    locationScore = 1;
   } else if (providerProfile.acceptsOutsideZone) {
-    locationScore = 0.7; // Proveedor acepta trabajar fuera de su zona
+    locationScore = 0.7;
   } else {
-    locationScore = 0.2; // No hay match de ubicación
+    locationScore = 0.2;
   }
   
   details.push({
@@ -547,24 +1692,23 @@ export function calculateWizardMatchScore(
   totalWeight += locationWeight;
   weightedScore += locationScore * locationWeight;
 
-  // 2. Match de presupuesto vs rango de precio (peso: 30)
+  // 2. Match de presupuesto (peso: 30)
   const budgetWeight = 30;
   let budgetScore = 0;
   
   const compatiblePriceRanges = BUDGET_TO_PRICE_COMPATIBILITY[userProfile.budget] || [];
   if (compatiblePriceRanges.includes(providerProfile.priceRange)) {
-    budgetScore = 1; // Presupuesto compatible
+    budgetScore = 1;
   } else {
-    // Calcular proximidad del rango
     const priceOrder = ['budget', 'mid', 'premium', 'luxury'];
     const userIndex = priceOrder.findIndex(p => compatiblePriceRanges.includes(p));
     const providerIndex = priceOrder.indexOf(providerProfile.priceRange);
     
     if (userIndex >= 0 && providerIndex >= 0) {
       const distance = Math.abs(userIndex - providerIndex);
-      budgetScore = Math.max(0, 1 - (distance * 0.3)); // Penalización por distancia
+      budgetScore = Math.max(0, 1 - (distance * 0.3));
     } else {
-      budgetScore = 0.5; // Score neutral si no hay datos
+      budgetScore = 0.5;
     }
   }
   
@@ -584,10 +1728,9 @@ export function calculateWizardMatchScore(
   
   const compatibleStyles = EVENT_STYLE_TO_SERVICE_STYLE[userProfile.eventStyle] || [];
   if (compatibleStyles.includes(providerProfile.serviceStyle)) {
-    styleScore = 1; // Estilo compatible
+    styleScore = 1;
   } else {
-    // Verificar si hay alguna coincidencia parcial
-    styleScore = 0.4; // Score base para estilos no compatibles pero profesionales
+    styleScore = 0.4;
   }
   
   details.push({
@@ -600,19 +1743,17 @@ export function calculateWizardMatchScore(
   totalWeight += styleWeight;
   weightedScore += styleScore * styleWeight;
 
-  // 4. Categoría es prioritaria para el usuario (peso: 20)
+  // 4. Categoría prioritaria (peso: 20)
   const priorityWeight = 20;
   let priorityScore = 0;
   
   if (userProfile.priorityCategories.includes(category)) {
-    // La categoría es prioritaria, verificar que el proveedor la ofrece
     if (providerProfile.categories.includes(category)) {
       priorityScore = 1;
     } else {
-      priorityScore = 0; // El proveedor no ofrece esta categoría
+      priorityScore = 0;
     }
   } else {
-    // No es prioritaria pero el proveedor la ofrece
     priorityScore = providerProfile.categories.includes(category) ? 0.7 : 0;
   }
   
@@ -626,7 +1767,6 @@ export function calculateWizardMatchScore(
   totalWeight += priorityWeight;
   weightedScore += priorityScore * priorityWeight;
 
-  // Calcular score final
   const finalScore = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
 
   return { score: finalScore, details };
@@ -634,14 +1774,6 @@ export function calculateWizardMatchScore(
 
 /**
  * Calcula el score de matching COMBINADO (wizard + mini-encuesta)
- * Este es el método principal que debe usarse para el matching completo
- * 
- * @param userSurveyResponses - Respuestas de la mini-encuesta del usuario
- * @param providerSurveyResponses - Respuestas de la mini-encuesta del proveedor
- * @param userProfile - Datos del wizard del usuario (opcional)
- * @param providerProfile - Datos del wizard del proveedor (opcional)
- * @param category - Categoría del servicio
- * @returns Score combinado (0-100) y detalles
  */
 export function calculateCombinedMatchScore(
   userSurveyResponses: SurveyResponses,
@@ -655,25 +1787,32 @@ export function calculateCombinedMatchScore(
   wizardScore: number;
   surveyDetails: MatchDetail[];
   wizardDetails: WizardMatchDetail[];
+  specificityBonus: number;
+  coverageScore: number;
 } {
-  // 1. Calcular score de la mini-encuesta (peso: 60%)
   const surveyResult = calculateMatchScore(
     userSurveyResponses,
     providerSurveyResponses,
     category
   );
   
-  // 2. Calcular score del wizard si hay datos disponibles (peso: 40%)
   let wizardResult = { score: 0, details: [] as WizardMatchDetail[] };
   let wizardWeight = 0;
   
   if (userProfile && providerProfile) {
     wizardResult = calculateWizardMatchScore(userProfile, providerProfile, category);
-    wizardWeight = 40; // El wizard contribuye 40% al score total
+    wizardWeight = 30;
   }
   
-  // 3. Combinar scores
-  const surveyWeight = 100 - wizardWeight; // 60% si hay wizard, 100% si no hay
+  const hasProviderSurvey = Object.keys(providerSurveyResponses).length > 0;
+  
+  let surveyWeight: number;
+  if (hasProviderSurvey) {
+    surveyWeight = 100 - wizardWeight;
+  } else {
+    surveyWeight = 40;
+    wizardWeight = 60;
+  }
   
   const combinedScore = Math.round(
     (surveyResult.score * (surveyWeight / 100)) + 
@@ -686,6 +1825,8 @@ export function calculateCombinedMatchScore(
     wizardScore: wizardResult.score,
     surveyDetails: surveyResult.details,
     wizardDetails: wizardResult.details,
+    specificityBonus: surveyResult.specificityBonus,
+    coverageScore: surveyResult.coverageScore,
   };
 }
 
@@ -697,7 +1838,8 @@ export function getCombinedMatchSummary(
   surveyScore: number,
   wizardScore: number,
   surveyDetails: MatchDetail[],
-  wizardDetails: WizardMatchDetail[]
+  wizardDetails: WizardMatchDetail[],
+  specificityBonus?: number
 ): string {
   let summary = `Compatibilidad total: ${score}%`;
   
@@ -705,7 +1847,10 @@ export function getCombinedMatchSummary(
     summary += ` (Perfil: ${wizardScore}%, Preferencias: ${surveyScore}%)`;
   }
   
-  // Encontrar fortalezas del wizard
+  if (specificityBonus && specificityBonus > 0) {
+    summary += ` [+${specificityBonus}% especialista]`;
+  }
+  
   const strongWizardMatches = wizardDetails.filter(d => d.score >= 0.8);
   if (strongWizardMatches.length > 0) {
     const strengths = strongWizardMatches.map(d => {
@@ -720,12 +1865,15 @@ export function getCombinedMatchSummary(
     summary += `. Excelente match en: ${strengths.join(', ')}`;
   }
   
-  // Encontrar fortalezas de la encuesta
   const strongSurveyMatches = surveyDetails.filter(d => d.score >= 0.8).slice(0, 2);
   if (strongSurveyMatches.length > 0) {
     summary += `. ${strongSurveyMatches.length} criterios específicos con alta compatibilidad`;
   }
   
+  const weakMatches = surveyDetails.filter(d => d.score < 0.3);
+  if (weakMatches.length > 0) {
+    summary += `. ⚠️ ${weakMatches.length} criterios con baja coincidencia`;
+  }
+  
   return summary;
 }
-

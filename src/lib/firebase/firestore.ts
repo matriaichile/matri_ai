@@ -273,7 +273,7 @@ export const createProviderProfile = async (
       facebook: providerData.facebook,
       tiktok: providerData.tiktok,
       portfolioImages: providerData.portfolioImages,
-      status: 'pending' as const, // Los proveedores empiezan como pendientes
+      status: 'active' as const, // Los proveedores empiezan como activos por defecto
       // Sistema de leads POR CATEGORÍA
       categoryLeadLimits,
       categoryLeadsUsed,
@@ -705,7 +705,7 @@ export const createCategoryLead = async (
       ...leadData,
       createdAt: now.toDate(),
       updatedAt: now.toDate(),
-    };
+    } as Lead;
   } catch (error) {
     console.error('Error al crear lead:', error);
     throw error;

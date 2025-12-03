@@ -388,122 +388,270 @@ interface SurveyQuestion {
 
 ---
 
-## 10. Criterios de Matchmaking
+## 10. Criterios de Matchmaking - VERSIÓN AVANZADA
 
-### 10.1 Cálculo del Match Score
+### 10.1 Arquitectura del Sistema de Matchmaking
 
-El score de compatibilidad se calcula comparando las respuestas del usuario con las del proveedor:
+El sistema de matchmaking ha sido mejorado significativamente para proporcionar scores más precisos y justos. Las mejoras principales incluyen:
+
+1. **Criterios de matching EXPLÍCITOS** por categoría (no automáticos)
+2. **Sistema de especificidad**: proveedores nicho obtienen bonus
+3. **Mejor comparación de rangos** numéricos con strings de presupuesto
+4. **Score de cobertura**: qué tan bien el proveedor cubre las necesidades
+5. **Combinación de datos**: wizard inicial + mini-encuestas por categoría
+
+### 10.2 Cálculo del Match Score
 
 ```typescript
-function calculateMatchScore(userSurvey: UserSurvey, providerSurvey: ProviderSurvey): number {
-  let totalScore = 0;
-  let totalWeight = 0;
+interface MatchResult {
+  score: number;           // Score final (0-100)
+  specificityBonus: number; // Bonus por ser especialista (+0 a +10)
+  coverageScore: number;   // % de criterios bien cubiertos
+  surveyScore: number;     // Score de la mini-encuesta
+  wizardScore: number;     // Score del wizard inicial
+}
 
-  for (const question of CATEGORY_QUESTIONS[category]) {
-    const userAnswer = userSurvey.responses[question.userId];
-    const providerAnswer = providerSurvey.responses[question.providerId];
-    const weight = question.weight;
-
-    const questionScore = calculateQuestionMatch(userAnswer, providerAnswer, question.type);
-    
-    totalScore += questionScore * weight;
-    totalWeight += weight;
-  }
-
-  return Math.round((totalScore / totalWeight) * 100);
+function calculateCombinedMatchScore(
+  userSurveyResponses: SurveyResponses,
+  providerSurveyResponses: SurveyResponses,
+  userWizardProfile: UserWizardProfile,
+  providerWizardProfile: ProviderWizardProfile,
+  category: CategoryId
+): MatchResult {
+  // 1. Calcular score de mini-encuesta (70% del total)
+  const surveyResult = calculateMatchScore(userSurveyResponses, providerSurveyResponses, category);
+  
+  // 2. Calcular score del wizard (30% del total)
+  const wizardResult = calculateWizardMatchScore(userWizardProfile, providerWizardProfile, category);
+  
+  // 3. Calcular especificidad del proveedor (bonus +0 a +10)
+  const specificityBonus = calculateProviderSpecificity(providerSurveyResponses, category);
+  
+  // 4. Combinar scores
+  const combinedScore = (surveyResult.score * 0.7) + (wizardResult.score * 0.3) + specificityBonus;
+  
+  return {
+    score: Math.min(100, Math.round(combinedScore)),
+    specificityBonus,
+    coverageScore: surveyResult.coverageScore,
+    surveyScore: surveyResult.score,
+    wizardScore: wizardResult.score,
+  };
 }
 ```
 
-### 10.2 Tipos de Comparación
+### 10.3 Tipos de Comparación Mejorados
 
-| Tipo | Lógica de Match |
-|------|-----------------|
-| `single` vs `multiple` | 100% si la opción del usuario está en las opciones del proveedor |
-| `multiple` vs `multiple` | % de opciones del usuario cubiertas por el proveedor |
-| `range` vs `range` | 100% si hay solapamiento, decrece según distancia |
-| `boolean` | 100% si coinciden, 50% si usuario=No y proveedor=Sí |
-| `number` | % basado en qué tan cerca está del rango del proveedor |
+| Tipo | Lógica de Match | Descripción |
+|------|-----------------|-------------|
+| `single_in_multiple` | 100% si la opción del usuario está en las del proveedor | Usuario elige UNA opción, proveedor ofrece MÚLTIPLES. Bonus si proveedor es especialista (ofrece pocas opciones). |
+| `contains` | % de opciones del usuario cubiertas por el proveedor | Múltiple vs múltiple. Score proporcional a cuántas preferencias del usuario cubre el proveedor. |
+| `range_overlap` | Calcula superposición de rangos | Mapea strings de presupuesto del usuario a rangos numéricos y compara con min/max del proveedor. |
+| `boolean_match` | Si usuario necesita (true), proveedor debe ofrecer | Si usuario no necesita algo, cualquier valor del proveedor es válido. |
+| `preference_match` | Mapeo de preferencias a scores | Para campos como "required/preferred/not_needed" vs opciones del proveedor. |
+| `exact` | Coincidencia exacta de valores | Para campos donde debe haber match exacto (ej: tipo de venue). |
+| `threshold_at_most` | Proveedor debe entregar ANTES o igual | **Para tiempos de entrega**: Si usuario quiere en 2 meses y proveedor entrega en 2 semanas → **100%** (entrega antes = perfecto). |
+| `threshold_at_least` | Proveedor debe ofrecer AL MENOS lo que usuario pide | **Para cantidad de fotos, horario de venue, mesas**: Si proveedor puede hacer más de lo que usuario necesita → **100%**. |
+| `threshold_can_accommodate` | Proveedor debe poder acomodar lo que usuario necesita | **Para horas de cobertura, capacidad**: Si lo que usuario necesita está dentro del rango del proveedor → **100%**. |
 
-### 10.3 Pesos por Categoría
+### 10.3.1 Tipos de Comparación "Threshold" (Umbral) - IMPORTANTE
+
+Estos tipos de comparación son **críticos** para preguntas donde "más es mejor" o "antes es mejor":
+
+#### `threshold_at_most` - Para tiempos de entrega
+**Lógica**: El proveedor debe entregar **ANTES O IGUAL** de cuando el usuario lo necesita.
+
+```
+Usuario quiere fotos en: 2 meses
+Proveedor entrega en: 2 semanas
+Resultado: 100% ✅ (entrega ANTES = perfecto)
+
+Usuario quiere fotos en: 1 mes
+Proveedor entrega en: 3 meses
+Resultado: ~30% ⚠️ (tarda más de lo necesario)
+```
+
+#### `threshold_at_least` - Para cantidades y horarios
+**Lógica**: El proveedor debe poder ofrecer **AL MENOS** lo que el usuario necesita.
+
+```
+Usuario necesita venue hasta: 2am
+Venue permite hasta: 4am
+Resultado: 100% ✅ (permite MÁS tarde = perfecto)
+
+Usuario quiere: 400 fotos
+Proveedor entrega hasta: 800 fotos
+Resultado: 100% ✅ (puede dar MÁS = perfecto)
+```
+
+#### `threshold_can_accommodate` - Para rangos de servicio
+**Lógica**: Lo que el usuario necesita debe estar **DENTRO** del rango del proveedor.
+
+```
+Usuario necesita: 8 horas de cobertura
+Proveedor ofrece: 4-12 horas
+Resultado: 100% ✅ (8 está en el rango = perfecto)
+
+Usuario tiene: 150 invitados
+Catering atiende: 50-500 personas
+Resultado: 100% ✅ (150 está en el rango = perfecto)
+```
+
+### 10.4 Sistema de Especificidad
+
+Los proveedores "nicho" (especializados) obtienen un bonus, mientras que los proveedores "generalistas" (que ofrecen todo) no reciben penalización pero tampoco bonus.
+
+```typescript
+// Cálculo de especificidad
+function calculateProviderSpecificity(providerResponses, category): number {
+  // Para cada pregunta de tipo "multiple":
+  // - Si selecciona 1-2 de 6 opciones = muy especialista (0.8-1.0)
+  // - Si selecciona 3-4 de 6 opciones = moderadamente especialista (0.4-0.6)
+  // - Si selecciona 5-6 de 6 opciones = generalista (0-0.2)
+  
+  // El bonus máximo es +10 puntos al score final
+  return specificityScore * 10;
+}
+```
+
+**Ejemplo práctico:**
+- Fotógrafo que solo hace estilo "documental" → +8-10 puntos de bonus
+- Fotógrafo que hace todos los estilos → +0-2 puntos de bonus
+- Ambos pueden tener scores altos, pero el especialista tiene ventaja cuando el usuario busca exactamente ese estilo
+
+### 10.5 Mapeo de Rangos de Presupuesto
+
+El sistema mapea los rangos de presupuesto del usuario (strings) a valores numéricos para compararlos con los precios min/max del proveedor:
+
+```typescript
+// Ejemplo para Fotografía
+const userRangeMapping = {
+  'under_500k': { min: 0, max: 500000 },
+  '500k_800k': { min: 500000, max: 800000 },
+  '800k_1200k': { min: 800000, max: 1200000 },
+  '1200k_1800k': { min: 1200000, max: 1800000 },
+  'over_1800k': { min: 1800000, max: 10000000 },
+};
+
+// Si el rango del usuario se superpone con el rango del proveedor → score alto
+// Si no hay superposición → score bajo proporcional a la distancia
+```
+
+### 10.6 Pesos por Categoría (Criterios Explícitos)
+
+Los criterios de matching están definidos explícitamente para cada categoría, con mapeos precisos entre preguntas de usuario y proveedor.
 
 #### Fotografía
-| Criterio | Peso |
-|----------|------|
-| Estilo fotográfico | 25% |
-| Presupuesto | 20% |
-| Horas de cobertura | 15% |
-| Pre/Post boda | 10% |
-| Formato entrega | 10% |
-| Cantidad fotos | 10% |
-| Ubicación/Viaje | 10% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `photo_u_style` | `photo_p_styles` | single_in_multiple | 25% | |
+| `photo_u_budget` | `photo_p_price_min/max` | range_overlap | 20% | |
+| `photo_u_hours` | `photo_p_hours_min/max` | **threshold_can_accommodate** | 15% | Si usuario quiere 8h y proveedor ofrece 4-12h → 100% |
+| `photo_u_preboda` | `photo_p_preboda` | boolean_match | 5% | |
+| `photo_u_postboda` | `photo_p_postboda` | boolean_match | 5% | |
+| `photo_u_second_shooter` | `photo_p_second_shooter` | preference_match | 5% | |
+| `photo_u_delivery_time` | `photo_p_delivery_time` | **threshold_at_most** | 5% | Si usuario quiere en 2 meses y proveedor entrega en 2 semanas → 100% |
+| `photo_u_delivery_format` | `photo_p_delivery_formats` | contains | 5% | |
+| `photo_u_photo_count` | `photo_p_photo_count_min/max` | **threshold_at_least** | 5% | Si usuario quiere 400 y proveedor entrega hasta 800 → 100% |
+| `photo_u_retouching` | `photo_p_retouching_levels` | single_in_multiple | 5% | |
+
+#### Videografía
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `video_u_style` | `video_p_styles` | single_in_multiple | 25% | |
+| `video_u_budget` | `video_p_price_min/max` | range_overlap | 20% | |
+| `video_u_duration` | `video_p_durations` | single_in_multiple | 15% | |
+| `video_u_hours` | `video_p_hours_min/max` | **threshold_can_accommodate** | 10% | Si usuario quiere 8h y proveedor ofrece 4-12h → 100% |
+| `video_u_second_camera` | `video_p_second_camera` | preference_match | 5% | |
+| `video_u_drone` | `video_p_drone` | preference_match | 5% | |
+| `video_u_same_day_edit` | `video_p_same_day_edit` | boolean_match | 5% | |
+| `video_u_raw_footage` | `video_p_raw_footage` | preference_match | 3% | |
+| `video_u_social_reel` | `video_p_social_reel` | preference_match | 5% | |
+| `video_u_delivery_time` | `video_p_delivery_time` | **threshold_at_most** | 5% | Si usuario quiere en 3 meses y proveedor entrega en 1 mes → 100% |
 
 #### DJ/VJ
-| Criterio | Peso |
-|----------|------|
-| Géneros musicales | 25% |
-| Presupuesto | 20% |
-| Estilo de fiesta | 15% |
-| Nivel de animación | 10% |
-| Iluminación | 10% |
-| Horas de servicio | 10% |
-| Efectos especiales | 5% |
-| Ubicación | 5% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `dj_u_genres` | `dj_p_genres` | contains | 25% | |
+| `dj_u_budget` | `dj_p_price_min/max` | range_overlap | 20% | |
+| `dj_u_style` | `dj_p_styles` | single_in_multiple | 15% | |
+| `dj_u_hours` | `dj_p_hours_min/max` | **threshold_can_accommodate** | 10% | Si usuario quiere 5h y proveedor ofrece 3-8h → 100% |
+| `dj_u_mc` | `dj_p_mc_levels` | single_in_multiple | 10% | |
+| `dj_u_ceremony_music` | `dj_p_ceremony_music` | boolean_match | 5% | |
+| `dj_u_lighting` | `dj_p_lighting_levels` | single_in_multiple | 5% | |
+| `dj_u_cocktail_music` | `dj_p_cocktail_music` | boolean_match | 3% | |
+| `dj_u_effects` | `dj_p_effects` | contains | 3% | |
+| `dj_u_karaoke` | `dj_p_karaoke` | boolean_match | 2% | |
 
 #### Banquetería
-| Criterio | Peso |
-|----------|------|
-| Tipo de servicio | 20% |
-| Presupuesto por persona | 20% |
-| Tipo de cocina | 15% |
-| Capacidad | 15% |
-| Opciones dietéticas | 10% |
-| Bebestibles | 10% |
-| Degustación | 5% |
-| Servicios adicionales | 5% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `catering_u_service_type` | `catering_p_service_types` | single_in_multiple | 20% | |
+| `catering_u_budget_pp` | `catering_p_price_pp_min/max` | range_overlap | 20% | |
+| `catering_u_cuisine` | `catering_p_cuisines` | contains | 15% | |
+| `catering_u_guest_count` | `catering_p_guests_min/max` | **threshold_can_accommodate** | 10% | Si usuario tiene 150 invitados y proveedor atiende 50-500 → 100% |
+| `catering_u_courses` | `catering_p_courses` | single_in_multiple | 5% | |
+| `catering_u_cocktail` | `catering_p_cocktail` | boolean_match | 5% | |
+| `catering_u_dietary` | `catering_p_dietary` | contains | 5% | |
+| `catering_u_beverages` | `catering_p_beverages` | contains | 5% | |
+| `catering_u_cake` | `catering_p_cake` | exact | 5% | |
+| `catering_u_staff` | `catering_p_staff_levels` | single_in_multiple | 5% | |
+| `catering_u_tasting` | `catering_p_tasting` | preference_match | 3% | |
+| `catering_u_setup` | `catering_p_setup` | boolean_match | 2% | |
 
 #### Centro de Eventos
-| Criterio | Peso |
-|----------|------|
-| Tipo de lugar | 20% |
-| Presupuesto | 20% |
-| Capacidad | 15% |
-| Interior/Exterior | 15% |
-| Exclusividad | 10% |
-| Horario | 10% |
-| Servicios incluidos | 10% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `venue_u_type` | `venue_p_type` | exact | 20% | |
+| `venue_u_budget` | `venue_p_price_min/max` | range_overlap | 20% | |
+| `venue_u_capacity` | `venue_p_capacity_min/max` | **threshold_can_accommodate** | 15% | Si usuario tiene 150 invitados y venue tiene capacidad 50-300 → 100% |
+| `venue_u_setting` | `venue_p_settings` | single_in_multiple | 15% | |
+| `venue_u_exclusivity` | `venue_p_exclusivity` | preference_match | 5% | |
+| `venue_u_ceremony_space` | `venue_p_ceremony_space` | boolean_match | 5% | |
+| `venue_u_parking` | `venue_p_parking` | preference_match | 5% | |
+| `venue_u_catering_policy` | `venue_p_catering_policy` | exact | 5% | |
+| `venue_u_end_time` | `venue_p_end_time` | **threshold_at_least** | 5% | Si usuario quiere hasta 2am y venue permite hasta 4am → 100% |
+| `venue_u_accommodation` | `venue_p_accommodation` | preference_match | 3% | |
+| `venue_u_accessibility` | `venue_p_accessibility` | boolean_match | 2% | |
 
 #### Decoración
-| Criterio | Peso |
-|----------|------|
-| Estilo | 25% |
-| Presupuesto | 20% |
-| Paleta de colores | 15% |
-| Tipos de flores | 10% |
-| Elementos adicionales | 10% |
-| Capacidad (mesas) | 10% |
-| Arriendo mobiliario | 10% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `deco_u_style` | `deco_p_styles` | single_in_multiple | 25% | |
+| `deco_u_budget` | `deco_p_price_min/max` | range_overlap | 20% | |
+| `deco_u_colors` | `deco_p_color_expertise` | contains | 15% | |
+| `deco_u_flowers` | `deco_p_flower_types` | contains | 10% | |
+| `deco_u_bridal_bouquet` | `deco_p_bridal_bouquet` | boolean_match | 5% | |
+| `deco_u_ceremony_deco` | `deco_p_ceremony_deco` | boolean_match | 5% | |
+| `deco_u_table_centerpieces` | `deco_p_centerpiece_types` | single_in_multiple | 5% | |
+| `deco_u_table_count` | `deco_p_table_capacity` | **threshold_at_least** | 5% | Si usuario tiene 25 mesas y proveedor puede hacer hasta 50 → 100% |
+| `deco_u_extras` | `deco_p_extras` | contains | 5% | |
+| `deco_u_rental` | `deco_p_rental` | boolean_match | 5% | |
 
 #### Wedding Planner
-| Criterio | Peso |
-|----------|------|
-| Nivel de servicio | 25% |
-| Presupuesto | 20% |
-| Red de proveedores | 15% |
-| Servicios de diseño | 15% |
-| Gestión de presupuesto | 10% |
-| Gestión de cronograma | 10% |
-| Tiempo de anticipación | 5% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `wp_u_service_level` | `wp_p_service_levels` | single_in_multiple | 25% | |
+| `wp_u_budget` | `wp_p_price_min/max` | range_overlap | 20% | |
+| `wp_u_vendor_help` | `wp_p_vendor_network` | preference_match | 15% | |
+| `wp_u_design_help` | `wp_p_design_services` | contains | 10% | |
+| `wp_u_budget_management` | `wp_p_budget_management` | boolean_match | 5% | |
+| `wp_u_timeline_management` | `wp_p_timeline_management` | boolean_match | 5% | |
+| `wp_u_guest_management` | `wp_p_guest_management` | boolean_match | 5% | |
+| `wp_u_rehearsal` | `wp_p_rehearsal` | boolean_match | 3% | |
 
 #### Maquillaje & Peinado
-| Criterio | Peso |
-|----------|------|
-| Estilo de maquillaje | 25% |
-| Presupuesto | 20% |
-| Servicio de peinado | 15% |
-| Prueba de maquillaje | 10% |
-| Capacidad (cortejo) | 10% |
-| Estilos de peinado | 10% |
-| Servicios adicionales | 10% |
+| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
+|------------------|-------------------|------------|------|-------|
+| `makeup_u_style` | `makeup_p_styles` | single_in_multiple | 25% | |
+| `makeup_u_budget` | `makeup_p_price_bride` | range_overlap | 20% | |
+| `makeup_u_hair` | `makeup_p_hair` | boolean_match | 15% | |
+| `makeup_u_trial` | `makeup_p_trial` | preference_match | 10% | |
+| `makeup_u_hair_style` | `makeup_p_hair_styles` | single_in_multiple | 10% | |
+| `makeup_u_lashes` | `makeup_p_lashes` | preference_match | 5% | |
+| `makeup_u_touch_ups` | `makeup_p_touch_ups` | exact | 4% | |
+| `makeup_u_extensions` | `makeup_p_extensions` | boolean_match | 3% | |
+| `makeup_u_bridesmaids` | `makeup_p_max_clients` | **threshold_at_least** | 5% | Si usuario necesita 8 personas y proveedor atiende hasta 15 → 100% |
 
 ---
 
@@ -532,8 +680,6 @@ interface SurveyQuestion {
   max?: number;
   required: boolean;
   weight: number; // 0-100
-  userVersion: string; // ID de la pregunta para usuarios
-  providerVersion: string; // ID de la pregunta para proveedores
 }
 
 // Respuestas guardadas
@@ -552,20 +698,110 @@ interface CategorySurveyConfig {
   categoryName: string;
   userQuestions: SurveyQuestion[];
   providerQuestions: SurveyQuestion[];
-  matchingCriteria: MatchingCriterion[];
 }
+```
 
-// Criterio de matching
-interface MatchingCriterion {
+### Tipos para Matching Avanzado
+
+```typescript
+// Criterio de matching explícito
+interface ExplicitMatchCriterion {
   userQuestionId: string;
   providerQuestionId: string;
   weight: number;
-  matchingLogic: 'exact' | 'contains' | 'range_overlap' | 'boolean_match';
+  matchType: 'exact' | 'contains' | 'range_overlap' | 'boolean_match' | 'single_in_multiple' | 'preference_match';
+  // Para rangos numéricos, mapeo de opciones del usuario a valores
+  userRangeMapping?: Record<string, { min: number; max: number }>;
+  // Para preference_match
+  preferenceMapping?: Record<string, number>;
+}
+
+// Resultado del matching
+interface MatchResult {
+  providerId: string;
+  userId: string;
+  category: CategoryId;
+  matchScore: number;          // Score final (0-100)
+  matchDetails: MatchDetail[]; // Detalles por criterio
+  specificityBonus: number;    // Bonus por ser especialista (+0 a +10)
+  coverageScore: number;       // % de criterios bien cubiertos
+  createdAt: Date;
+}
+
+// Detalle de un criterio
+interface MatchDetail {
+  criterionId: string;
+  userQuestionId: string;
+  providerQuestionId: string;
+  userValue: string | string[] | number | boolean | undefined;
+  providerValue: string | string[] | number | boolean | undefined;
+  score: number;               // Score del criterio (0-1)
+  weight: number;              // Peso del criterio
+  matchType: string;           // Tipo de comparación usado
+  explanation?: string;        // Explicación legible
+}
+
+// Perfiles del wizard
+interface UserWizardProfile {
+  budget: string;
+  guestCount: string;
+  region: string;
+  eventStyle: string;
+  ceremonyTypes: string[];
+  priorityCategories: string[];
+  involvementLevel: string;
+}
+
+interface ProviderWizardProfile {
+  serviceStyle: string;
+  priceRange: string;
+  workRegion: string;
+  acceptsOutsideZone: boolean;
+  categories: string[];
 }
 ```
 
 ---
 
+## Anexo: Ejemplos de Cálculo de Match
+
+### Ejemplo 1: Proveedor Especialista vs Generalista
+
+**Usuario busca:** Fotografía documental, presupuesto $800k-1.2M
+
+**Proveedor A (Especialista):**
+- Estilos: solo "documental"
+- Precio: $700k - $1M
+- Score base: 95%
+- Bonus especificidad: +8%
+- **Score final: 100%** (capped)
+
+**Proveedor B (Generalista):**
+- Estilos: todos los 6 estilos
+- Precio: $500k - $2M
+- Score base: 90%
+- Bonus especificidad: +1%
+- **Score final: 91%**
+
+### Ejemplo 2: Match de Rango de Presupuesto
+
+**Usuario:** "500k_800k" → se mapea a { min: 500000, max: 800000 }
+
+**Proveedor:** price_min: 400000, price_max: 900000
+
+**Cálculo:**
+- Superposición: 500000 - 800000 (todo el rango del usuario)
+- Score: 100% (superposición completa)
+
+**Proveedor alternativo:** price_min: 900000, price_max: 1500000
+
+**Cálculo:**
+- No hay superposición
+- Gap: 100000 (900k - 800k)
+- Score: ~50% (penalización por estar fuera del rango)
+
+---
+
 *Documento actualizado: Diciembre 2025*
-*Versión: 1.0*
+*Versión: 2.0 - Sistema de Matchmaking Avanzado*
 

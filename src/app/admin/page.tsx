@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react';
-import { useAuthStore, UserProfile, ProviderProfile } from '@/store/authStore';
+import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { Lead, getUserLeads } from '@/lib/firebase/firestore';
 import {
@@ -26,6 +26,7 @@ import {
   getAdminStats,
   getProviderLeadsForAdmin,
   updateProviderLeadLimit,
+  updateProviderStatus,
 } from '@/lib/firebase/admin-firestore';
 import { AdminStats } from '@/store/adminStore';
 import { PROVIDER_CATEGORIES, REGIONS } from '@/store/wizardStore';
@@ -174,6 +175,19 @@ export default function AdminDashboardPage() {
     setIsViewLeadsModalOpen(true);
   };
 
+  // Cambiar estado activo/inactivo del proveedor
+  const handleToggleProviderStatus = async (provider: ProviderProfile) => {
+    const newStatus: ProviderStatus = provider.status === 'active' ? 'closed' : 'active';
+    try {
+      await updateProviderStatus(provider.id, newStatus);
+      setProviders(providers.map(p => 
+        p.id === provider.id ? { ...p, status: newStatus } : p
+      ));
+    } catch (error) {
+      console.error('Error actualizando estado:', error);
+    }
+  };
+
   // Ver matches de un usuario (los 3 proveedores asignados)
   const handleViewUserMatches = async (user: UserProfile) => {
     setSelectedUser(user);
@@ -191,6 +205,14 @@ export default function AdminDashboardPage() {
     PROVIDER_CATEGORIES.find(c => c.id === id)?.label || id;
   const getRegionLabel = (id: string) =>
     REGIONS.find(r => r.id === id)?.label || id;
+  const getStatusLabel = (status: ProviderStatus) => {
+    switch (status) {
+      case 'active': return 'Activo';
+      case 'pending': return 'Pendiente';
+      case 'closed': return 'Inactivo';
+      default: return status;
+    }
+  };
 
   const getProgressClass = (used: number, limit: number) => {
     if (limit === 0) return styles.high;
@@ -370,6 +392,7 @@ export default function AdminDashboardPage() {
                       <th>Proveedor</th>
                       <th>Categoría</th>
                       <th>Región</th>
+                      <th>Estado</th>
                       <th>Leads (Usados / Límite)</th>
                       <th>Acciones</th>
                     </tr>
@@ -388,6 +411,22 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>{provider.categories.map(getCategoryLabel).join(', ')}</td>
                           <td>{getRegionLabel(provider.workRegion)}</td>
+                          <td>
+                            <div className={styles.statusCell}>
+                              <span className={`${styles.statusBadge} ${styles[provider.status]}`}>
+                                <span className={styles.statusDot} />
+                                {getStatusLabel(provider.status)}
+                              </span>
+                              <label className={styles.toggleSwitch}>
+                                <input
+                                  type="checkbox"
+                                  checked={provider.status === 'active'}
+                                  onChange={() => handleToggleProviderStatus(provider)}
+                                />
+                                <span className={styles.toggleSlider} />
+                              </label>
+                            </div>
+                          </td>
                           <td>
                             <div className={styles.leadCounter}>
                               <div className={styles.leadCounterValue}>
