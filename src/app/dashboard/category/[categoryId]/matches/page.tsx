@@ -223,18 +223,23 @@ export default function CategoryMatchesPage() {
       
       {/* Header */}
       <header className={styles.header}>
-        <Link href="/dashboard" className={styles.backButton}>
-          <ChevronLeft size={20} />
-          <span>Volver al dashboard</span>
-        </Link>
-        
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>
-            Matches de {categoryInfo.name}
-          </h1>
-          <p className={styles.subtitle}>
-            Proveedores recomendados basados en tus preferencias
-          </p>
+        <div className={styles.headerRow}>
+          <Link href="/dashboard" className={styles.backButton}>
+            <ChevronLeft size={20} />
+            <span>Volver al dashboard</span>
+          </Link>
+          
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>
+              Matches de {categoryInfo.name}
+            </h1>
+            <p className={styles.subtitle}>
+              Proveedores recomendados basados en tus preferencias
+            </p>
+          </div>
+          
+          {/* Spacer para balancear el botón de la izquierda */}
+          <div className={styles.headerSpacer} />
         </div>
       </header>
 
