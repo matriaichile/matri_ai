@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -34,18 +34,28 @@ import {
   AlertCircle,
   ChevronRight,
   Check,
-  FileText
+  FileText,
+  Copy,
+  X,
+  Heart,
+  Sparkles,
+  Save,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Plus
 } from 'lucide-react';
-import { useAuthStore, ProviderProfile, CategoryId } from '@/store/authStore';
+import { useAuthStore, ProviderProfile, CategoryId, UserProfile } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { PROVIDER_CATEGORIES, REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
-import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
+import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, SurveyQuestion } from '@/lib/surveys';
+import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
 import styles from './page.module.css';
 
-// Interfaz para los leads
+// Interfaz para los leads con info extendida
 interface Lead {
   id: string;
   userId: string;
@@ -60,7 +70,15 @@ interface Lead {
     email: string;
     phone: string;
   };
+  // IDs de encuestas para acceso seguro
+  userSurveyId?: string;
+  providerSurveyId?: string;
   createdAt: Date;
+}
+
+// Interfaz para el perfil completo del usuario (para el modal)
+interface ExtendedUserInfo extends UserProfile {
+  categorySurvey?: UserCategorySurvey | null;
 }
 
 // Iconos por categoría
@@ -86,17 +104,57 @@ const BUDGET_LABELS: Record<string, string> = {
   'over_50m': 'Más de $50M',
 };
 
+// Labels de cantidad de invitados
+const GUEST_COUNT_LABELS: Record<string, string> = {
+  'under_50': 'Menos de 50',
+  '50_100': '50 - 100',
+  '100_150': '100 - 150',
+  '150_200': '150 - 200',
+  '200_300': '200 - 300',
+  'over_300': 'Más de 300',
+};
+
+// Labels de estilos
+const EVENT_STYLE_LABELS: Record<string, string> = {
+  'classic': 'Clásico/Tradicional',
+  'modern': 'Moderno/Minimalista',
+  'romantic': 'Romántico',
+  'rustic': 'Rústico/Campestre',
+  'bohemian': 'Bohemio',
+  'luxury': 'Lujo/Glamour',
+  'beach': 'Playero',
+  'vintage': 'Vintage',
+};
+
 /**
  * Dashboard del proveedor.
  * Diseño elegante y minimalista con sidebar.
  */
 export default function ProviderDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser } = useAuthStore();
+  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'profile'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [extendedUserInfo, setExtendedUserInfo] = useState<ExtendedUserInfo | null>(null);
+  const [providerSurvey, setProviderSurvey] = useState<ProviderCategorySurvey | null>(null);
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
+  
+  // Estados para edición de perfil
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<ProviderProfile>>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [editingCategories, setEditingCategories] = useState<CategoryId[]>([]);
+  
+  // Estados para secciones expandibles en el modal
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    basicInfo: true,
+    eventDetails: true,
+    surveyComparison: false,
+  });
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -142,6 +200,99 @@ export default function ProviderDashboardPage() {
     loadLeads();
   }, [firebaseUser?.uid]);
 
+  // Función para copiar al portapapeles
+  const copyToClipboard = useCallback(async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Error al copiar:', err);
+    }
+  }, []);
+
+  // Función para cargar info extendida del usuario cuando se abre el modal
+  // NOTA: Los proveedores NO tienen acceso directo a /users/{userId}
+  // La info del usuario está denormalizada en el lead (userInfo)
+  // Para la encuesta, usamos el userSurveyId del lead para acceso seguro
+  const loadExtendedUserInfo = useCallback(async (lead: Lead) => {
+    setLoadingModal(true);
+    try {
+      // Crear objeto con la info del usuario desde el lead (ya denormalizada)
+      // No accedemos a /users/{userId} directamente por seguridad
+      const extendedInfo: ExtendedUserInfo = {
+        id: lead.userId,
+        type: 'user',
+        email: lead.userInfo.email,
+        coupleNames: lead.userInfo.coupleNames,
+        phone: lead.userInfo.phone,
+        eventDate: lead.userInfo.eventDate,
+        budget: lead.userInfo.budget,
+        region: lead.userInfo.region,
+        // Campos que no tenemos en userInfo - se mostrarán como vacíos
+        isDateTentative: false,
+        guestCount: '',
+        ceremonyTypes: [],
+        eventStyle: '',
+        planningProgress: '',
+        completedItems: [],
+        priorityCategories: [],
+        involvementLevel: '',
+        expectations: '',
+        categorySurveyStatus: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Cargar encuesta del usuario usando el userSurveyId del lead
+      // Esto es seguro porque el proveedor solo puede acceder a encuestas
+      // de usuarios que son sus leads (tiene el ID específico)
+      if (lead.userSurveyId) {
+        try {
+          const userSurvey = await getUserCategorySurveyById(lead.userSurveyId);
+          if (userSurvey) {
+            extendedInfo.categorySurvey = userSurvey;
+          }
+        } catch (surveyError) {
+          console.warn('No se pudo cargar la encuesta del usuario:', surveyError);
+        }
+      }
+      
+      setExtendedUserInfo(extendedInfo);
+      
+      // Cargar encuesta del proveedor para comparación
+      if (firebaseUser?.uid) {
+        const provSurvey = await getProviderCategorySurvey(firebaseUser.uid, lead.category as CategoryId);
+        setProviderSurvey(provSurvey);
+      }
+    } catch (error) {
+      console.error('Error cargando info del usuario:', error);
+    } finally {
+      setLoadingModal(false);
+    }
+  }, [firebaseUser?.uid]);
+
+  // Abrir modal con lead seleccionado
+  const handleOpenLeadModal = useCallback((lead: Lead) => {
+    setSelectedLead(lead);
+    loadExtendedUserInfo(lead);
+  }, [loadExtendedUserInfo]);
+
+  // Cerrar modal
+  const handleCloseModal = useCallback(() => {
+    setSelectedLead(null);
+    setExtendedUserInfo(null);
+    setProviderSurvey(null);
+  }, []);
+
+  // Toggle sección expandible
+  const toggleSection = useCallback((section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -151,10 +302,142 @@ export default function ProviderDashboardPage() {
     }
   };
 
+  // Iniciar edición de perfil
+  const startEditing = useCallback(() => {
+    if (userProfile && userProfile.type === 'provider') {
+      const providerData = userProfile as ProviderProfile;
+      setEditFormData({
+        providerName: providerData.providerName,
+        phone: providerData.phone,
+        description: providerData.description,
+        website: providerData.website,
+        instagram: providerData.instagram,
+        serviceStyle: providerData.serviceStyle,
+        priceRange: providerData.priceRange,
+        workRegion: providerData.workRegion,
+        acceptsOutsideZone: providerData.acceptsOutsideZone,
+      });
+      setEditingCategories(providerData.categories || []);
+      setIsEditing(true);
+    }
+  }, [userProfile]);
+
+  // Guardar cambios del perfil
+  const saveProfile = useCallback(async () => {
+    if (!firebaseUser?.uid || !editFormData) return;
+    
+    setSavingProfile(true);
+    try {
+      const currentProfile = userProfile as ProviderProfile;
+      const currentCategories = currentProfile?.categories || [];
+      
+      // Detectar nuevas categorías agregadas
+      const newCategories = editingCategories.filter(cat => !currentCategories.includes(cat));
+      
+      // Preparar datos de actualización
+      const updateData: Partial<ProviderProfile> = {
+        ...editFormData,
+        categories: editingCategories,
+      };
+      
+      // Si hay nuevas categorías, inicializar sus campos
+      if (newCategories.length > 0) {
+        const newCategoryLeadLimits = { ...(currentProfile?.categoryLeadLimits || {}) };
+        const newCategoryLeadsUsed = { ...(currentProfile?.categoryLeadsUsed || {}) };
+        const newCategorySurveyStatus = { ...(currentProfile?.categorySurveyStatus || {}) };
+        
+        for (const cat of newCategories) {
+          newCategoryLeadLimits[cat] = 10; // 10 leads por defecto
+          newCategoryLeadsUsed[cat] = 0;
+          newCategorySurveyStatus[cat] = 'not_started';
+        }
+        
+        updateData.categoryLeadLimits = newCategoryLeadLimits;
+        updateData.categoryLeadsUsed = newCategoryLeadsUsed;
+        updateData.categorySurveyStatus = newCategorySurveyStatus;
+      }
+      
+      await updateProviderProfile(firebaseUser.uid, updateData);
+      
+      // Actualizar el store local con los datos actualizados
+      const updatedProfile = {
+        ...userProfile,
+        ...updateData,
+      } as ProviderProfile;
+      
+      setUserProfile(updatedProfile);
+      
+      // Log para verificar la actualización
+      console.log('✅ Perfil actualizado:', {
+        categories: updatedProfile.categories,
+        categorySurveyStatus: updatedProfile.categorySurveyStatus,
+        categoryLeadLimits: updatedProfile.categoryLeadLimits,
+        categoryLeadsUsed: updatedProfile.categoryLeadsUsed,
+      });
+      
+      // Mostrar mensaje de éxito si se agregaron nuevas categorías
+      if (newCategories.length > 0) {
+        const newCatLabels = newCategories.map(c => PROVIDER_CATEGORIES.find(pc => pc.id === c)?.label || c).join(', ');
+        alert(`¡Categorías agregadas! Ahora debes completar las encuestas de: ${newCatLabels}`);
+      }
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error guardando perfil:', error);
+      alert('Error al guardar el perfil. Por favor, intenta de nuevo.');
+    } finally {
+      setSavingProfile(false);
+    }
+  }, [firebaseUser?.uid, editFormData, editingCategories, userProfile, setUserProfile]);
+
+  // Cancelar edición
+  const cancelEditing = useCallback(() => {
+    setIsEditing(false);
+    setEditFormData({});
+    setEditingCategories([]);
+  }, []);
+
+  // Toggle categoría en edición
+  const toggleCategory = useCallback((categoryId: CategoryId) => {
+    setEditingCategories(prev => {
+      if (prev.includes(categoryId)) {
+        // No permitir quitar la última categoría
+        if (prev.length <= 1) return prev;
+        return prev.filter(c => c !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  }, []);
+
   const getCategoryLabel = (id: string) => PROVIDER_CATEGORIES.find((c) => c.id === id)?.label || id;
   const getRegionLabel = (id: string) => REGIONS.find((r) => r.id === id)?.label || id;
   const getPriceLabel = (id: string) => PRICE_RANGES_PROVIDER.find((p) => p.id === id)?.label || id;
   const getStyleLabel = (id: string) => SERVICE_STYLES.find((s) => s.id === id)?.label || id;
+
+  // Función para obtener label de una respuesta de encuesta
+  const getSurveyAnswerLabel = (questionId: string, answer: string | string[] | number | boolean, questions: SurveyQuestion[]): string => {
+    const question = questions.find(q => q.id === questionId);
+    if (!question) return String(answer);
+    
+    if (question.type === 'boolean') {
+      return answer ? 'Sí' : 'No';
+    }
+    
+    if (question.type === 'multiple' && Array.isArray(answer)) {
+      return answer.map(a => {
+        const opt = question.options?.find(o => o.id === a);
+        return opt?.label || a;
+      }).join(', ');
+    }
+    
+    if (question.options) {
+      const opt = question.options.find(o => o.id === answer);
+      return opt?.label || String(answer);
+    }
+    
+    return String(answer);
+  };
 
   if (isLoading) {
     return <LoadingState message="Cargando tu dashboard..." fullScreen />;
@@ -163,6 +446,11 @@ export default function ProviderDashboardPage() {
   const profile = userProfile as ProviderProfile | null;
   const isPending = profile?.status === 'pending';
   const isClosed = profile?.status === 'closed';
+
+  // Filtrar leads por categoría
+  const filteredLeads = selectedCategory === 'all' 
+    ? leads 
+    : leads.filter(l => l.category === selectedCategory);
 
   // Estadísticas
   const totalLeads = leads.length;
@@ -174,6 +462,12 @@ export default function ProviderDashboardPage() {
   const completedSurveysCount = profile?.categorySurveyStatus 
     ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed').length 
     : 0;
+
+  // Agrupar leads por categoría para stats
+  const leadsByCategory = leads.reduce((acc, lead) => {
+    acc[lead.category] = (acc[lead.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   // Configuración del header según la sección activa
   const headerConfig = {
@@ -273,6 +567,28 @@ export default function ProviderDashboardPage() {
               </div>
             </div>
 
+            {/* Leads por categoría */}
+            {profile?.categories && profile.categories.length > 1 && (
+              <div className={styles.categoryStatsSection}>
+                <div className={styles.sectionHeader}>
+                  <h2>Leads por servicio</h2>
+                </div>
+                <div className={styles.categoryStatsGrid}>
+                  {profile.categories.map((cat) => (
+                    <div key={cat} className={styles.categoryStatCard}>
+                      <div className={styles.categoryStatIcon}>
+                        {CATEGORY_ICONS[cat]}
+                      </div>
+                      <div className={styles.categoryStatInfo}>
+                        <span className={styles.categoryStatName}>{getCategoryLabel(cat)}</span>
+                        <span className={styles.categoryStatValue}>{leadsByCategory[cat] || 0} leads</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Leads recientes */}
             <div className={styles.recentSection}>
               <div className={styles.sectionHeader}>
@@ -297,9 +613,18 @@ export default function ProviderDashboardPage() {
               ) : (
                 <div className={styles.leadsPreview}>
                   {leads.slice(0, 3).map((lead) => (
-                    <div key={lead.id} className={styles.leadPreviewCard}>
+                    <div 
+                      key={lead.id} 
+                      className={styles.leadPreviewCard}
+                      onClick={() => handleOpenLeadModal(lead)}
+                    >
                       <div className={styles.leadPreviewHeader}>
-                        <h4>{lead.userInfo.coupleNames}</h4>
+                        <div className={styles.leadPreviewInfo}>
+                          <span className={styles.leadCategoryBadge}>
+                            {CATEGORY_ICONS[lead.category]}
+                          </span>
+                          <h4>{lead.userInfo.coupleNames}</h4>
+                        </div>
                         <span className={styles.matchScore}>
                           <Star size={12} />
                           <span>{lead.matchScore}%</span>
@@ -336,7 +661,7 @@ export default function ProviderDashboardPage() {
 
               <div className={styles.profilePreview}>
                 <div className={styles.profilePreviewItem}>
-                  <span className={styles.previewLabel}>Categorías</span>
+                  <span className={styles.previewLabel}>Servicios</span>
                   <div className={styles.categoryTags}>
                     {profile?.categories?.map((cat) => (
                       <span key={cat} className={styles.categoryTag}>
@@ -362,65 +687,97 @@ export default function ProviderDashboardPage() {
         {/* Sección Leads */}
         {activeSection === 'leads' && (
           <div className={styles.leadsSection}>
+            {/* Filtro por categoría */}
+            {profile?.categories && profile.categories.length > 1 && (
+              <div className={styles.leadsFilter}>
+                <div className={styles.filterLabel}>
+                  <Filter size={16} />
+                  <span>Filtrar por servicio:</span>
+                </div>
+                <div className={styles.filterOptions}>
+                  <button
+                    className={`${styles.filterOption} ${selectedCategory === 'all' ? styles.filterOptionActive : ''}`}
+                    onClick={() => setSelectedCategory('all')}
+                  >
+                    Todos ({leads.length})
+                  </button>
+                  {profile.categories.map((cat) => (
+                    <button
+                      key={cat}
+                      className={`${styles.filterOption} ${selectedCategory === cat ? styles.filterOptionActive : ''}`}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {CATEGORY_ICONS[cat]}
+                      <span>{getCategoryLabel(cat)} ({leadsByCategory[cat] || 0})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loadingLeads ? (
               <LoadingState message="Cargando leads..." />
-            ) : leads.length === 0 ? (
+            ) : filteredLeads.length === 0 ? (
               <EmptyState
                 icon={<Inbox size={48} />}
-                title="Aún no tienes leads"
+                title={selectedCategory === 'all' ? "Aún no tienes leads" : `No tienes leads de ${getCategoryLabel(selectedCategory)}`}
                 description="Cuando las parejas te seleccionen, aparecerán aquí"
               />
             ) : (
               <div className={styles.leadsGrid}>
-                {leads.map((lead) => (
+                {filteredLeads.map((lead) => (
                   <div 
                     key={lead.id} 
                     className={styles.leadCard}
-                    onClick={() => setSelectedLead(lead)}
                   >
                     <div className={styles.leadCardHeader}>
                       <div className={styles.leadCardTitle}>
-                        <h3>{lead.userInfo.coupleNames}</h3>
+                        <div className={styles.leadCardNameRow}>
+                          <span className={styles.leadCategoryIcon}>
+                            {CATEGORY_ICONS[lead.category]}
+                          </span>
+                          <h3>{lead.userInfo.coupleNames}</h3>
+                        </div>
                         <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
                           {lead.status === 'pending' ? 'Pendiente' : 
                            lead.status === 'approved' ? 'Aprobado' : 
                            lead.status === 'contacted' ? 'Contactado' : 'Rechazado'}
                         </span>
                       </div>
-                      <div className={styles.leadMatchScore}>
-                        <Star size={16} />
-                        <span>{lead.matchScore}%</span>
+                      <div className={styles.leadCardActions}>
+                        <span className={styles.leadBudget}>
+                          <DollarSign size={14} />
+                          <span>{BUDGET_LABELS[lead.userInfo.budget] || lead.userInfo.budget}</span>
+                        </span>
+                        <button 
+                          className={styles.viewDetailsButton}
+                          onClick={() => handleOpenLeadModal(lead)}
+                        >
+                          <Eye size={14} />
+                          <span>Ver detalles</span>
+                        </button>
                       </div>
                     </div>
 
                     <div className={styles.leadCardBody}>
                       <div className={styles.leadDetail}>
-                        <Calendar size={16} />
+                        <Calendar size={14} />
                         <span>{lead.userInfo.eventDate}</span>
                       </div>
                       <div className={styles.leadDetail}>
-                        <MapPin size={16} />
+                        <MapPin size={14} />
                         <span>{getRegionLabel(lead.userInfo.region)}</span>
-                      </div>
-                      <div className={styles.leadDetail}>
-                        <DollarSign size={16} />
-                        <span>{BUDGET_LABELS[lead.userInfo.budget] || lead.userInfo.budget}</span>
                       </div>
                     </div>
 
                     <div className={styles.leadCardFooter}>
-                      <div className={styles.leadContact}>
-                        <a href={`mailto:${lead.userInfo.email}`} className={styles.contactButton}>
-                          <Mail size={14} />
-                        </a>
-                        <a href={`tel:${lead.userInfo.phone}`} className={styles.contactButton}>
-                          <Phone size={14} />
-                        </a>
+                      <div className={styles.leadMatchScore}>
+                        <Star size={14} />
+                        <span>{lead.matchScore}% match</span>
                       </div>
-                      <button className={styles.viewLeadButton}>
-                        <Eye size={14} />
-                        <span>Ver detalles</span>
-                      </button>
+                      <span className={styles.leadDate}>
+                        {lead.createdAt.toLocaleDateString('es-CL')}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -513,6 +870,47 @@ export default function ProviderDashboardPage() {
         {/* Sección Perfil */}
         {activeSection === 'profile' && (
           <div className={styles.profileSection}>
+            {/* Botón de edición global */}
+            <div className={styles.profileActions}>
+              {isEditing ? (
+                <>
+                  <button 
+                    className={styles.cancelButton}
+                    onClick={cancelEditing}
+                    disabled={savingProfile}
+                  >
+                    <X size={16} />
+                    <span>Cancelar</span>
+                  </button>
+                  <button 
+                    className={styles.saveButton}
+                    onClick={saveProfile}
+                    disabled={savingProfile}
+                  >
+                    {savingProfile ? (
+                      <>
+                        <span className={styles.spinner}></span>
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        <span>Guardar cambios</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className={styles.editProfileButton}
+                  onClick={startEditing}
+                >
+                  <Edit3 size={16} />
+                  <span>Editar perfil</span>
+                </button>
+              )}
+            </div>
+
             <div className={styles.profileGrid}>
               {/* Información básica */}
               <div className={styles.profileCard}>
@@ -523,7 +921,16 @@ export default function ProviderDashboardPage() {
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Nombre del negocio</span>
-                    <span className={styles.fieldValue}>{profile?.providerName}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className={styles.fieldInput}
+                        value={editFormData.providerName || ''}
+                        onChange={(e) => setEditFormData({...editFormData, providerName: e.target.value})}
+                      />
+                    ) : (
+                      <span className={styles.fieldValue}>{profile?.providerName}</span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Email</span>
@@ -531,7 +938,16 @@ export default function ProviderDashboardPage() {
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Teléfono</span>
-                    <span className={styles.fieldValue}>{profile?.phone || 'No registrado'}</span>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        className={styles.fieldInput}
+                        value={editFormData.phone || ''}
+                        onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                      />
+                    ) : (
+                      <span className={styles.fieldValue}>{profile?.phone || 'No registrado'}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -544,23 +960,87 @@ export default function ProviderDashboardPage() {
                 </h3>
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
-                    <span className={styles.fieldLabel}>Categorías</span>
-                    <div className={styles.tagsList}>
-                      {profile?.categories?.map((cat) => (
-                        <span key={cat} className={styles.tag}>
-                          {CATEGORY_ICONS[cat]}
-                          <span>{getCategoryLabel(cat)}</span>
-                        </span>
-                      ))}
-                    </div>
+                    <span className={styles.fieldLabel}>
+                      Categorías
+                      {isEditing && (
+                        <span className={styles.fieldHint}> (selecciona los servicios que ofreces)</span>
+                      )}
+                    </span>
+                    {isEditing ? (
+                      <div className={styles.categoriesEditor}>
+                        <div className={styles.categoriesGrid}>
+                          {PROVIDER_CATEGORIES.map((cat) => {
+                            const isSelected = editingCategories.includes(cat.id as CategoryId);
+                            const isOnlyOne = editingCategories.length === 1 && isSelected;
+                            return (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                className={`${styles.categoryToggle} ${isSelected ? styles.categoryToggleActive : ''}`}
+                                onClick={() => toggleCategory(cat.id as CategoryId)}
+                                disabled={isOnlyOne}
+                                title={isOnlyOne ? 'Debes tener al menos una categoría' : ''}
+                              >
+                                {CATEGORY_ICONS[cat.id]}
+                                <span>{cat.label}</span>
+                                {isSelected ? (
+                                  <Check size={16} className={styles.categoryCheckIcon} />
+                                ) : (
+                                  <Plus size={16} className={styles.categoryAddIcon} />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {editingCategories.length > (profile?.categories?.length || 0) && (
+                          <p className={styles.newCategoriesNote}>
+                            <AlertCircle size={14} />
+                            Las nuevas categorías requieren completar sus encuestas para recibir leads
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className={styles.tagsList}>
+                        {profile?.categories?.map((cat) => (
+                          <span key={cat} className={styles.tag}>
+                            {CATEGORY_ICONS[cat]}
+                            <span>{getCategoryLabel(cat)}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Estilo de servicio</span>
-                    <span className={styles.fieldValue}>{getStyleLabel(profile?.serviceStyle || '')}</span>
+                    {isEditing ? (
+                      <select
+                        className={styles.fieldSelect}
+                        value={editFormData.serviceStyle || ''}
+                        onChange={(e) => setEditFormData({...editFormData, serviceStyle: e.target.value})}
+                      >
+                        {SERVICE_STYLES.map(style => (
+                          <option key={style.id} value={style.id}>{style.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>{getStyleLabel(profile?.serviceStyle || '')}</span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Rango de precios</span>
-                    <span className={styles.fieldValue}>{getPriceLabel(profile?.priceRange || '')}</span>
+                    {isEditing ? (
+                      <select
+                        className={styles.fieldSelect}
+                        value={editFormData.priceRange || ''}
+                        onChange={(e) => setEditFormData({...editFormData, priceRange: e.target.value})}
+                      >
+                        {PRICE_RANGES_PROVIDER.map(price => (
+                          <option key={price.id} value={price.id}>{price.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>{getPriceLabel(profile?.priceRange || '')}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -574,13 +1054,36 @@ export default function ProviderDashboardPage() {
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Región de trabajo</span>
-                    <span className={styles.fieldValue}>{getRegionLabel(profile?.workRegion || '')}</span>
+                    {isEditing ? (
+                      <select
+                        className={styles.fieldSelect}
+                        value={editFormData.workRegion || ''}
+                        onChange={(e) => setEditFormData({...editFormData, workRegion: e.target.value})}
+                      >
+                        {REGIONS.map(region => (
+                          <option key={region.id} value={region.id}>{region.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>{getRegionLabel(profile?.workRegion || '')}</span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Acepta fuera de zona</span>
-                    <span className={styles.fieldValue}>
-                      {profile?.acceptsOutsideZone ? 'Sí' : 'No'}
-                    </span>
+                    {isEditing ? (
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={editFormData.acceptsOutsideZone || false}
+                          onChange={(e) => setEditFormData({...editFormData, acceptsOutsideZone: e.target.checked})}
+                        />
+                        <span>Sí, acepto trabajar fuera de mi región</span>
+                      </label>
+                    ) : (
+                      <span className={styles.fieldValue}>
+                        {profile?.acceptsOutsideZone ? 'Sí' : 'No'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -592,23 +1095,46 @@ export default function ProviderDashboardPage() {
                   <span>Presencia online</span>
                 </h3>
                 <div className={styles.profileCardContent}>
-                  {profile?.website && (
-                    <div className={styles.socialLink}>
-                      <Globe size={16} />
-                      <a href={profile.website} target="_blank" rel="noopener noreferrer">
-                        {profile.website}
-                      </a>
-                    </div>
-                  )}
-                  {profile?.instagram && (
-                    <div className={styles.socialLink}>
-                      <Instagram size={16} />
-                      <span>{profile.instagram}</span>
-                    </div>
-                  )}
-                  {!profile?.website && !profile?.instagram && (
-                    <p className={styles.noData}>No hay redes configuradas</p>
-                  )}
+                  <div className={styles.profileField}>
+                    <span className={styles.fieldLabel}>Sitio web</span>
+                    {isEditing ? (
+                      <input
+                        type="url"
+                        className={styles.fieldInput}
+                        placeholder="https://..."
+                        value={editFormData.website || ''}
+                        onChange={(e) => setEditFormData({...editFormData, website: e.target.value})}
+                      />
+                    ) : profile?.website ? (
+                      <div className={styles.socialLink}>
+                        <Globe size={16} />
+                        <a href={profile.website} target="_blank" rel="noopener noreferrer">
+                          {profile.website}
+                        </a>
+                      </div>
+                    ) : (
+                      <span className={styles.fieldValue}>No configurado</span>
+                    )}
+                  </div>
+                  <div className={styles.profileField}>
+                    <span className={styles.fieldLabel}>Instagram</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className={styles.fieldInput}
+                        placeholder="@usuario"
+                        value={editFormData.instagram || ''}
+                        onChange={(e) => setEditFormData({...editFormData, instagram: e.target.value})}
+                      />
+                    ) : profile?.instagram ? (
+                      <div className={styles.socialLink}>
+                        <Instagram size={16} />
+                        <span>{profile.instagram}</span>
+                      </div>
+                    ) : (
+                      <span className={styles.fieldValue}>No configurado</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -619,9 +1145,19 @@ export default function ProviderDashboardPage() {
                   <span>Descripción</span>
                 </h3>
                 <div className={styles.profileCardContent}>
-                  <p className={styles.descriptionText}>
-                    {profile?.description || 'No has agregado una descripción aún.'}
-                  </p>
+                  {isEditing ? (
+                    <textarea
+                      className={styles.fieldTextarea}
+                      rows={4}
+                      placeholder="Describe tu negocio, experiencia y lo que te hace único..."
+                      value={editFormData.description || ''}
+                      onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                    />
+                  ) : (
+                    <p className={styles.descriptionText}>
+                      {profile?.description || 'No has agregado una descripción aún.'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -654,73 +1190,330 @@ export default function ProviderDashboardPage() {
         )}
       </div>
 
-      {/* Modal de lead seleccionado */}
+      {/* Modal de lead seleccionado - MEJORADO */}
       {selectedLead && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedLead(null)}>
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{selectedLead.userInfo.coupleNames}</h2>
+              <div className={styles.modalHeaderInfo}>
+                <span className={styles.modalCategoryBadge}>
+                  {CATEGORY_ICONS[selectedLead.category]}
+                  <span>{getCategoryLabel(selectedLead.category)}</span>
+                </span>
+                <h2>{selectedLead.userInfo.coupleNames}</h2>
+                <div className={styles.modalMatchBadge}>
+                  <Star size={16} />
+                  <span>{selectedLead.matchScore}% compatibilidad</span>
+                </div>
+              </div>
               <button 
                 className={styles.modalClose}
-                onClick={() => setSelectedLead(null)}
+                onClick={handleCloseModal}
               >
-                <XCircle size={24} />
+                <X size={24} />
               </button>
             </div>
+            
             <div className={styles.modalBody}>
-              <div className={styles.modalSection}>
-                <h4>Información del evento</h4>
-                <div className={styles.modalGrid}>
-                  <div className={styles.modalField}>
-                    <Calendar size={16} />
-                    <div>
-                      <span className={styles.modalLabel}>Fecha</span>
-                      <span className={styles.modalValue}>{selectedLead.userInfo.eventDate}</span>
-                    </div>
-                  </div>
-                  <div className={styles.modalField}>
-                    <MapPin size={16} />
-                    <div>
-                      <span className={styles.modalLabel}>Región</span>
-                      <span className={styles.modalValue}>{getRegionLabel(selectedLead.userInfo.region)}</span>
-                    </div>
-                  </div>
-                  <div className={styles.modalField}>
-                    <DollarSign size={16} />
-                    <div>
-                      <span className={styles.modalLabel}>Presupuesto</span>
-                      <span className={styles.modalValue}>{BUDGET_LABELS[selectedLead.userInfo.budget]}</span>
-                    </div>
-                  </div>
-                  <div className={styles.modalField}>
-                    <Star size={16} />
-                    <div>
-                      <span className={styles.modalLabel}>Match Score</span>
-                      <span className={styles.modalValue}>{selectedLead.matchScore}%</span>
-                    </div>
-                  </div>
+              {loadingModal ? (
+                <div className={styles.modalLoading}>
+                  <LoadingState message="Cargando información..." />
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Sección de contacto con botones de copiado */}
+                  <div className={styles.modalContactSection}>
+                    <h4>Información de contacto</h4>
+                    <div className={styles.contactCards}>
+                      <div className={styles.contactCard}>
+                        <div className={styles.contactCardIcon}>
+                          <Mail size={20} />
+                        </div>
+                        <div className={styles.contactCardInfo}>
+                          <span className={styles.contactLabel}>Email</span>
+                          <span className={styles.contactValue}>{selectedLead.userInfo.email}</span>
+                        </div>
+                        <button 
+                          className={`${styles.copyButton} ${copiedField === 'email' ? styles.copied : ''}`}
+                          onClick={() => copyToClipboard(selectedLead.userInfo.email, 'email')}
+                        >
+                          {copiedField === 'email' ? <Check size={16} /> : <Copy size={16} />}
+                          <span>{copiedField === 'email' ? 'Copiado' : 'Copiar'}</span>
+                        </button>
+                      </div>
+                      
+                      <div className={styles.contactCard}>
+                        <div className={styles.contactCardIcon}>
+                          <Phone size={20} />
+                        </div>
+                        <div className={styles.contactCardInfo}>
+                          <span className={styles.contactLabel}>Teléfono</span>
+                          <span className={styles.contactValue}>{selectedLead.userInfo.phone}</span>
+                        </div>
+                        <button 
+                          className={`${styles.copyButton} ${copiedField === 'phone' ? styles.copied : ''}`}
+                          onClick={() => copyToClipboard(selectedLead.userInfo.phone, 'phone')}
+                        >
+                          {copiedField === 'phone' ? <Check size={16} /> : <Copy size={16} />}
+                          <span>{copiedField === 'phone' ? 'Copiado' : 'Copiar'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className={styles.modalSection}>
-                <h4>Contacto</h4>
-                <div className={styles.modalActions}>
-                  <a 
-                    href={`mailto:${selectedLead.userInfo.email}`}
-                    className={styles.modalActionButton}
-                  >
-                    <Mail size={18} />
-                    <span>{selectedLead.userInfo.email}</span>
-                  </a>
-                  <a 
-                    href={`tel:${selectedLead.userInfo.phone}`}
-                    className={styles.modalActionButton}
-                  >
-                    <Phone size={18} />
-                    <span>{selectedLead.userInfo.phone}</span>
-                  </a>
-                </div>
-              </div>
+                  {/* Sección expandible: Información básica */}
+                  <div className={styles.expandableSection}>
+                    <button 
+                      className={styles.sectionToggle}
+                      onClick={() => toggleSection('basicInfo')}
+                    >
+                      <div className={styles.sectionToggleTitle}>
+                        <Heart size={18} />
+                        <span>Información del evento</span>
+                      </div>
+                      {expandedSections.basicInfo ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    
+                    {expandedSections.basicInfo && (
+                      <div className={styles.sectionContent}>
+                        <div className={styles.infoGrid}>
+                          <div className={styles.infoItem}>
+                            <Calendar size={16} />
+                            <div>
+                              <span className={styles.infoLabel}>Fecha del evento</span>
+                              <span className={styles.infoValue}>{selectedLead.userInfo.eventDate}</span>
+                            </div>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <MapPin size={16} />
+                            <div>
+                              <span className={styles.infoLabel}>Región</span>
+                              <span className={styles.infoValue}>{getRegionLabel(selectedLead.userInfo.region)}</span>
+                            </div>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <DollarSign size={16} />
+                            <div>
+                              <span className={styles.infoLabel}>Presupuesto total</span>
+                              <span className={styles.infoValue}>{BUDGET_LABELS[selectedLead.userInfo.budget]}</span>
+                            </div>
+                          </div>
+                          {extendedUserInfo && (
+                            <>
+                              <div className={styles.infoItem}>
+                                <Users size={16} />
+                                <div>
+                                  <span className={styles.infoLabel}>Invitados</span>
+                                  <span className={styles.infoValue}>{GUEST_COUNT_LABELS[extendedUserInfo.guestCount] || extendedUserInfo.guestCount}</span>
+                                </div>
+                              </div>
+                              <div className={styles.infoItem}>
+                                <Sparkles size={16} />
+                                <div>
+                                  <span className={styles.infoLabel}>Estilo del evento</span>
+                                  <span className={styles.infoValue}>{EVENT_STYLE_LABELS[extendedUserInfo.eventStyle] || extendedUserInfo.eventStyle}</span>
+                                </div>
+                              </div>
+                              {extendedUserInfo.ceremonyTypes && extendedUserInfo.ceremonyTypes.length > 0 && (
+                                <div className={styles.infoItem}>
+                                  <Heart size={16} />
+                                  <div>
+                                    <span className={styles.infoLabel}>Tipo de ceremonia</span>
+                                    <span className={styles.infoValue}>{extendedUserInfo.ceremonyTypes.join(', ')}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sección expandible: Detalles adicionales */}
+                  {extendedUserInfo && (
+                    <div className={styles.expandableSection}>
+                      <button 
+                        className={styles.sectionToggle}
+                        onClick={() => toggleSection('eventDetails')}
+                      >
+                        <div className={styles.sectionToggleTitle}>
+                          <ClipboardList size={18} />
+                          <span>Detalles de planificación</span>
+                        </div>
+                        {expandedSections.eventDetails ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </button>
+                      
+                      {expandedSections.eventDetails && (
+                        <div className={styles.sectionContent}>
+                          <div className={styles.detailsList}>
+                            {extendedUserInfo.planningProgress && (
+                              <div className={styles.detailItem}>
+                                <span className={styles.detailLabel}>Progreso de planificación</span>
+                                <span className={styles.detailValue}>{extendedUserInfo.planningProgress}</span>
+                              </div>
+                            )}
+                            {extendedUserInfo.involvementLevel && (
+                              <div className={styles.detailItem}>
+                                <span className={styles.detailLabel}>Nivel de involucramiento</span>
+                                <span className={styles.detailValue}>{extendedUserInfo.involvementLevel}</span>
+                              </div>
+                            )}
+                            {extendedUserInfo.expectations && (
+                              <div className={styles.detailItem}>
+                                <span className={styles.detailLabel}>Expectativas</span>
+                                <span className={styles.detailValue}>{extendedUserInfo.expectations}</span>
+                              </div>
+                            )}
+                            {extendedUserInfo.priorityCategories && extendedUserInfo.priorityCategories.length > 0 && (
+                              <div className={styles.detailItem}>
+                                <span className={styles.detailLabel}>Categorías prioritarias</span>
+                                <div className={styles.priorityTags}>
+                                  {extendedUserInfo.priorityCategories.map(cat => (
+                                    <span key={cat} className={styles.priorityTag}>
+                                      {CATEGORY_ICONS[cat]}
+                                      <span>{getCategoryLabel(cat)}</span>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sección expandible: Comparativa de encuestas */}
+                  {extendedUserInfo?.categorySurvey && providerSurvey && (
+                    <div className={styles.expandableSection}>
+                      <button 
+                        className={styles.sectionToggle}
+                        onClick={() => toggleSection('surveyComparison')}
+                      >
+                        <div className={styles.sectionToggleTitle}>
+                          <BarChart3 size={18} />
+                          <span>Comparativa de preferencias</span>
+                          <span className={styles.comparisonBadge}>
+                            <Sparkles size={12} />
+                            Ver match detallado
+                          </span>
+                        </div>
+                        {expandedSections.surveyComparison ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </button>
+                      
+                      {expandedSections.surveyComparison && (
+                        <div className={styles.sectionContent}>
+                          <div className={styles.comparisonIntro}>
+                            <p>Comparación entre lo que busca la pareja y lo que tú ofreces en {getCategoryLabel(selectedLead.category)}:</p>
+                          </div>
+                          
+                          <div className={styles.comparisonGrid}>
+                            {(() => {
+                              const userQuestions = getSurveyQuestions(selectedLead.category as CategoryId, 'user');
+                              const providerQuestions = getSurveyQuestions(selectedLead.category as CategoryId, 'provider');
+                              const userResponses = extendedUserInfo.categorySurvey?.responses || {};
+                              const providerResponses = providerSurvey.responses || {};
+                              
+                              // Mapear preguntas relacionadas
+                              const comparisons: Array<{
+                                label: string;
+                                userValue: string;
+                                providerValue: string;
+                                isMatch: boolean;
+                              }> = [];
+                              
+                              // Iterar sobre las respuestas del usuario
+                              Object.keys(userResponses).forEach(questionId => {
+                                const userQuestion = userQuestions.find(q => q.id === questionId);
+                                if (!userQuestion) return;
+                                
+                                // Buscar pregunta equivalente del proveedor
+                                const providerQuestionId = questionId.replace('user_', 'provider_').replace('_preference', '_offer');
+                                const providerQuestion = providerQuestions.find(q => 
+                                  q.id === providerQuestionId || 
+                                  q.id === questionId ||
+                                  q.question.toLowerCase().includes(userQuestion.question.toLowerCase().split(' ')[0])
+                                );
+                                
+                                const userValue = getSurveyAnswerLabel(questionId, userResponses[questionId], userQuestions);
+                                const providerValue = providerQuestion && providerResponses[providerQuestion.id]
+                                  ? getSurveyAnswerLabel(providerQuestion.id, providerResponses[providerQuestion.id], providerQuestions)
+                                  : 'No especificado';
+                                
+                                // Determinar si hay match
+                                const userAnswer = userResponses[questionId];
+                                const providerAnswer = providerQuestion ? providerResponses[providerQuestion.id] : null;
+                                let isMatch = false;
+                                
+                                if (userAnswer && providerAnswer) {
+                                  if (Array.isArray(userAnswer) && Array.isArray(providerAnswer)) {
+                                    isMatch = userAnswer.some(ua => providerAnswer.includes(ua));
+                                  } else if (Array.isArray(providerAnswer)) {
+                                    isMatch = providerAnswer.includes(String(userAnswer));
+                                  } else if (Array.isArray(userAnswer)) {
+                                    isMatch = userAnswer.includes(String(providerAnswer));
+                                  } else {
+                                    isMatch = String(userAnswer) === String(providerAnswer);
+                                  }
+                                }
+                                
+                                comparisons.push({
+                                  label: userQuestion.question,
+                                  userValue,
+                                  providerValue,
+                                  isMatch,
+                                });
+                              });
+                              
+                              return comparisons.map((comp, index) => (
+                                <div 
+                                  key={index} 
+                                  className={`${styles.comparisonItem} ${comp.isMatch ? styles.comparisonMatch : styles.comparisonDiff}`}
+                                >
+                                  <div className={styles.comparisonLabel}>{comp.label}</div>
+                                  <div className={styles.comparisonValues}>
+                                    <div className={styles.comparisonUser}>
+                                      <span className={styles.comparisonTag}>Buscan</span>
+                                      <span className={styles.comparisonText}>{comp.userValue}</span>
+                                    </div>
+                                    <div className={styles.comparisonDivider}>
+                                      {comp.isMatch ? (
+                                        <Check size={16} className={styles.matchIcon} />
+                                      ) : (
+                                        <X size={16} className={styles.diffIcon} />
+                                      )}
+                                    </div>
+                                    <div className={styles.comparisonProvider}>
+                                      <span className={styles.comparisonTag}>Ofreces</span>
+                                      <span className={styles.comparisonText}>{comp.providerValue}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mensaje si no hay encuesta */}
+                  {(!extendedUserInfo?.categorySurvey || !providerSurvey) && (
+                    <div className={styles.noSurveyMessage}>
+                      <AlertCircle size={20} />
+                      <div>
+                        <p><strong>Comparativa no disponible</strong></p>
+                        <p>
+                          {!providerSurvey 
+                            ? 'Completa tu encuesta de esta categoría para ver la comparativa detallada.'
+                            : 'La pareja aún no ha completado la encuesta de esta categoría.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

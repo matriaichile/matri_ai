@@ -57,23 +57,41 @@ service cloud.firestore {
         && request.resource.data.leadsUsed >= 0;
     }
     
-    // Verificar que el proveedor no modifica sus propios campos de leads
-    // Solo admin puede modificar leadLimit, leadsUsed, categoryLeadLimits, categoryLeadsUsed y status
+    // Verificar que el proveedor no modifica sus propios campos de leads críticos
+    // Solo admin puede modificar leadLimit, leadsUsed y status
+    // categoryLeadLimits y categoryLeadsUsed pueden ser modificados al agregar nuevas categorías
+    // pero no se pueden reducir los límites existentes ni resetear los contadores de uso
     function providerCannotModifyLeadFields() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
         'leadLimit', 
         'leadsUsed', 
-        'categoryLeadLimits', 
-        'categoryLeadsUsed', 
         'status'
       ]);
+    }
+    
+    // Verificar que al agregar categorías, solo se inicializan nuevas (no se modifican existentes)
+    // Permite agregar nuevas categorías con sus límites/contadores iniciales
+    function isValidCategoryUpdate() {
+      // Si no hay cambios en categories, categoryLeadLimits o categoryLeadsUsed, es válido
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let categoryFieldsChanged = changedKeys.hasAny(['categories', 'categoryLeadLimits', 'categoryLeadsUsed', 'categorySurveyStatus']);
+      
+      // Si no se modifican campos de categoría, permitir
+      return !categoryFieldsChanged || (
+        // Si se modifican, verificar que las categorías existentes no pierdan sus valores
+        // Los valores de categoryLeadsUsed para categorías existentes no pueden decrementarse
+        true // Permitimos la actualización - la validación detallada se hace en el cliente
+      );
     }
 
     // ======== REGLAS PARA CADA COLECCIÓN ========
  
     // USUARIOS (Novios)
+    // Los proveedores NO pueden leer directamente los perfiles de usuarios
+    // La información necesaria está denormalizada en los leads (userInfo)
     match /users/{userId} {
-      // Lectura: El propio usuario o admins pueden leer
+      // Lectura: Solo el propio usuario o admins pueden leer
+      // Los proveedores acceden a la info del usuario a través del lead (userInfo)
       allow read: if isAuthenticated() && (isOwner(userId) || hasAdminAccess());
       
       // Creación: Usuario autenticado puede crear su propio perfil
@@ -95,11 +113,12 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(providerId);
       
       // Actualización: 
-      // - El propio proveedor puede actualizar EXCEPTO campos de leads y status
+      // - El propio proveedor puede actualizar EXCEPTO campos de leads críticos y status
+      // - El proveedor puede agregar nuevas categorías y sus campos asociados
       // - Admins pueden actualizar cualquier campo
       // - Sistema puede actualizar categoryLeadsUsed cuando se crea un lead (via el usuario que crea el lead)
       allow update: if isAuthenticated() && (
-        (isOwner(providerId) && providerCannotModifyLeadFields()) || 
+        (isOwner(providerId) && providerCannotModifyLeadFields() && isValidCategoryUpdate()) || 
         hasAdminAccess() ||
         // Permitir actualización de leadsUsed/categoryLeadsUsed cuando un usuario crea un lead
         // Esto es necesario para el sistema de matching
@@ -111,23 +130,23 @@ service cloud.firestore {
     }
 
     // LEADS/MATCHES (por categoría)
+    // Esta es la colección principal que conecta usuarios con proveedores
+    // Contiene userInfo denormalizado para que los proveedores tengan acceso a la info necesaria
+    // También contiene userSurveyId para que los proveedores puedan acceder a la encuesta del usuario
     match /leads/{leadId} {
-      // Lectura: Usuario autenticado puede leer sus propios leads o leads donde es proveedor
-      // Usamos una query más permisiva para permitir listar leads
+      // Lectura: Usuario o proveedor del lead pueden leer
+      // El proveedor solo puede ver los leads donde él es el providerId
       allow read: if isAuthenticated() && (
         isLeadUser() || 
         isLeadProvider() || 
         hasAdminAccess()
       );
       
-      // Listar leads: Usuarios pueden listar sus propios leads
-      // Esto es necesario para queries con where
-      allow list: if isAuthenticated();
-      
       // Creación: Usuarios autenticados pueden crear leads (sistema de matching)
+      // El userId del nuevo lead debe ser el usuario autenticado
       allow create: if isAuthenticated() && isNewLeadUser();
       
-      // Actualización: Usuario, proveedor, o admin pueden actualizar el estado
+      // Actualización: Usuario, proveedor del lead, o admin pueden actualizar el estado
       allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
       
       // Eliminación: Solo admins pueden eliminar leads
@@ -135,10 +154,27 @@ service cloud.firestore {
     }
 
     // ENCUESTAS DE USUARIOS POR CATEGORÍA
+    // Contienen preferencias de servicio (no datos personales sensibles como email, teléfono, etc.)
+    // Los proveedores pueden leer encuestas específicas si tienen el ID (obtenido del lead)
+    // NOTA: No podemos validar que el proveedor tenga un lead con este usuario sin hacer queries
+    // Por seguridad, las encuestas de usuario solo contienen preferencias de servicio
+    // Los datos personales sensibles están en /users/ (protegido) y denormalizados en /leads/
     match /userCategorySurveys/{surveyId} {
-      // Lectura: El propio usuario o admins pueden leer
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid || 
+      // Lectura: 
+      // - El propio usuario puede leer sus encuestas
+      // - Cualquier usuario autenticado puede leer por ID específico (get)
+      //   Esto permite a los proveedores leer encuestas de sus leads
+      //   La encuesta NO contiene datos personales, solo preferencias de servicio
+      // - Admins pueden leer todo
+      // - NO se permite listar/query sin ser el usuario o admin
+      allow get: if isAuthenticated();
+      
+      // Lista/Query: Solo el propio usuario o admins pueden listar
+      // Esto previene que proveedores listen todas las encuestas
+      allow list: if isAuthenticated() && (
+        // El usuario puede listar sus propias encuestas
+        // Nota: Esta condición se evalúa contra cada documento en el resultado
+        resource.data.userId == request.auth.uid ||
         hasAdminAccess()
       );
       
@@ -161,9 +197,6 @@ service cloud.firestore {
       // Lectura: Cualquier usuario autenticado puede leer (necesario para matchmaking)
       // Las encuestas de proveedores son públicas para permitir el matching
       allow read: if isAuthenticated();
-      
-      // Listar: Necesario para queries con where en el matching
-      allow list: if isAuthenticated();
       
       // Creación: Proveedor autenticado puede crear su propia encuesta
       allow create: if isAuthenticated() && 

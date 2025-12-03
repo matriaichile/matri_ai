@@ -439,6 +439,8 @@ export const saveProviderCategorySurvey = async (
     );
     const existingSnapshot = await getDocs(existingQuery);
     
+    let surveyId: string;
+    
     if (!existingSnapshot.empty) {
       // Actualizar encuesta existente
       const existingDoc = existingSnapshot.docs[0];
@@ -446,35 +448,34 @@ export const saveProviderCategorySurvey = async (
         responses,
         completedAt: now,
       });
-      
-      return {
-        id: existingDoc.id,
+      surveyId = existingDoc.id;
+    } else {
+      // Crear nueva encuesta
+      const surveyData = {
         providerId,
         category,
         responses,
-        completedAt: now.toDate(),
+        completedAt: now,
       };
+      
+      const docRef = await addDoc(collection(db, COLLECTIONS.PROVIDER_CATEGORY_SURVEYS), surveyData);
+      surveyId = docRef.id;
     }
     
-    // Crear nueva encuesta
-    const surveyData = {
-      providerId,
-      category,
-      responses,
-      completedAt: now,
-    };
-    
-    const docRef = await addDoc(collection(db, COLLECTIONS.PROVIDER_CATEGORY_SURVEYS), surveyData);
-    
-    // Actualizar estado de encuesta del proveedor
+    // SIEMPRE actualizar estado de encuesta del proveedor (tanto para nueva como actualizada)
+    // Esto asegura que el status esté correcto incluso si hubo inconsistencias previas
     await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
       [`categorySurveyStatus.${category}`]: 'completed' as CategorySurveyStatus,
       updatedAt: now,
     });
     
+    console.log(`✓ Encuesta de proveedor guardada: ${providerId} - ${category} (status: completed)`);
+    
     return {
-      id: docRef.id,
-      ...surveyData,
+      id: surveyId,
+      providerId,
+      category,
+      responses,
       completedAt: now.toDate(),
     };
   } catch (error) {
@@ -485,6 +486,7 @@ export const saveProviderCategorySurvey = async (
 
 /**
  * Obtener encuesta de usuario por categoría
+ * NOTA: Esta función hace una query, solo puede ser usada por el propio usuario o admins
  */
 export const getUserCategorySurvey = async (
   userId: string,
@@ -501,11 +503,11 @@ export const getUserCategorySurvey = async (
     
     if (snapshot.empty) return null;
     
-    const doc = snapshot.docs[0];
-    const data = doc.data();
+    const docSnap = snapshot.docs[0];
+    const data = docSnap.data();
     
     return {
-      id: doc.id,
+      id: docSnap.id,
       userId: data.userId,
       category: data.category,
       responses: data.responses,
@@ -514,6 +516,36 @@ export const getUserCategorySurvey = async (
     };
   } catch (error) {
     console.error('Error al obtener encuesta de usuario:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener encuesta de usuario por ID directo
+ * Esta función es segura para proveedores que tienen el ID de la encuesta desde el lead
+ * No hace queries, solo accede al documento específico
+ */
+export const getUserCategorySurveyById = async (
+  surveyId: string
+): Promise<UserCategorySurvey | null> => {
+  try {
+    const docRef = doc(db, COLLECTIONS.USER_CATEGORY_SURVEYS, surveyId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) return null;
+    
+    const data = docSnap.data();
+    
+    return {
+      id: docSnap.id,
+      userId: data.userId,
+      category: data.category,
+      responses: data.responses,
+      completedAt: data.completedAt?.toDate() || new Date(),
+      matchesGenerated: data.matchesGenerated || false,
+    };
+  } catch (error) {
+    console.error('Error al obtener encuesta de usuario por ID:', error);
     throw error;
   }
 };
@@ -936,7 +968,7 @@ export const getProvidersByFilters = async (
 /**
  * Obtener proveedores disponibles para matchmaking en una categoría específica
  * Solo retorna proveedores que:
- * 1. Ofrecen esa categoría
+ * 1. Ofrecen esa categoría (en su array 'categories')
  * 2. Están activos
  * 3. Tienen leads disponibles para esa categoría
  * 4. Han completado su encuesta para esa categoría
@@ -947,16 +979,19 @@ export const getAvailableProvidersForCategory = async (
   limitCount: number = 10
 ): Promise<ProviderProfile[]> => {
   try {
+    console.log(`🔍 Buscando proveedores para categoría: ${category}, región: ${region}`);
+    
     const providersQuery = query(
       collection(db, COLLECTIONS.PROVIDERS),
       where('categories', 'array-contains', category),
       where('status', '==', 'active'),
-      limit(limitCount * 2) // Pedimos más porque filtraremos después
+      limit(limitCount * 3) // Pedimos más porque filtraremos después
     );
     
     const snapshot = await getDocs(providersQuery);
+    console.log(`📊 Proveedores encontrados con categoría ${category} y status active: ${snapshot.docs.length}`);
     
-    let providers = snapshot.docs.map((doc) => {
+    const allProviders = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -970,8 +1005,30 @@ export const getAvailableProvidersForCategory = async (
       } as ProviderProfile;
     });
     
+    // Log detallado de cada proveedor para diagnóstico
+    allProviders.forEach((p) => {
+      const regionMatch = p.workRegion === region || p.acceptsOutsideZone;
+      const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
+      const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
+      const hasLeadsAvailable = leadsUsed < leadLimit;
+      const surveyStatus = p.categorySurveyStatus?.[category];
+      const surveyCompleted = surveyStatus === 'completed';
+      
+      console.log(`  📋 ${p.providerName}:`, {
+        categories: p.categories,
+        region: p.workRegion,
+        regionMatch,
+        surveyStatus,
+        surveyCompleted,
+        leadLimit,
+        leadsUsed,
+        hasLeadsAvailable,
+        willMatch: regionMatch && hasLeadsAvailable && surveyCompleted
+      });
+    });
+    
     // Filtrar proveedores
-    providers = providers.filter((p) => {
+    const filteredProviders = allProviders.filter((p) => {
       // Verificar región
       const regionMatch = p.workRegion === region || p.acceptsOutsideZone;
       
@@ -986,7 +1043,9 @@ export const getAvailableProvidersForCategory = async (
       return regionMatch && hasLeadsAvailable && surveyCompleted;
     });
     
-    return providers.slice(0, limitCount);
+    console.log(`✅ Proveedores que pasan todos los filtros: ${filteredProviders.length}`);
+    
+    return filteredProviders.slice(0, limitCount);
   } catch (error) {
     console.error('Error al obtener proveedores disponibles:', error);
     throw error;
@@ -1008,12 +1067,19 @@ export const generateMatchesForUserSurvey = async (
   maxMatches: number = 5
 ): Promise<Lead[]> => {
   try {
+    console.log(`\n🚀 ========== GENERANDO MATCHES ==========`);
+    console.log(`📌 Usuario: ${userId}`);
+    console.log(`📌 Categoría: ${category}`);
+    console.log(`📌 Región: ${region}`);
+    console.log(`📌 Max matches: ${maxMatches}`);
+    
     // 1. Obtener la encuesta del usuario (mini-encuesta de categoría)
     const userSurvey = await getUserCategorySurvey(userId, category);
     if (!userSurvey) {
-      console.warn('No se encontró encuesta del usuario para generar matches');
+      console.warn('❌ No se encontró encuesta del usuario para generar matches');
       return [];
     }
+    console.log(`✅ Encuesta del usuario encontrada: ${userSurvey.id}`);
 
     // 2. Obtener el perfil completo del usuario (datos del wizard)
     const userProfile = await getUserProfile(userId);
@@ -1126,8 +1192,13 @@ export const generateMatchesForUserSurvey = async (
     const createdLeads: Lead[] = [];
 
     for (const { provider, score } of topMatches) {
+      // Obtener el ID de la encuesta del proveedor si existe
+      const providerSurveyData = providerSurveys.find(ps => ps.provider.id === provider.id);
+      const providerSurveyId = providerSurveyData?.survey?.id;
+      
       // Siempre crear leads para los mejores matches
       // Mostramos al menos los 3 mejores aunque el score sea bajo
+      // Incluimos userSurveyId y providerSurveyId para que el proveedor pueda acceder a la encuesta
       const lead = await createCategoryLead(
         userId,
         provider.id,
@@ -1145,7 +1216,10 @@ export const generateMatchesForUserSurvey = async (
           providerName: provider.providerName,
           categories: provider.categories || [],
           priceRange: provider.priceRange || '',
-        }
+        },
+        undefined, // matchCriteria
+        userSurvey.id, // userSurveyId - permite al proveedor acceder a la encuesta del usuario
+        providerSurveyId // providerSurveyId
       );
 
       createdLeads.push(lead);
