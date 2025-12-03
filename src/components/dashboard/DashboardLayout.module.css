@@ -1,0 +1,33 @@
+/* ====================================
+   DASHBOARD LAYOUT - Base Structure
+   Matri.AI - Black & Gold Premium
+   ==================================== */
+
+.dashboardLayout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-background);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.mainContent {
+  margin-left: 280px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 0; /* Permite que flex: 1 controle el ancho */
+  min-width: 0; /* Previene overflow en flexbox */
+  overflow-x: hidden;
+}
+
+/* ====================================
+   RESPONSIVE
+   ==================================== */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    width: 100%;
+  }
+}
