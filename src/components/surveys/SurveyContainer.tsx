@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, ReactElement } from 'react';
 import styles from './SurveyContainer.module.css';
 import { getCategoryInfo } from '@/lib/surveys';
 import { CategoryId } from '@/store/authStore';
@@ -157,7 +157,7 @@ export default function SurveyContainer({
 
 // Componente de icono por categoría
 function CategoryIcon({ categoryId }: { categoryId: CategoryId }) {
-  const iconMap: Record<CategoryId, JSX.Element> = {
+  const iconMap: Record<CategoryId, ReactElement> = {
     photography: (
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
