@@ -17,7 +17,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from './config';
-import { UserProfile, ProviderProfile, ProviderStatus, AdminProfile } from '@/store/authStore';
+import { UserProfile, ProviderProfile, ProviderStatus, AdminProfile, CategoryId } from '@/store/authStore';
 import { Lead, LeadStatus } from './firestore';
 import { AdminStats } from '@/store/adminStore';
 
@@ -204,7 +204,7 @@ export const getAllProviders = async (
   lastDoc?: DocumentSnapshot | null,
   filters?: {
     status?: ProviderStatus;
-    category?: string;
+    category?: CategoryId;
     searchTerm?: string;
   }
 ): Promise<{ providers: ProviderProfile[]; lastDoc: DocumentSnapshot | null; total: number }> => {

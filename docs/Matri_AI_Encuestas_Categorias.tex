@@ -1,0 +1,1746 @@
+\documentclass[11pt,a4paper]{article}
+
+% ============================================
+% PAQUETES
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{tocloft}
+\usepackage{tikz}
+\usepackage{fontawesome5}
+\usepackage{tcolorbox}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+% ============================================
+% CONFIGURACIÓN DE PÁGINA
+% ============================================
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=3cm,
+    bottom=3cm
+}
+
+% ============================================
+% COLORES PERSONALIZADOS
+% ============================================
+\definecolor{primaryColor}{HTML}{E91E63}      % Rosa principal (matrimonio)
+\definecolor{secondaryColor}{HTML}{9C27B0}    % Púrpura
+\definecolor{accentColor}{HTML}{FF4081}       % Rosa accent
+\definecolor{darkText}{HTML}{212121}          % Texto oscuro
+\definecolor{lightGray}{HTML}{F5F5F5}         % Fondo gris claro
+\definecolor{mediumGray}{HTML}{9E9E9E}        % Gris medio
+\definecolor{userColor}{HTML}{2196F3}         % Azul para usuarios
+\definecolor{providerColor}{HTML}{4CAF50}     % Verde para proveedores
+\definecolor{tableHeader}{HTML}{FCE4EC}       % Rosa muy claro para headers
+
+% ============================================
+% CONFIGURACIÓN DE HYPERREF
+% ============================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryColor,
+    urlcolor=secondaryColor,
+    pdftitle={Matri.AI - Encuestas por Categoría},
+    pdfauthor={Matri.AI Development Team}
+}
+
+% ============================================
+% ESTILOS DE TÍTULOS
+% ============================================
+\titleformat{\section}
+    {\color{primaryColor}\Large\bfseries}
+    {\thesection.}{0.5em}{}[\titlerule]
+
+\titleformat{\subsection}
+    {\color{secondaryColor}\large\bfseries}
+    {\thesubsection}{0.5em}{}
+
+\titleformat{\subsubsection}
+    {\color{darkText}\normalsize\bfseries}
+    {\thesubsubsection}{0.5em}{}
+
+% ============================================
+% ENCABEZADO Y PIE DE PÁGINA
+% ============================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{mediumGray}{\small Matri.AI}}
+\fancyhead[R]{\textcolor{mediumGray}{\small Encuestas por Categoría}}
+\fancyfoot[C]{\textcolor{mediumGray}{\thepage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{primaryColor}\leaders\hrule height \headrulewidth\hfill}}
+
+% ============================================
+% CAJAS PERSONALIZADAS
+% ============================================
+\tcbuselibrary{skins,breakable}
+
+\newtcolorbox{userbox}{
+    colback=userColor!5,
+    colframe=userColor,
+    fonttitle=\bfseries,
+    title={\faUser\ Encuesta para Usuarios (Novios)},
+    breakable,
+    enhanced
+}
+
+\newtcolorbox{providerbox}{
+    colback=providerColor!5,
+    colframe=providerColor,
+    fonttitle=\bfseries,
+    title={\faBriefcase\ Encuesta para Proveedores},
+    breakable,
+    enhanced
+}
+
+\newtcolorbox{infobox}{
+    colback=lightGray,
+    colframe=mediumGray,
+    fonttitle=\bfseries,
+    breakable,
+    enhanced
+}
+
+% ============================================
+% COMANDOS PERSONALIZADOS
+% ============================================
+\newcommand{\peso}[1]{\textcolor{primaryColor}{\textbf{#1}}}
+\newcommand{\tipo}[1]{\texttt{\small #1}}
+\newcommand{\opcion}[1]{\textit{#1}}
+
+% Tipo de columna para tablas
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ============================================
+% INICIO DEL DOCUMENTO
+% ============================================
+\begin{document}
+
+% ============================================
+% PORTADA
+% ============================================
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    % Logo placeholder
+    \begin{tikzpicture}
+        \node[circle, fill=primaryColor, minimum size=3cm] at (0,0) {};
+        \node[white, font=\Huge\bfseries] at (0,0) {M};
+    \end{tikzpicture}
+    
+    \vspace{1cm}
+    
+    {\Huge\bfseries\textcolor{primaryColor}{Matri.AI}\par}
+    
+    \vspace{0.5cm}
+    
+    {\LARGE\textcolor{secondaryColor}{Sistema de Matchmaking para Bodas}\par}
+    
+    \vspace{2cm}
+    
+    {\Huge\bfseries Encuestas por Categoría\par}
+    
+    \vspace{0.5cm}
+    
+    {\Large Documentación de Preguntas y Opciones de Respuesta\par}
+    
+    \vspace{3cm}
+    
+    \begin{tcolorbox}[
+        colback=lightGray,
+        colframe=mediumGray,
+        width=0.8\textwidth,
+        arc=5mm
+    ]
+        \centering
+        \textbf{Categorías incluidas:}\\[0.5em]
+        Fotografía $\bullet$ Videografía $\bullet$ DJ/VJ $\bullet$ Banquetería\\
+        Centro de Eventos $\bullet$ Decoración $\bullet$ Wedding Planner $\bullet$ Maquillaje \& Peinado
+    \end{tcolorbox}
+    
+    \vfill
+    
+    {\large Versión 1.0\par}
+    {\large Diciembre 2025\par}
+    
+\end{titlepage}
+
+% ============================================
+% ÍNDICE
+% ============================================
+\tableofcontents
+\newpage
+
+% ============================================
+% INTRODUCCIÓN
+% ============================================
+\section{Introducción}
+
+Este documento presenta de manera detallada y ordenada todas las preguntas de las encuestas que forman parte del sistema de matchmaking de \textbf{Matri.AI}. Estas encuestas permiten conectar a parejas que planifican su boda con los proveedores más adecuados según sus preferencias y necesidades.
+
+\subsection{Objetivo del Sistema}
+
+El sistema de encuestas está diseñado para:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Usuarios (Novios):} Capturar sus preferencias, presupuesto y necesidades específicas para cada categoría de servicio.
+    \item \textbf{Proveedores:} Registrar sus servicios, capacidades, precios y especialidades.
+    \item \textbf{Matchmaking:} Calcular un score de compatibilidad entre usuarios y proveedores basado en las respuestas.
+\end{itemize}
+
+\subsection{Principio de Diseño}
+
+Las encuestas están diseñadas para que las respuestas sean \textbf{comparables} entre usuarios y proveedores:
+
+\begin{center}
+\begin{tabular}{|L{4cm}|L{4.5cm}|L{4.5cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Tipo de Pregunta} & \textbf{Usuario} & \textbf{Proveedor} \\
+\hline
+Selección única & Elige su preferencia & Indica si lo ofrece \\
+\hline
+Selección múltiple & Elige varias opciones & Indica todas las que ofrece \\
+\hline
+Rango numérico & Indica presupuesto/necesidad & Indica rango de precios/capacidad \\
+\hline
+Sí/No & Indica si lo necesita & Indica si lo ofrece \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Tipos de Preguntas}
+
+\begin{itemize}[leftmargin=*]
+    \item \tipo{single}: Selección única (una sola opción)
+    \item \tipo{multiple}: Selección múltiple (varias opciones)
+    \item \tipo{boolean}: Pregunta Sí/No
+    \item \tipo{number}: Valor numérico
+    \item \tipo{range}: Rango de valores
+\end{itemize}
+
+\subsection{Sistema de Pesos}
+
+Cada pregunta tiene un \textbf{peso} asignado que indica su importancia en el cálculo del match score. Los pesos van del 0\% al 25\%, donde un mayor peso significa mayor relevancia para la compatibilidad.
+
+\newpage
+
+% ============================================
+% FOTOGRAFÍA
+% ============================================
+\section{Fotografía}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilo fotográfico prefieres? & single & 
+\opcion{Documental/Natural, Artístico/Creativo, Clásico/Tradicional, Editorial/Revista, Espontáneo/Candid, Cinemático} & \peso{25\%} \\
+\hline
+
+¿Cuántas horas de cobertura necesitas? & single & 
+\opcion{4 horas, 6 horas, 8 horas, 10 horas, Día completo +12h} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto para fotografía? & single & 
+\opcion{Menos de \$500.000, \$500.000-\$800.000, \$800.000-\$1.200.000, \$1.200.000-\$1.800.000, Más de \$1.800.000} & \peso{20\%} \\
+\hline
+
+¿Necesitas sesión pre-boda? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Te interesa sesión post-boda? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas segundo fotógrafo? & single & 
+\opcion{No necesario, Preferible, Indispensable} & \peso{5\%} \\
+\hline
+
+¿En cuánto tiempo necesitas las fotos? & single & 
+\opcion{2 semanas, 1 mes, 2 meses, 3+ meses, Flexible} & \peso{5\%} \\
+\hline
+
+¿Qué formato de entrega prefieres? & multiple & 
+\opcion{Digital HD, Digital RAW, Álbum impreso, USB en caja especial, Galería online} & \peso{5\%} \\
+\hline
+
+¿Cuántas fotos editadas esperas recibir? & single & 
+\opcion{Menos de 200, 200-400, 400-600, Más de 600, Sin límite} & \peso{5\%} \\
+\hline
+
+¿Qué nivel de retoque prefieres? & single & 
+\opcion{Natural/Mínimo, Moderado, Tipo revista/Alto} & \peso{5\%} \\
+\hline
+
+¿Cuántas locaciones tendrá tu evento? & single & 
+\opcion{Solo una, Dos locaciones, Tres o más} & \peso{3\%} \\
+\hline
+
+¿Qué momentos son más importantes para ti? & multiple & 
+\opcion{Preparativos, Ceremonia, Retratos de pareja, Fotos familiares, Fiesta, Detalles decoración} & \peso{2\%} \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilos fotográficos ofreces? & multiple & 
+\opcion{Documental, Artístico, Clásico, Editorial, Candid, Cinemático} & \peso{25\%} \\
+\hline
+
+¿Cuál es tu cobertura mínima? & number & 
+\opcion{1-12 horas} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu cobertura máxima? & number & 
+\opcion{1-24 horas} & - \\
+\hline
+
+Precio mínimo de tu servicio & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de tu servicio & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+¿Ofreces sesión pre-boda? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Está incluida en el paquete base? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Ofreces sesión post-boda? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces segundo fotógrafo? & single & 
+\opcion{No, Costo adicional, Incluido en algunos paquetes, Siempre incluido} & \peso{5\%} \\
+\hline
+
+¿Cuál es tu tiempo de entrega habitual? & single & 
+\opcion{2 semanas, 1 mes, 2 meses, 3 meses} & \peso{5\%} \\
+\hline
+
+¿Qué formatos de entrega ofreces? & multiple & 
+\opcion{Digital HD, Digital RAW, Álbum impreso, USB en caja, Galería online} & \peso{5\%} \\
+\hline
+
+Mínimo de fotos editadas que entregas & number & 
+\opcion{50-1000} & \peso{5\%} \\
+\hline
+
+Máximo de fotos editadas que entregas & number & 
+\opcion{100-2000} & - \\
+\hline
+
+¿Qué niveles de retoque ofreces? & multiple & 
+\opcion{Natural, Moderado, Editorial} & \peso{5\%} \\
+\hline
+
+¿Viajas fuera de tu región? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Cobras adicional por traslado? & single & 
+\opcion{No, Sí por km, Sí tarifa fija, Negociable} & - \\
+\hline
+
+Años de experiencia en bodas & number & 
+\opcion{0-30 años} & \peso{2\%} \\
+\hline
+
+¿Cuántas bodas realizas al año? & number & 
+\opcion{1-100} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% VIDEOGRAFÍA
+% ============================================
+\section{Videografía}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilo de video prefieres? & single & 
+\opcion{Documental, Cinemático/Película, Narrativo/Historia, Tradicional, Artístico/Experimental} & \peso{25\%} \\
+\hline
+
+¿Qué duración de video final prefieres? & single & 
+\opcion{Highlight 3-5 min, Highlight 8-12 min, Medio 15-25 min, Completo 30-45 min, Extendido +60 min} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto para video? & single & 
+\opcion{Menos de \$600.000, \$600.000-\$1.000.000, \$1.000.000-\$1.500.000, \$1.500.000-\$2.500.000, Más de \$2.500.000} & \peso{20\%} \\
+\hline
+
+¿Cuántas horas de cobertura necesitas? & single & 
+\opcion{4 horas, 6 horas, 8 horas, 10 horas, Día completo} & \peso{10\%} \\
+\hline
+
+¿Necesitas segundo camarógrafo? & single & 
+\opcion{No necesario, Preferible, Indispensable} & \peso{5\%} \\
+\hline
+
+¿Te gustaría incluir tomas con drone? & single & 
+\opcion{No, Sería bueno, Indispensable} & \peso{5\%} \\
+\hline
+
+¿Te interesa un video editado el mismo día? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Quieres recibir el material sin editar? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Necesitas versión corta para redes sociales? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿En cuánto tiempo necesitas el video? & single & 
+\opcion{1 mes, 2 meses, 3 meses, 6 meses, Flexible} & \peso{5\%} \\
+\hline
+
+¿Tienes preferencia musical para el video? & single & 
+\opcion{Que elija el videógrafo, Romántica/Emotiva, Moderna/Pop, Clásica, Quiero elegir yo} & \peso{2\%} \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilos de video ofreces? & multiple & 
+\opcion{Documental, Cinemático, Narrativo, Tradicional, Artístico} & \peso{25\%} \\
+\hline
+
+¿Qué duraciones de video ofreces? & multiple & 
+\opcion{Highlight 3-5 min, Highlight 8-12 min, Medio 15-25 min, Completo 30-45 min, Extendido +60 min} & \peso{15\%} \\
+\hline
+
+Precio mínimo de tu servicio & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de tu servicio & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+Cobertura mínima & number & 
+\opcion{1-12 horas} & \peso{10\%} \\
+\hline
+
+Cobertura máxima & number & 
+\opcion{1-24 horas} & - \\
+\hline
+
+¿Ofreces segundo camarógrafo? & single & 
+\opcion{No, Costo adicional, Incluido, Siempre} & \peso{5\%} \\
+\hline
+
+¿Ofreces tomas con drone? & single & 
+\opcion{No, Costo adicional, Incluido} & \peso{5\%} \\
+\hline
+
+¿Ofreces edición el mismo día? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Entregas material sin editar? & single & 
+\opcion{No, Costo adicional, Incluido} & \peso{3\%} \\
+\hline
+
+¿Ofreces versión para redes? & single & 
+\opcion{No, Costo adicional, Incluido} & \peso{5\%} \\
+\hline
+
+Tiempo de entrega habitual & single & 
+\opcion{1 mes, 2 meses, 3 meses, 6 meses} & \peso{5\%} \\
+\hline
+
+¿Qué equipo utilizas? & multiple & 
+\opcion{Cámaras 4K, Cámaras de cine, Estabilizador/Gimbal, Slider, Grúa, Iluminación profesional} & \peso{2\%} \\
+\hline
+
+Años de experiencia en bodas & number & 
+\opcion{0-30 años} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% DJ/VJ
+% ============================================
+\section{DJ/VJ}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué géneros musicales te gustan? & multiple & 
+\opcion{Reggaetón, Pop Internacional, Pop Latino, Cumbia, Salsa, Bachata, Rock, Electrónica, 80s y 90s, Disco, Jazz/Lounge, Baladas/Románticas} & \peso{25\%} \\
+\hline
+
+¿Qué estilo de fiesta prefieres? & single & 
+\opcion{Elegante/Sofisticado, Fiesta total, Mezcla de ambos, Relajado/Lounge} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto para DJ? & single & 
+\opcion{Menos de \$400.000, \$400.000-\$600.000, \$600.000-\$900.000, \$900.000-\$1.400.000, Más de \$1.400.000} & \peso{20\%} \\
+\hline
+
+¿Cuántas horas de música necesitas? & single & 
+\opcion{3 horas, 4 horas, 5 horas, 6 horas, Sin límite} & \peso{10\%} \\
+\hline
+
+¿Necesitas música para la ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas música para el cóctel? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Necesitas que el DJ anime/presente? & single & 
+\opcion{No, solo música; Mínimo, solo anuncios; Moderado; Animación completa} & \peso{10\%} \\
+\hline
+
+¿Qué nivel de iluminación necesitas? & single & 
+\opcion{Básica, Estándar, Premium con efectos, Personalizada} & \peso{5\%} \\
+\hline
+
+¿Qué efectos especiales te interesan? & multiple & 
+\opcion{Máquina de humo, Chispas frías, Láser, Confetti, Burbujas, Ninguno} & \peso{3\%} \\
+\hline
+
+¿Te gustaría tener karaoke? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Permitirás solicitudes de invitados? & single & 
+\opcion{No, Limitadas, Sí todas} & \peso{2\%} \\
+\hline
+
+¿Necesitas pantallas/proyección? & single & 
+\opcion{No, Una pantalla, Varias pantallas} & - \\
+\hline
+
+¿Combinarás con banda en vivo? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Ya tienes canción para el primer baile? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué géneros musicales dominas? & multiple & 
+\opcion{Reggaetón, Pop, Pop Latino, Cumbia, Salsa, Bachata, Rock, Electrónica, 80s/90s, Disco, Jazz, Románticas} & \peso{25\%} \\
+\hline
+
+¿Qué estilos de fiesta manejas? & multiple & 
+\opcion{Elegante, Fiesta, Mixto, Chill} & \peso{15\%} \\
+\hline
+
+Precio mínimo de tu servicio & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de tu servicio & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+Horas mínimas de servicio & number & 
+\opcion{1-8 horas} & \peso{10\%} \\
+\hline
+
+Horas máximas de servicio & number & 
+\opcion{1-12 horas} & - \\
+\hline
+
+¿Ofreces música para ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces música para cóctel? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Qué niveles de animación ofreces? & multiple & 
+\opcion{Sin animación, Mínimo, Moderado, Completo} & \peso{10\%} \\
+\hline
+
+¿Qué niveles de iluminación ofreces? & multiple & 
+\opcion{Básica, Estándar, Premium, Personalizada} & \peso{5\%} \\
+\hline
+
+¿Qué efectos especiales ofreces? & multiple & 
+\opcion{Humo, Chispas frías, Láser, Confetti, Burbujas} & \peso{3\%} \\
+\hline
+
+¿Ofreces karaoke? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Ofreces pantallas/proyección? & single & 
+\opcion{No, Una, Varias} & \peso{2\%} \\
+\hline
+
+¿Qué equipo de sonido tienes? & multiple & 
+\opcion{Hasta 100 personas, Hasta 200, Hasta 400, Más de 400, Subwoofers, Micrófonos inalámbricos} & \peso{5\%} \\
+\hline
+
+¿Tienes equipo de respaldo? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+Años de experiencia en bodas & number & 
+\opcion{0-30 años} & - \\
+\hline
+
+Bodas que realizas al año & number & 
+\opcion{1-100} & - \\
+\hline
+
+Tiempo de montaje necesario & single & 
+\opcion{1 hora, 2 horas, 3 horas, 4+ horas} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% BANQUETERÍA
+% ============================================
+\section{Banquetería}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué tipo de servicio prefieres? & single & 
+\opcion{Servido a la mesa, Buffet, Estaciones temáticas, Cóctel/Finger food, Estilo familiar} & \peso{20\%} \\
+\hline
+
+¿Qué tipo de cocina prefieres? & multiple & 
+\opcion{Chilena tradicional, Internacional, Mediterránea, Asiática/Fusión, Gourmet/Alta cocina, Comfort food} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto por persona? & single & 
+\opcion{Menos de \$25.000, \$25.000-\$35.000, \$35.000-\$50.000, \$50.000-\$70.000, Más de \$70.000} & \peso{20\%} \\
+\hline
+
+¿Cuántos invitados tendrás? & single & 
+\opcion{Menos de 50, 50-100, 100-150, 150-200, 200-300, Más de 300} & \peso{10\%} \\
+\hline
+
+¿Cuántos tiempos de comida? & single & 
+\opcion{2 tiempos, 3 tiempos, 4 tiempos, 5 o más tiempos} & \peso{5\%} \\
+\hline
+
+¿Incluirás hora de cóctel? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas opciones especiales? & multiple & 
+\opcion{Vegetariana, Vegana, Sin gluten, Kosher, Halal, Ninguna} & \peso{5\%} \\
+\hline
+
+¿Qué bebestibles necesitas? & multiple & 
+\opcion{Bebidas, Vinos, Cerveza, Cócteles, Barra libre, Licores premium} & \peso{5\%} \\
+\hline
+
+¿Quieres degustación previa? & single & 
+\opcion{Indispensable, Preferible, No necesario} & \peso{3\%} \\
+\hline
+
+¿Incluir torta de novios? & single & 
+\opcion{No tengo otro proveedor, Sí simple, Sí elaborada, Mesa de postres completa} & \peso{5\%} \\
+\hline
+
+¿Qué nivel de servicio esperas? & single & 
+\opcion{Básico, Estándar, Premium/Garzones dedicados} & \peso{5\%} \\
+\hline
+
+¿Necesitas montaje de mesas? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Necesitas snack de medianoche? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Necesitas menú infantil? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Incluir comida para proveedores? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué tipos de servicio ofreces? & multiple & 
+\opcion{Servido, Buffet, Estaciones, Cóctel, Familiar} & \peso{20\%} \\
+\hline
+
+¿Qué tipos de cocina ofreces? & multiple & 
+\opcion{Chilena, Internacional, Mediterránea, Asiática, Gourmet, Comfort} & \peso{15\%} \\
+\hline
+
+Precio mínimo por persona & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo por persona & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+Mínimo de invitados que atiendes & number & 
+\opcion{10-500} & \peso{10\%} \\
+\hline
+
+Máximo de invitados que atiendes & number & 
+\opcion{50-1000} & - \\
+\hline
+
+¿Cuántos tiempos ofreces? & multiple & 
+\opcion{2, 3, 4, 5 o más} & \peso{5\%} \\
+\hline
+
+¿Ofreces servicio de cóctel? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Qué opciones especiales manejas? & multiple & 
+\opcion{Vegetariana, Vegana, Sin gluten, Kosher, Halal} & \peso{5\%} \\
+\hline
+
+¿Qué bebestibles ofreces? & multiple & 
+\opcion{Bebidas, Vinos, Cerveza, Cócteles, Barra libre, Premium} & \peso{5\%} \\
+\hline
+
+¿Ofreces degustación previa? & single & 
+\opcion{Sí gratis, Sí con costo, No} & \peso{3\%} \\
+\hline
+
+¿Ofreces torta de novios? & single & 
+\opcion{No, Simple, Elaborada, Mesa de postres} & \peso{5\%} \\
+\hline
+
+¿Qué niveles de servicio ofreces? & multiple & 
+\opcion{Básico, Estándar, Premium} & \peso{5\%} \\
+\hline
+
+¿Ofreces montaje de mesas? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Qué equipamiento incluyes? & multiple & 
+\opcion{Mesas, Sillas, Vajilla, Cristalería, Mantelería, Calefacción, Carpas} & - \\
+\hline
+
+¿Qué necesitas del lugar? & multiple & 
+\opcion{Cocina completa, Cocina básica, Solo electricidad, Nada} & - \\
+\hline
+
+Años de experiencia en eventos & number & 
+\opcion{0-30 años} & - \\
+\hline
+
+Eventos que realizas al año & number & 
+\opcion{1-200} & - \\
+\hline
+
+¿Tienes certificaciones? & multiple & 
+\opcion{Resolución sanitaria, HACCP, Orgánico certificado, Ninguna} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% CENTRO DE EVENTOS
+% ============================================
+\section{Centro de Eventos}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué tipo de lugar prefieres? & single & 
+\opcion{Hacienda/Campo, Hotel, Restaurant, Jardín/Parque, Playa, Viña, Loft/Industrial, Casona/Mansión, Castillo/Palacio} & \peso{20\%} \\
+\hline
+
+¿Interior o exterior? & single & 
+\opcion{Interior, Exterior, Ambos/Mixto, Flexible según clima} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto para el lugar? & single & 
+\opcion{Menos de \$1.000.000, \$1M-\$2M, \$2M-\$4M, \$4M-\$7M, Más de \$7.000.000} & \peso{20\%} \\
+\hline
+
+¿Cuántos invitados tendrás? & single & 
+\opcion{Menos de 50, 50-100, 100-150, 150-200, 200-300, Más de 300} & \peso{15\%} \\
+\hline
+
+¿Necesitas exclusividad del lugar? & single & 
+\opcion{Indispensable, Preferible, No necesario} & \peso{5\%} \\
+\hline
+
+¿Necesitas espacio para ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas estacionamiento? & single & 
+\opcion{Indispensable, Preferible, No necesario habrá valet} & \peso{5\%} \\
+\hline
+
+¿Necesitas alojamiento para invitados? & single & 
+\opcion{Indispensable, Preferible, No necesario} & \peso{3\%} \\
+\hline
+
+¿Preferencia de catering? & single & 
+\opcion{Solo del lugar, Puede ser externo, Sin preferencia} & \peso{5\%} \\
+\hline
+
+¿Hasta qué hora necesitas el lugar? & single & 
+\opcion{Medianoche, 2:00 AM, 4:00 AM, Hasta el amanecer, Flexible} & \peso{5\%} \\
+\hline
+
+¿Necesitas accesibilidad especial? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Necesitas plan de lluvia? & single & 
+\opcion{Indispensable, Preferible, No evento interior} & - \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué tipo de lugar eres? & single & 
+\opcion{Hacienda, Hotel, Restaurant, Jardín, Playa, Viña, Loft, Mansión, Castillo} & \peso{20\%} \\
+\hline
+
+¿Qué espacios ofreces? & multiple & 
+\opcion{Interior, Exterior, Ambos} & \peso{15\%} \\
+\hline
+
+Precio mínimo de arriendo & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de arriendo & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+Capacidad mínima & number & 
+\opcion{10-500 personas} & \peso{15\%} \\
+\hline
+
+Capacidad máxima & number & 
+\opcion{50-1000 personas} & - \\
+\hline
+
+¿Ofreces exclusividad? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Tienes espacio para ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Tienes estacionamiento? & single & 
+\opcion{Sí gratis, Sí con costo, Servicio valet, No} & \peso{5\%} \\
+\hline
+
+Capacidad de estacionamiento & number & 
+\opcion{0-500 vehículos} & - \\
+\hline
+
+¿Ofreces alojamiento? & single & 
+\opcion{Sí, Convenio cercano, No} & \peso{3\%} \\
+\hline
+
+Número de habitaciones & number & 
+\opcion{0-100} & - \\
+\hline
+
+¿Política de catering? & single & 
+\opcion{Solo nuestro catering, Preferimos el nuestro, Externo permitido, No ofrecemos} & \peso{5\%} \\
+\hline
+
+¿Hasta qué hora pueden estar? & single & 
+\opcion{Medianoche, 2 AM, 4 AM, Amanecer, Flexible} & \peso{5\%} \\
+\hline
+
+¿Hay restricciones de sonido? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Tienes accesibilidad? & boolean & 
+\opcion{Sí / No} & \peso{2\%} \\
+\hline
+
+¿Tienes plan de lluvia? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Qué servicios incluyes? & multiple & 
+\opcion{Mesas, Sillas, Mantelería, Iluminación, Sonido, Coordinador, Seguridad, Limpieza} & - \\
+\hline
+
+¿Qué restricciones tienes? & multiple & 
+\opcion{Sin fuegos artificiales, Sin confetti, Sin vino tinto, Sin mascotas, Sin DJ externo, Ninguna} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% DECORACIÓN
+% ============================================
+\section{Decoración}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilo de decoración prefieres? & single & 
+\opcion{Romántico, Rústico, Moderno/Minimalista, Clásico/Elegante, Bohemio, Tropical, Vintage, Glamoroso} & \peso{25\%} \\
+\hline
+
+¿Qué paleta de colores prefieres? & multiple & 
+\opcion{Blanco y verde, Pasteles, Colores vivos, Tonos tierra, Tonos joya, Monocromático, Personalizada} & \peso{15\%} \\
+\hline
+
+¿Cuál es tu presupuesto para decoración? & single & 
+\opcion{Menos de \$500.000, \$500.000-\$1M, \$1M-\$2M, \$2M-\$4M, Más de \$4.000.000} & \peso{20\%} \\
+\hline
+
+¿Qué tipo de flores prefieres? & multiple & 
+\opcion{Rosas, Peonías, Hortensias, Eucalipto, Flores silvestres, Tropicales, Flores secas, Sin preferencia} & \peso{10\%} \\
+\hline
+
+¿Necesitas ramo de novia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas decoración de ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Qué tipo de centros de mesa? & single & 
+\opcion{Bajos, Altos, Mixtos, No florales, Sin preferencia} & \peso{5\%} \\
+\hline
+
+¿Cuántas mesas tendrás? & single & 
+\opcion{Menos de 10, 10-20, 20-30, Más de 30} & \peso{5\%} \\
+\hline
+
+¿Qué elementos adicionales te interesan? & multiple & 
+\opcion{Arco de ceremonia, Backdrop/Fondo, Instalaciones colgantes, Velas, Letreros neón, Globos, Ninguno} & \peso{5\%} \\
+\hline
+
+¿Necesitas arriendo de mobiliario? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilos de decoración ofreces? & multiple & 
+\opcion{Romántico, Rústico, Moderno, Clásico, Bohemio, Tropical, Vintage, Glamoroso} & \peso{25\%} \\
+\hline
+
+¿Qué paletas manejas mejor? & multiple & 
+\opcion{Blanco/verde, Pasteles, Vivos, Tierra, Joya, Monocromático, Personalizada} & \peso{15\%} \\
+\hline
+
+Precio mínimo de servicio & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de servicio & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+¿Qué tipos de flores trabajas? & multiple & 
+\opcion{Rosas, Peonías, Hortensias, Eucalipto, Silvestres, Tropicales, Secas} & \peso{10\%} \\
+\hline
+
+¿Ofreces ramo de novia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces decoración de ceremonia? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Qué tipos de centros de mesa ofreces? & multiple & 
+\opcion{Bajos, Altos, Mixtos, No florales} & \peso{5\%} \\
+\hline
+
+Máximo de mesas que puedes decorar & number & 
+\opcion{5-100 mesas} & \peso{5\%} \\
+\hline
+
+¿Qué elementos adicionales ofreces? & multiple & 
+\opcion{Arco, Backdrop, Colgantes, Velas, Neón, Globos} & \peso{5\%} \\
+\hline
+
+¿Ofreces arriendo de mobiliario? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Qué mobiliario arriendas? & multiple & 
+\opcion{Sillas, Mesas, Mobiliario lounge, Barras, Iluminación, Mantelería} & - \\
+\hline
+
+Tiempo de montaje necesario & single & 
+\opcion{2 horas, 4 horas, 6 horas, Día completo} & - \\
+\hline
+
+Años de experiencia & number & 
+\opcion{0-30 años} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% WEDDING PLANNER
+% ============================================
+\section{Wedding Planner}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué nivel de servicio necesitas? & single & 
+\opcion{Planificación completa, Planificación parcial, Solo coordinación del día, Solo asesoría} & \peso{25\%} \\
+\hline
+
+¿Cuál es tu presupuesto para wedding planner? & single & 
+\opcion{Menos de \$500.000, \$500.000-\$1M, \$1M-\$2M, \$2M-\$4M, Más de \$4.000.000} & \peso{20\%} \\
+\hline
+
+¿Cuántos meses faltan para tu boda? & single & 
+\opcion{Menos de 3 meses, 3-6 meses, 6-12 meses, Más de 12 meses} & \peso{10\%} \\
+\hline
+
+¿Necesitas ayuda para encontrar proveedores? & single & 
+\opcion{Todos los proveedores, Algunos proveedores, Ya tengo mis proveedores} & \peso{15\%} \\
+\hline
+
+¿Necesitas ayuda con el diseño/estética? & single & 
+\opcion{Diseño completo, Solo orientación, Ya tengo definido} & \peso{10\%} \\
+\hline
+
+¿Necesitas gestión de presupuesto? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas gestión de cronograma? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas gestión de invitados? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Necesitas coordinación del ensayo? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Cómo prefieres comunicarte? & single & 
+\opcion{WhatsApp, Email, Llamadas, Reuniones presenciales, Flexible} & \peso{2\%} \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué niveles de servicio ofreces? & multiple & 
+\opcion{Completo, Parcial, Solo día, Asesoría} & \peso{25\%} \\
+\hline
+
+Precio mínimo de servicio & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio máximo de servicio & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+Tiempo mínimo de anticipación & single & 
+\opcion{Menos de 3 meses, 3-6 meses, 6-12 meses} & \peso{10\%} \\
+\hline
+
+¿Tienes red de proveedores? & single & 
+\opcion{Extensa, Moderada, Limitada} & \peso{15\%} \\
+\hline
+
+¿Ofreces servicios de diseño? & multiple & 
+\opcion{Completo, Orientación, Moodboards, Ninguno} & \peso{10\%} \\
+\hline
+
+¿Ofreces gestión de presupuesto? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces gestión de cronograma? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces gestión de invitados? & boolean & 
+\opcion{Sí / No} & \peso{5\%} \\
+\hline
+
+¿Ofreces coordinación del ensayo? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Cuántas personas en tu equipo el día del evento? & single & 
+\opcion{Solo yo, 2 personas, 3 o más} & \peso{2\%} \\
+\hline
+
+¿Cuántos eventos manejas por mes? & single & 
+\opcion{1, 2-3, 4 o más} & - \\
+\hline
+
+Años de experiencia & number & 
+\opcion{0-20 años} & - \\
+\hline
+
+¿Tienes certificaciones? & multiple & 
+\opcion{Wedding Planner Institute, ABC Certification, Otras, Ninguna} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% MAQUILLAJE & PEINADO
+% ============================================
+\section{Maquillaje \& Peinado}
+
+\begin{userbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{userColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilo de maquillaje prefieres? & single & 
+\opcion{Natural/Fresco, Clásico/Elegante, Glamoroso, Editorial/Dramático, Romántico/Suave, Bohemio} & \peso{25\%} \\
+\hline
+
+¿Cuál es tu presupuesto? & single & 
+\opcion{Menos de \$100.000, \$100.000-\$200.000, \$200.000-\$350.000, Más de \$350.000} & \peso{20\%} \\
+\hline
+
+¿Necesitas prueba de maquillaje? & single & 
+\opcion{Indispensable, Preferible, No necesario} & \peso{10\%} \\
+\hline
+
+¿Necesitas servicio de peinado? & boolean & 
+\opcion{Sí / No} & \peso{15\%} \\
+\hline
+
+¿Qué estilo de peinado prefieres? & single & 
+\opcion{Recogido, Semi-recogido, Suelto, Trenzas, Indecisa} & \peso{10\%} \\
+\hline
+
+¿Necesitas extensiones de cabello? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Quieres pestañas postizas? & single & 
+\opcion{No, Naturales, Dramáticas, Indecisa} & \peso{5\%} \\
+\hline
+
+¿Necesitas servicio para cortejo? & single & 
+\opcion{No, Algunas personas, Cortejo completo} & \peso{5\%} \\
+\hline
+
+¿Cuántas personas del cortejo? & number & 
+\opcion{0-15 personas} & - \\
+\hline
+
+¿Incluir madres? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Necesitas retoques durante el evento? & single & 
+\opcion{No, Solo kit de retoque, Persona presente} & \peso{4\%} \\
+\hline
+
+¿Dónde necesitas el servicio? & single & 
+\opcion{A domicilio, En salón, En el lugar del evento, Flexible} & - \\
+\hline
+
+\end{longtable}
+
+\end{userbox}
+
+\vspace{1cm}
+
+\begin{providerbox}
+
+\begin{longtable}{|L{5.5cm}|C{1.8cm}|L{5.5cm}|C{1cm}|}
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{providerColor!20}
+\textbf{Pregunta} & \textbf{Tipo} & \textbf{Opciones de Respuesta} & \textbf{Peso} \\
+\hline
+\endhead
+
+¿Qué estilos de maquillaje ofreces? & multiple & 
+\opcion{Natural, Clásico, Glamoroso, Editorial, Romántico, Bohemio} & \peso{25\%} \\
+\hline
+
+Precio para novia (maquillaje + peinado) & number & 
+\opcion{Valor en CLP} & \peso{20\%} \\
+\hline
+
+Precio por persona del cortejo & number & 
+\opcion{Valor en CLP} & - \\
+\hline
+
+¿Ofreces prueba de maquillaje? & single & 
+\opcion{Sí gratis, Sí con costo, No} & \peso{10\%} \\
+\hline
+
+¿Ofreces servicio de peinado? & boolean & 
+\opcion{Sí / No} & \peso{15\%} \\
+\hline
+
+¿Qué estilos de peinado ofreces? & multiple & 
+\opcion{Recogido, Semi-recogido, Suelto, Trenzas} & \peso{10\%} \\
+\hline
+
+¿Trabajas con extensiones? & boolean & 
+\opcion{Sí / No} & \peso{3\%} \\
+\hline
+
+¿Ofreces pestañas postizas? & single & 
+\opcion{No, Naturales, Dramáticas, Ambas} & \peso{5\%} \\
+\hline
+
+¿Cuántas personas en tu equipo? & single & 
+\opcion{Solo yo, 2 personas, 3 o más} & \peso{5\%} \\
+\hline
+
+Máximo de personas que atiendes por evento & number & 
+\opcion{1-20 personas} & \peso{5\%} \\
+\hline
+
+¿Ofreces retoques durante el evento? & single & 
+\opcion{No, Kit, Persona presente} & \peso{4\%} \\
+\hline
+
+¿Dónde ofreces el servicio? & multiple & 
+\opcion{A domicilio, En salón, En el lugar del evento} & \peso{3\%} \\
+\hline
+
+¿Viajas fuera de tu zona? & boolean & 
+\opcion{Sí / No} & - \\
+\hline
+
+¿Qué marcas de productos usas? & multiple & 
+\opcion{MAC, NARS, Charlotte Tilbury, Bobbi Brown, Dior, Otras premium, Variadas} & - \\
+\hline
+
+Años de experiencia en novias & number & 
+\opcion{0-20 años} & - \\
+\hline
+
+\end{longtable}
+
+\end{providerbox}
+
+\newpage
+
+% ============================================
+% CRITERIOS DE MATCHMAKING
+% ============================================
+\section{Criterios de Matchmaking}
+
+El sistema de matchmaking utiliza las respuestas de las encuestas para calcular un \textbf{score de compatibilidad} entre usuarios y proveedores. A continuación se detallan los pesos asignados a cada criterio por categoría.
+
+\subsection{Resumen de Pesos por Categoría}
+
+\subsubsection{Fotografía}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Estilo fotográfico & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Horas de cobertura & 15\% \\
+\hline
+Pre/Post boda & 10\% \\
+\hline
+Formato entrega & 10\% \\
+\hline
+Cantidad fotos & 10\% \\
+\hline
+Ubicación/Viaje & 10\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Videografía}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Estilo de video & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Duración del video & 15\% \\
+\hline
+Horas de cobertura & 10\% \\
+\hline
+Servicios adicionales & 30\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{DJ/VJ}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Géneros musicales & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Estilo de fiesta & 15\% \\
+\hline
+Nivel de animación & 10\% \\
+\hline
+Iluminación & 10\% \\
+\hline
+Horas de servicio & 10\% \\
+\hline
+Efectos especiales & 5\% \\
+\hline
+Ubicación & 5\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Banquetería}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Tipo de servicio & 20\% \\
+\hline
+Presupuesto por persona & 20\% \\
+\hline
+Tipo de cocina & 15\% \\
+\hline
+Capacidad & 15\% \\
+\hline
+Opciones dietéticas & 10\% \\
+\hline
+Bebestibles & 10\% \\
+\hline
+Degustación & 5\% \\
+\hline
+Servicios adicionales & 5\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Centro de Eventos}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Tipo de lugar & 20\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Capacidad & 15\% \\
+\hline
+Interior/Exterior & 15\% \\
+\hline
+Exclusividad & 10\% \\
+\hline
+Horario & 10\% \\
+\hline
+Servicios incluidos & 10\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Decoración}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Estilo & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Paleta de colores & 15\% \\
+\hline
+Tipos de flores & 10\% \\
+\hline
+Elementos adicionales & 10\% \\
+\hline
+Capacidad (mesas) & 10\% \\
+\hline
+Arriendo mobiliario & 10\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Wedding Planner}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Nivel de servicio & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Red de proveedores & 15\% \\
+\hline
+Servicios de diseño & 15\% \\
+\hline
+Gestión de presupuesto & 10\% \\
+\hline
+Gestión de cronograma & 10\% \\
+\hline
+Tiempo de anticipación & 5\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Maquillaje \& Peinado}
+\begin{center}
+\begin{tabular}{|L{6cm}|C{3cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Criterio} & \textbf{Peso} \\
+\hline
+Estilo de maquillaje & 25\% \\
+\hline
+Presupuesto & 20\% \\
+\hline
+Servicio de peinado & 15\% \\
+\hline
+Prueba de maquillaje & 10\% \\
+\hline
+Capacidad (cortejo) & 10\% \\
+\hline
+Estilos de peinado & 10\% \\
+\hline
+Servicios adicionales & 10\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Lógica de Comparación}
+
+\begin{center}
+\begin{tabular}{|L{4cm}|L{9cm}|}
+\hline
+\rowcolor{tableHeader}
+\textbf{Tipo} & \textbf{Lógica de Match} \\
+\hline
+single vs multiple & 100\% si la opción del usuario está en las opciones del proveedor \\
+\hline
+multiple vs multiple & \% de opciones del usuario cubiertas por el proveedor \\
+\hline
+range vs range & 100\% si hay solapamiento, decrece según distancia \\
+\hline
+boolean & 100\% si coinciden, 50\% si usuario=No y proveedor=Sí \\
+\hline
+number & \% basado en qué tan cerca está del rango del proveedor \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{2cm}
+
+% ============================================
+% PIE DE PÁGINA FINAL
+% ============================================
+\begin{center}
+\rule{0.5\textwidth}{0.5pt}\\[1em]
+\textcolor{mediumGray}{\small Documento generado para Matri.AI}\\
+\textcolor{mediumGray}{\small Versión 1.0 - Diciembre 2025}
+\end{center}
+
+\end{document}
+
