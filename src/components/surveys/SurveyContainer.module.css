@@ -335,31 +335,10 @@
   justify-content: center;
   z-index: 10;
   animation: surveyFadeIn 400ms ease-out forwards;
-  /* Permitir scroll vertical si es necesario, pero ocultar horizontal */
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* Padding extra en bottom para que el glow del botón no se corte */
-  padding: 1rem 1rem 2rem 1rem;
-  /* Scrollbar elegante */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
-}
-
-.surveyContent::-webkit-scrollbar {
-  width: 4px;
-}
-
-.surveyContent::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.surveyContent::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 2px;
-}
-
-.surveyContent::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  /* Permitir que el glow del botón se vea - el scroll se maneja en SurveyStep */
+  overflow: visible;
+  /* Padding generoso abajo para el glow del botón */
+  padding: 1rem 1rem 3rem 1rem;
 }
 
 @keyframes surveyFadeIn {

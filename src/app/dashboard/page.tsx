@@ -491,10 +491,12 @@ export default function UserDashboardPage() {
                             className={styles.matchCard}
                           >
                             <div className={styles.matchImage}>
-                              <img 
-                                src={categoryImage} 
-                                alt={match.providerInfo.providerName}
-                              />
+                              <div className={styles.matchImageWrapper}>
+                                <img 
+                                  src={categoryImage} 
+                                  alt={match.providerInfo.providerName}
+                                />
+                              </div>
                               <div 
                                 className={styles.matchBadgeFloating}
                                 style={getMatchCategoryStyles(match.matchScore)}
@@ -597,10 +599,12 @@ export default function UserDashboardPage() {
                             className={`${styles.matchCard} ${styles.matchCardApproved}`}
                           >
                             <div className={styles.matchImage}>
-                              <img 
-                                src={categoryImage} 
-                                alt={match.providerInfo.providerName}
-                              />
+                              <div className={styles.matchImageWrapper}>
+                                <img 
+                                  src={categoryImage} 
+                                  alt={match.providerInfo.providerName}
+                                />
+                              </div>
                               <div 
                                 className={styles.matchBadgeFloating}
                                 style={getMatchCategoryStyles(match.matchScore)}
@@ -643,7 +647,15 @@ export default function UserDashboardPage() {
                                 </span>
                               </div>
 
-                              <div className={styles.matchActions}>
+                              <div className={styles.matchActionsApproved}>
+                                <button 
+                                  className={styles.revertButtonSmall}
+                                  onClick={() => handleRevertMatch(match.id)}
+                                  disabled={isProcessing}
+                                  title="Cambiar de opinión"
+                                >
+                                  {isProcessing ? <Loader2 size={14} className={styles.spinnerIcon} /> : <RotateCcw size={14} />}
+                                </button>
                                 <button 
                                   className={styles.viewContactButton}
                                   onClick={() => handleViewProviderDetails(match)}
@@ -651,14 +663,6 @@ export default function UserDashboardPage() {
                                   <Eye size={16} />
                                   <span>Ver contacto</span>
                                   <ChevronRight size={14} />
-                                </button>
-                                <button 
-                                  className={styles.revertButton}
-                                  onClick={() => handleRevertMatch(match.id)}
-                                  disabled={isProcessing}
-                                  title="Cambiar de opinión"
-                                >
-                                  {isProcessing ? <Loader2 size={14} className={styles.spinnerIcon} /> : <RotateCcw size={14} />}
                                 </button>
                               </div>
                             </div>

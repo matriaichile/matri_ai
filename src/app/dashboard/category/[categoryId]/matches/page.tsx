@@ -301,10 +301,12 @@ export default function CategoryMatchesPage() {
                         <div className={styles.matchCard}>
                           {/* Imagen del proveedor */}
                           <div className={styles.matchImage}>
-                            <img 
-                              src={categoryImage} 
-                              alt={match.providerInfo.providerName}
-                            />
+                            <div className={styles.matchImageWrapper}>
+                              <img 
+                                src={categoryImage} 
+                                alt={match.providerInfo.providerName}
+                              />
+                            </div>
                             <div className={styles.matchCategory}>
                               <span>{categoryInfo?.name}</span>
                             </div>
@@ -396,10 +398,12 @@ export default function CategoryMatchesPage() {
                       >
                         {/* Imagen del proveedor */}
                         <div className={styles.matchImage}>
-                          <img 
-                            src={categoryImage} 
-                            alt={match.providerInfo.providerName}
-                          />
+                          <div className={styles.matchImageWrapper}>
+                            <img 
+                              src={categoryImage} 
+                              alt={match.providerInfo.providerName}
+                            />
+                          </div>
                           <div 
                             className={styles.matchBadgeSmall}
                             style={getMatchCategoryStylesCompact(match.matchScore)}
@@ -432,17 +436,9 @@ export default function CategoryMatchesPage() {
                           </div>
                         </div>
 
-                        <div className={styles.matchActions}>
+                        <div className={styles.matchActionsApproved}>
                           <button 
-                            className={styles.viewDetailsButton}
-                            onClick={() => handleViewDetails(match)}
-                          >
-                            <Eye size={16} />
-                            <span>Ver contacto</span>
-                            <ChevronRight size={14} />
-                          </button>
-                          <button 
-                            className={styles.revertButton}
+                            className={styles.revertButtonSmall}
                             onClick={() => handleRevert(match.id)}
                             disabled={processingId === match.id}
                             title="Cambiar de opinión"
@@ -452,6 +448,14 @@ export default function CategoryMatchesPage() {
                             ) : (
                               <RotateCcw size={14} />
                             )}
+                          </button>
+                          <button 
+                            className={styles.viewContactButton}
+                            onClick={() => handleViewDetails(match)}
+                          >
+                            <Eye size={16} />
+                            <span>Ver contacto</span>
+                            <ChevronRight size={14} />
                           </button>
                         </div>
                       </div>
