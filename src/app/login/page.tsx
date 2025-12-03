@@ -22,7 +22,9 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated()) {
-      if (userType === 'user') {
+      if (userType === 'admin') {
+        router.push('/admin');
+      } else if (userType === 'user') {
         router.push('/dashboard');
       } else if (userType === 'provider') {
         router.push('/dashboard/provider');
@@ -42,8 +44,20 @@ export default function LoginPage() {
     setLocalError(null);
     
     try {
-      await loginWithEmail(email, password);
-      // La redirección se maneja en el useEffect de arriba
+      const user = await loginWithEmail(email, password);
+      
+      // Verificar si es admin leyendo los claims del token
+      const tokenResult = await user.getIdTokenResult(true);
+      const claims = tokenResult.claims;
+      
+      // Redirigir según tipo de usuario
+      // El middleware también maneja esto, pero hacemos redirect explícito para UX
+      if (claims.admin === true || claims.super_admin === true) {
+        router.push('/admin');
+      } else {
+        // El useEffect redirigirá según userType del store
+        router.refresh(); // Forzar que el middleware actúe
+      }
     } catch (error) {
       // El error ya se maneja en el store
       console.error('Error de login:', error);

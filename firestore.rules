@@ -24,56 +24,87 @@ service cloud.firestore {
     function isLeadProvider() {
       return resource.data.providerId == request.auth.uid;
     }
+    
+    // ======== FUNCIONES DE ADMIN ========
+    
+    // Verificar si el usuario tiene el claim de admin
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // Verificar si el usuario tiene el claim de super_admin
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.super_admin == true;
+    }
+    
+    // Verificar si es admin o super_admin
+    function hasAdminAccess() {
+      return isAdmin() || isSuperAdmin();
+    }
 
     // ======== REGLAS PARA CADA COLECCIÓN ========
  
     // USUARIOS (Novios)
     match /users/{userId} {
-      // Lectura: Solo el propio usuario puede leer su perfil
-      allow read: if isAuthenticated() && isOwner(userId);
+      // Lectura: El propio usuario o admins pueden leer
+      allow read: if isAuthenticated() && (isOwner(userId) || hasAdminAccess());
       
       // Creación: Usuario autenticado puede crear su propio perfil
       allow create: if isAuthenticated() && isOwner(userId);
       
-      // Actualización: Solo el propio usuario puede actualizar su perfil
-      allow update: if isAuthenticated() && isOwner(userId);
+      // Actualización: El propio usuario o admins pueden actualizar
+      allow update: if isAuthenticated() && (isOwner(userId) || hasAdminAccess());
       
-      // Eliminación: No permitida desde el cliente
-      allow delete: if false;
+      // Eliminación: Solo super_admin puede eliminar
+      allow delete: if isSuperAdmin();
     }
 
     // PROVEEDORES
     match /providers/{providerId} {
-      // Lectura pública: Cualquiera puede ver perfiles de proveedores activos
-      // Lectura completa: Solo el propio proveedor ve todos sus datos
+      // Lectura pública: Cualquiera puede ver perfiles de proveedores
+      // Admins tienen acceso completo
       allow read: if true;
       
       // Creación: Usuario autenticado puede crear su propio perfil de proveedor
       allow create: if isAuthenticated() && isOwner(providerId);
       
-      // Actualización: Solo el propio proveedor puede actualizar su perfil
-      // NOTA: El campo 'status' solo puede ser cambiado por admin (no implementado aún)
-      allow update: if isAuthenticated() && isOwner(providerId);
+      // Actualización: El propio proveedor o admins pueden actualizar
+      // NOTA: El campo 'status' solo puede ser cambiado por admin
+      allow update: if isAuthenticated() && (isOwner(providerId) || hasAdminAccess());
       
-      // Eliminación: No permitida desde el cliente
-      allow delete: if false;
+      // Eliminación: Solo super_admin puede eliminar
+      allow delete: if isSuperAdmin();
     }
 
     // LEADS/MATCHES
     match /leads/{leadId} {
-      // Lectura: El usuario o el proveedor involucrado pueden leer el lead
-      allow read: if isAuthenticated() && (isLeadUser() || isLeadProvider());
+      // Lectura: El usuario, el proveedor involucrado, o admins pueden leer
+      allow read: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
       
-      // Creación: Solo usuarios autenticados pueden crear leads
-      // El userId debe coincidir con el usuario autenticado
+      // Creación: Usuarios autenticados o admins pueden crear leads
       allow create: if isAuthenticated() && 
-        request.resource.data.userId == request.auth.uid;
+        (request.resource.data.userId == request.auth.uid || hasAdminAccess());
       
-      // Actualización: Usuario o proveedor pueden actualizar el estado
-      allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider());
+      // Actualización: Usuario, proveedor, o admin pueden actualizar el estado
+      allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
       
-      // Eliminación: No permitida desde el cliente
-      allow delete: if false;
+      // Eliminación: Solo admins pueden eliminar leads
+      allow delete: if hasAdminAccess();
+    }
+
+    // ADMINISTRADORES
+    match /admins/{adminId} {
+      // Lectura: Solo el propio admin o super_admins pueden leer
+      allow read: if isAuthenticated() && (isOwner(adminId) || isSuperAdmin());
+      
+      // Creación: Solo super_admin puede crear nuevos admins
+      allow create: if isSuperAdmin();
+      
+      // Actualización: Solo super_admin puede actualizar perfiles de admin
+      allow update: if isSuperAdmin();
+      
+      // Eliminación: Solo super_admin puede eliminar admins
+      allow delete: if isSuperAdmin();
     }
 
     // REGLA POR DEFECTO: Denegar todo lo que no esté explícitamente permitido

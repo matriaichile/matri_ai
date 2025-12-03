@@ -6,8 +6,20 @@ import { User as FirebaseUser } from 'firebase/auth';
 // TIPOS PARA USUARIOS
 // ============================================
 
-export type UserType = 'user' | 'provider';
+export type UserType = 'user' | 'provider' | 'admin';
 export type ProviderStatus = 'active' | 'pending' | 'closed';
+
+// Perfil de administrador
+export interface AdminProfile {
+  id: string;
+  type: 'admin';
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'moderator';
+  permissions: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // Datos del perfil de usuario (novios)
 export interface UserProfile {
@@ -55,7 +67,7 @@ export interface ProviderProfile {
   updatedAt: Date;
 }
 
-export type UserProfileData = UserProfile | ProviderProfile;
+export type UserProfileData = UserProfile | ProviderProfile | AdminProfile;
 
 // ============================================
 // ESTADO DE AUTENTICACIÓN
@@ -93,6 +105,7 @@ interface AuthState {
   isAuthenticated: () => boolean;
   isUser: () => boolean;
   isProvider: () => boolean;
+  isAdmin: () => boolean;
 }
 
 // ============================================
@@ -145,6 +158,11 @@ export const useAuthStore = create<AuthState>()(
         const { userType } = get();
         return userType === 'provider';
       },
+      
+      isAdmin: () => {
+        const { userType } = get();
+        return userType === 'admin';
+      },
     }),
     {
       name: 'matri-auth-storage',
@@ -155,4 +173,3 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
-

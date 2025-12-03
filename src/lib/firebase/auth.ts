@@ -10,6 +10,7 @@ import { auth } from './config';
 import { useAuthStore, UserProfileData } from '@/store/authStore';
 import { getUserProfile, createUserProfile, createProviderProfile } from './firestore';
 import { UserWizardData, ProviderWizardData } from '@/store/wizardStore';
+import { setTokenCookie, removeTokenCookie } from './token-cookie';
 
 // ============================================
 // TIPOS DE ERROR
@@ -134,6 +135,10 @@ export const loginWithEmail = async (email: string, password: string): Promise<F
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
+    // Guardar token en cookie para el middleware
+    const token = await user.getIdToken();
+    setTokenCookie(token);
+    
     // Obtener perfil de Firestore
     const profile = await getUserProfile(user.uid);
     
@@ -160,6 +165,9 @@ export const logout = async (): Promise<void> => {
   try {
     setIsLoading(true);
     setError(null);
+    
+    // Eliminar token de la cookie
+    removeTokenCookie();
     
     await signOut(auth);
     clearAuth();
@@ -205,6 +213,10 @@ export const initAuthListener = (): (() => void) => {
     if (user) {
       setFirebaseUser(user);
       
+      // Actualizar token en cookie (puede haber cambiado)
+      const token = await user.getIdToken();
+      setTokenCookie(token);
+      
       // Obtener perfil de Firestore
       try {
         const profile = await getUserProfile(user.uid);
@@ -216,6 +228,7 @@ export const initAuthListener = (): (() => void) => {
     } else {
       setFirebaseUser(null);
       setUserProfile(null);
+      removeTokenCookie();
     }
     
     setIsLoading(false);
