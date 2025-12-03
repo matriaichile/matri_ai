@@ -258,6 +258,9 @@ export const getAllProviders = async (
         id: doc.id,
         type: 'provider' as const,
         ...data,
+        // Valores por defecto para proveedores existentes sin estos campos
+        leadLimit: data.leadLimit ?? 10,
+        leadsUsed: data.leadsUsed ?? 0,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
       } as ProviderProfile;
@@ -492,6 +495,7 @@ export const adminUpdateProvider = async (
 /**
  * Asignar leads adicionales a un proveedor
  * Esto crea nuevos leads vinculando usuarios con el proveedor
+ * También incrementa el contador de leads usados del proveedor
  */
 export const assignLeadsToProvider = async (
   providerId: string,
@@ -509,6 +513,15 @@ export const assignLeadsToProvider = async (
       throw new Error('Proveedor no encontrado');
     }
     const providerData = providerDoc.data();
+    
+    // Verificar que el proveedor puede recibir más leads
+    const currentLeadsUsed = providerData.leadsUsed ?? 0;
+    const leadLimit = providerData.leadLimit ?? 10;
+    const leadsRemaining = leadLimit - currentLeadsUsed;
+    
+    if (leadsRemaining < userIds.length) {
+      throw new Error(`El proveedor solo puede recibir ${leadsRemaining} leads más. Límite: ${leadLimit}, Usados: ${currentLeadsUsed}`);
+    }
     
     // Crear leads para cada usuario
     for (const userId of userIds) {
@@ -553,6 +566,13 @@ export const assignLeadsToProvider = async (
       });
     }
     
+    // Actualizar el contador de leads usados del proveedor
+    const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+    batch.update(providerRef, {
+      leadsUsed: currentLeadsUsed + createdLeads.length,
+      updatedAt: now,
+    });
+    
     await batch.commit();
     
     return createdLeads;
@@ -563,11 +583,35 @@ export const assignLeadsToProvider = async (
 };
 
 /**
- * Eliminar un lead
+ * Eliminar un lead y decrementar el contador del proveedor
  */
 export const deleteLead = async (leadId: string): Promise<void> => {
   try {
-    await deleteDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    // Obtener el lead para saber el proveedor
+    const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    
+    if (leadDoc.exists()) {
+      const leadData = leadDoc.data();
+      const providerId = leadData.providerId;
+      
+      // Eliminar el lead
+      await deleteDoc(doc(db, COLLECTIONS.LEADS, leadId));
+      
+      // Decrementar el contador de leads del proveedor
+      if (providerId) {
+        const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+        if (providerDoc.exists()) {
+          const currentLeadsUsed = providerDoc.data().leadsUsed || 0;
+          await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
+            leadsUsed: Math.max(0, currentLeadsUsed - 1),
+            updatedAt: Timestamp.now(),
+          });
+        }
+      }
+    } else {
+      // Si no existe, simplemente intentamos eliminarlo
+      await deleteDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    }
   } catch (error) {
     console.error('Error al eliminar lead:', error);
     throw error;
@@ -691,6 +735,9 @@ export const getProviderById = async (providerId: string): Promise<ProviderProfi
         id: providerDoc.id,
         type: 'provider',
         ...data,
+        // Valores por defecto para proveedores existentes sin estos campos
+        leadLimit: data.leadLimit ?? 10,
+        leadsUsed: data.leadsUsed ?? 0,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
       } as ProviderProfile;
@@ -699,6 +746,135 @@ export const getProviderById = async (providerId: string): Promise<ProviderProfi
     return null;
   } catch (error) {
     console.error('Error al obtener proveedor:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// FUNCIONES DE GESTIÓN DE LEADS LIMIT (ADMIN)
+// ============================================
+
+/**
+ * Actualizar el límite de leads de un proveedor
+ */
+export const updateProviderLeadLimit = async (
+  providerId: string,
+  newLimit: number
+): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
+      leadLimit: newLimit,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error al actualizar límite de leads:', error);
+    throw error;
+  }
+};
+
+/**
+ * Incrementar los leads usados de un proveedor
+ * Se llama cuando un usuario genera un match con el proveedor
+ */
+export const incrementProviderLeadsUsed = async (
+  providerId: string,
+  amount: number = 1
+): Promise<void> => {
+  try {
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    if (!providerDoc.exists()) {
+      throw new Error('Proveedor no encontrado');
+    }
+    
+    const currentLeadsUsed = providerDoc.data().leadsUsed || 0;
+    
+    await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
+      leadsUsed: currentLeadsUsed + amount,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error al incrementar leads usados:', error);
+    throw error;
+  }
+};
+
+/**
+ * Decrementar los leads usados de un proveedor
+ * Se llama cuando se elimina un lead o se rechaza
+ */
+export const decrementProviderLeadsUsed = async (
+  providerId: string,
+  amount: number = 1
+): Promise<void> => {
+  try {
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    if (!providerDoc.exists()) {
+      throw new Error('Proveedor no encontrado');
+    }
+    
+    const currentLeadsUsed = providerDoc.data().leadsUsed || 0;
+    const newValue = Math.max(0, currentLeadsUsed - amount);
+    
+    await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
+      leadsUsed: newValue,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error al decrementar leads usados:', error);
+    throw error;
+  }
+};
+
+/**
+ * Verificar si un proveedor puede recibir más leads
+ */
+export const canProviderReceiveLeads = async (providerId: string): Promise<boolean> => {
+  try {
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    if (!providerDoc.exists()) {
+      return false;
+    }
+    
+    const data = providerDoc.data();
+    const leadLimit = data.leadLimit ?? 10;
+    const leadsUsed = data.leadsUsed ?? 0;
+    
+    return leadsUsed < leadLimit;
+  } catch (error) {
+    console.error('Error al verificar capacidad de leads:', error);
+    return false;
+  }
+};
+
+/**
+ * Obtener estadísticas de leads de un proveedor
+ */
+export const getProviderLeadStats = async (providerId: string): Promise<{
+  leadLimit: number;
+  leadsUsed: number;
+  leadsRemaining: number;
+  percentageUsed: number;
+}> => {
+  try {
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    if (!providerDoc.exists()) {
+      throw new Error('Proveedor no encontrado');
+    }
+    
+    const data = providerDoc.data();
+    const leadLimit = data.leadLimit ?? 10;
+    const leadsUsed = data.leadsUsed ?? 0;
+    const leadsRemaining = Math.max(0, leadLimit - leadsUsed);
+    const percentageUsed = leadLimit > 0 ? Math.round((leadsUsed / leadLimit) * 100) : 0;
+    
+    return {
+      leadLimit,
+      leadsUsed,
+      leadsRemaining,
+      percentageUsed,
+    };
+  } catch (error) {
+    console.error('Error al obtener estadísticas de leads:', error);
     throw error;
   }
 };

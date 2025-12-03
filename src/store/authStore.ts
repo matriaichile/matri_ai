@@ -63,6 +63,9 @@ export interface ProviderProfile {
   tiktok: string;
   portfolioImages: string[];
   status: ProviderStatus;
+  // Sistema de leads - cuántos leads puede recibir el proveedor
+  leadLimit: number; // Límite máximo de leads asignados (por defecto 10)
+  leadsUsed: number; // Cantidad de leads ya consumidos/asignados
   createdAt: Date;
   updatedAt: Date;
 }

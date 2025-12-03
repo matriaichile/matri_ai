@@ -229,9 +229,19 @@ Similar a fotografía con variaciones:
 
 ---
 
-## 6. Sistema de Matchmaking
+## 6. Sistema de Matchmaking y Leads
 
-### 6.1 Criterios de Match
+### 6.1 Concepto del Sistema de Leads
+
+El sistema de leads funciona de la siguiente manera:
+
+1. **Usuarios (Novios)** buscan proveedores para su boda
+2. Cuando un usuario busca proveedores, el sistema genera **3 matches** con los proveedores más compatibles
+3. Cada match generado **consume 1 lead** del límite del proveedor
+4. Los proveedores tienen un **límite de leads** que pueden recibir (por defecto: 10)
+5. Cuando un proveedor alcanza su límite, no aparece más en las recomendaciones
+
+### 6.2 Criterios de Match
 
 El sistema genera 3 proveedores recomendados basándose en:
 
@@ -241,14 +251,41 @@ El sistema genera 3 proveedores recomendados basándose en:
 4. **Preferencias específicas** - Según categoría
 5. **Tipo de evento** - Ceremonia + Cóctel + Cena + Fiesta
 6. **Estilo** - Coincidencia de estilos
+7. **Disponibilidad de leads** - El proveedor debe tener leads disponibles
 
-### 6.2 Match Score
+### 6.3 Match Score
 
 - Siempre debe haber un porcentaje de probabilidad de match
 - **NUNCA** debe aparecer que NO hay match
 - Mínimo 3 opciones si existen
 
-### 6.3 Notificaciones
+### 6.4 Sistema de Límite de Leads
+
+| Campo | Descripción |
+|-------|-------------|
+| `leadLimit` | Número máximo de leads que puede recibir el proveedor (default: 10) |
+| `leadsUsed` | Cantidad de leads ya consumidos |
+| `leadsRemaining` | Calculado: `leadLimit - leadsUsed` |
+
+#### Reglas del sistema:
+- Cuando se crea un proveedor: `leadLimit = 10`, `leadsUsed = 0`
+- Cuando se genera un match: `leadsUsed += 1`
+- Cuando se elimina un lead: `leadsUsed -= 1`
+- Solo admins pueden modificar `leadLimit`
+- El proveedor NO puede modificar estos campos
+
+### 6.5 Gestión de Leads (Admin)
+
+Desde el panel de administración se puede:
+
+| Acción | Descripción |
+|--------|-------------|
+| Ver leads de proveedor | Lista de todos los usuarios que son leads del proveedor |
+| Ajustar límite | Aumentar o disminuir el límite de leads de un proveedor |
+| Asignar leads manualmente | Vincular usuarios específicos como leads de un proveedor |
+| Eliminar leads | Remover un lead y liberar el cupo del proveedor |
+
+### 6.6 Notificaciones
 
 - Email al proveedor cuando recibe un lead
 - Notificación en dashboard (deseable ambas)
@@ -385,6 +422,9 @@ src/
   tiktok: string;
   portfolioImages: string[];
   status: 'pending' | 'active' | 'closed';
+  // Sistema de leads
+  leadLimit: number;    // Límite máximo de leads (default: 10)
+  leadsUsed: number;    // Cantidad de leads consumidos (default: 0)
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

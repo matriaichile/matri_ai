@@ -146,6 +146,9 @@ export const createUserProfile = async (
   }
 };
 
+// Constantes del sistema de leads
+export const DEFAULT_LEAD_LIMIT = 10; // Límite por defecto de leads para nuevos proveedores
+
 /**
  * Crear perfil de proveedor
  */
@@ -172,6 +175,8 @@ export const createProviderProfile = async (
       tiktok: providerData.tiktok,
       portfolioImages: providerData.portfolioImages,
       status: 'pending' as const, // Los proveedores empiezan como pendientes
+      leadLimit: DEFAULT_LEAD_LIMIT, // Límite de leads por defecto
+      leadsUsed: 0, // Sin leads consumidos al inicio
       createdAt: now,
       updatedAt: now,
     };
