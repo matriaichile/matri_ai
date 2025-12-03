@@ -262,7 +262,7 @@ export const createProviderProfile = async (
       email: providerData.email,
       providerName: providerData.providerName,
       phone: providerData.phone,
-      categories: providerData.categories,
+      categories: categories, // Usar la variable ya casteada a CategoryId[]
       serviceStyle: providerData.serviceStyle,
       priceRange: providerData.priceRange,
       workRegion: providerData.workRegion,
@@ -645,8 +645,8 @@ export const createCategoryLead = async (
         availabilityMatch: 0,
         specificCriteriaMatch: 0,
       },
-      userSurveyId: userSurveyId || null,
-      providerSurveyId: providerSurveyId || null,
+      userSurveyId: userSurveyId || undefined,
+      providerSurveyId: providerSurveyId || undefined,
       assignedByAdmin: false,
       createdAt: now,
       updatedAt: now,
@@ -1132,7 +1132,7 @@ export const generateMatchesForUserSurvey = async (
           budget: (userProfile as UserProfile).budget || '',
           region: (userProfile as UserProfile).region || region,
           email: userProfile.email,
-          phone: userProfile.phone || '',
+          phone: (userProfile as UserProfile).phone || '',
         },
         {
           providerName: provider.providerName,
