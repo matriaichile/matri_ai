@@ -6,10 +6,12 @@ import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import RegisterModal from './RegisterModal';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const pathname = usePathname();
 
   // Check if we are on the home page for transparent navbar logic
@@ -82,7 +84,12 @@ export default function Navbar() {
 
         <div className={styles.authButtons}>
           <Link href="/login" className={styles.loginBtn}>Iniciar Sesión</Link>
-          <Link href="/register/user" className={styles.registerBtn}>Registrarse</Link>
+          <button 
+            onClick={() => setIsRegisterModalOpen(true)} 
+            className={styles.registerBtn}
+          >
+            Registrarse
+          </button>
         </div>
 
         <button 
@@ -118,9 +125,23 @@ export default function Navbar() {
           </Link>
           <hr />
           <Link href="/login" onClick={() => setMobileMenuOpen(false)} className={styles.navLink}>Iniciar Sesión</Link>
-          <Link href="/register/user" onClick={() => setMobileMenuOpen(false)} className={styles.navLink}>Registrarse</Link>
+          <button 
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setIsRegisterModalOpen(true);
+            }} 
+            className={styles.navLink}
+          >
+            Registrarse
+          </button>
         </div>
       )}
+
+      {/* Modal de registro */}
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={() => setIsRegisterModalOpen(false)} 
+      />
     </nav>
   );
 }

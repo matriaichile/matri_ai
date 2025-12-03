@@ -660,6 +660,21 @@ export const createCategoryLead = async (
   providerSurveyId?: string
 ): Promise<Lead> => {
   try {
+    // VALIDACIÓN CRÍTICA: Verificar que el proveedor tiene leads disponibles para esta categoría
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    if (!providerDoc.exists()) {
+      throw new Error(`Proveedor ${providerId} no encontrado`);
+    }
+    
+    const providerData = providerDoc.data();
+    const leadLimit = providerData.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
+    const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
+    
+    if (leadsUsed >= leadLimit) {
+      console.warn(`⚠️ Proveedor ${providerId} ha alcanzado su límite de leads para ${category} (${leadsUsed}/${leadLimit})`);
+      throw new Error(`El proveedor ha alcanzado su límite de leads para la categoría ${category}`);
+    }
+    
     const now = Timestamp.now();
     
     // Construir objeto base sin campos undefined (Firebase no acepta undefined)
@@ -1103,7 +1118,7 @@ export const generateMatchesForUserSurvey = async (
         collection(db, COLLECTIONS.PROVIDERS),
         where('categories', 'array-contains', category),
         where('status', '==', 'active'),
-        limit(maxMatches * 3)
+        limit(maxMatches * 5) // Pedimos más porque filtraremos por límite de leads
       );
       const snapshot = await getDocs(allProvidersQuery);
       
@@ -1112,11 +1127,29 @@ export const generateMatchesForUserSurvey = async (
         return [];
       }
       
-      // Usar estos proveedores aunque no tengan encuesta
-      const fallbackProviders = snapshot.docs.map(doc => ({
+      // Usar estos proveedores aunque no tengan encuesta, PERO filtrar por límite de leads
+      const allProviders = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       })) as ProviderProfile[];
+      
+      // FILTRO CRÍTICO: Solo incluir proveedores que tengan leads disponibles
+      const fallbackProviders = allProviders.filter(p => {
+        const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
+        const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
+        const hasLeadsAvailable = leadsUsed < leadLimit;
+        
+        if (!hasLeadsAvailable) {
+          console.log(`⚠️ Proveedor ${p.providerName} excluido del fallback: sin leads disponibles (${leadsUsed}/${leadLimit})`);
+        }
+        
+        return hasLeadsAvailable;
+      });
+      
+      if (fallbackProviders.length === 0) {
+        console.log('No hay proveedores con leads disponibles para esta categoría');
+        return [];
+      }
       
       // Generar matches solo con datos del wizard
       return await generateMatchesWithWizardOnly(
