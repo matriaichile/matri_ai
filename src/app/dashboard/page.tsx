@@ -264,8 +264,8 @@ export default function UserDashboardPage() {
           setProviders(prev => ({
             ...prev,
             [match.providerId]: {
-              id: providerDoc.id,
               ...providerData,
+              id: providerDoc.id,
             }
           }));
         }
