@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { 
   LogOut, 
-  Heart, 
   Calendar, 
   User, 
   Sparkles, 
@@ -92,37 +89,7 @@ export default function Sidebar(props: SidebarProps) {
         onMouseEnter={() => !isPinned && setIsExpanded(true)}
         onMouseLeave={() => !isPinned && setIsExpanded(false)}
       >
-        {/* Header con perfil del usuario */}
-        <div className={styles.sidebarHeader}>
-          <Link href="/" className={styles.logoLink}>
-            {showExpanded ? (
-              <Image 
-                src="/logo.png" 
-                alt="Matri.AI" 
-                width={100} 
-                height={32}
-                className={styles.logoFull}
-              />
-            ) : (
-              <div className={styles.logoIcon}>
-                <Heart size={16} />
-              </div>
-            )}
-          </Link>
-          
-          {/* Botón para fijar sidebar */}
-          {showExpanded && (
-            <button 
-              className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
-              onClick={togglePin}
-              title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
-            >
-              {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
-            </button>
-          )}
-        </div>
-
-        {/* Perfil del usuario */}
+        {/* Perfil del usuario - Ahora es la primera sección */}
         <div className={styles.sidebarProfile}>
           <div className={styles.profileAvatar}>
             {showExpanded ? (
@@ -145,6 +112,16 @@ export default function Sidebar(props: SidebarProps) {
                 </p>
               )}
             </div>
+          )}
+          {/* Botón para fijar sidebar */}
+          {showExpanded && (
+            <button 
+              className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
+              onClick={togglePin}
+              title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
+            >
+              {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
+            </button>
           )}
         </div>
 
@@ -229,36 +206,7 @@ export default function Sidebar(props: SidebarProps) {
       onMouseEnter={() => !isPinned && setIsExpanded(true)}
       onMouseLeave={() => !isPinned && setIsExpanded(false)}
     >
-      {/* Header con logo */}
-      <div className={styles.sidebarHeader}>
-        <Link href="/" className={styles.logoLink}>
-          {showExpanded ? (
-            <Image 
-              src="/logo.png" 
-              alt="Matri.AI" 
-              width={100} 
-              height={32}
-              className={styles.logoFull}
-            />
-          ) : (
-            <div className={styles.logoIcon}>
-              {categoryIcon || <User size={16} />}
-            </div>
-          )}
-        </Link>
-        
-        {showExpanded && (
-          <button 
-            className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
-            onClick={togglePin}
-            title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
-          >
-            {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
-          </button>
-        )}
-      </div>
-
-      {/* Perfil del proveedor */}
+      {/* Perfil del proveedor - Ahora es la primera sección */}
       <div className={styles.sidebarProfile}>
         <div className={styles.profileAvatar}>
           {showExpanded ? (
@@ -279,6 +227,15 @@ export default function Sidebar(props: SidebarProps) {
                profile?.status === 'pending' ? 'Pendiente' : 'Cerrado'}
             </div>
           </div>
+        )}
+        {showExpanded && (
+          <button 
+            className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
+            onClick={togglePin}
+            title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
+          >
+            {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
+          </button>
         )}
       </div>
 

@@ -37,7 +37,8 @@ import {
   Globe,
   Instagram,
   CheckCircle,
-  MapPinned
+  MapPinned,
+  Filter
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -130,6 +131,9 @@ export default function UserDashboardPage() {
   const [selectedMatch, setSelectedMatch] = useState<LeadMatch | null>(null);
   const [loadingProviderDetails, setLoadingProviderDetails] = useState(false);
   const [processingMatchId, setProcessingMatchId] = useState<string | null>(null);
+  
+  // Estado para filtro de categoría en matches
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -369,8 +373,17 @@ export default function UserDashboardPage() {
   }
 
   const profile = userProfile as UserProfile | null;
-  const pendingMatches = matches.filter(m => m.status === 'pending');
-  const approvedMatches = matches.filter(m => m.status === 'approved');
+  
+  // Obtener categorías únicas de los matches para el filtro
+  const uniqueCategories = [...new Set(matches.map(m => m.category))];
+  
+  // Filtrar matches por categoría
+  const filteredMatches = categoryFilter === 'all' 
+    ? matches 
+    : matches.filter(m => m.category === categoryFilter);
+  
+  const pendingMatches = filteredMatches.filter(m => m.status === 'pending');
+  const approvedMatches = filteredMatches.filter(m => m.status === 'approved');
   
   // Calcular encuestas completadas desde el perfil (incluye 'completed' y 'matches_generated')
   const completedSurveysCount = profile?.categorySurveyStatus 
@@ -423,6 +436,37 @@ export default function UserDashboardPage() {
               />
             ) : (
               <>
+                {/* Filtro por categoría */}
+                {uniqueCategories.length > 1 && (
+                  <div className={styles.matchesFilter}>
+                    <div className={styles.filterLabel}>
+                      <Filter size={14} />
+                      <span>Filtrar por categoría:</span>
+                    </div>
+                    <div className={styles.filterButtons}>
+                      <button
+                        className={`${styles.filterButton} ${categoryFilter === 'all' ? styles.filterButtonActive : ''}`}
+                        onClick={() => setCategoryFilter('all')}
+                      >
+                        Todas ({matches.length})
+                      </button>
+                      {uniqueCategories.map((cat) => {
+                        const count = matches.filter(m => m.category === cat).length;
+                        return (
+                          <button
+                            key={cat}
+                            className={`${styles.filterButton} ${categoryFilter === cat ? styles.filterButtonActive : ''}`}
+                            onClick={() => setCategoryFilter(cat)}
+                          >
+                            {CATEGORY_ICONS[cat]}
+                            <span>{getCategoryLabel(cat)}</span>
+                            <span className={styles.filterCount}>({count})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {/* Matches pendientes */}
                 {pendingMatches.length > 0 && (
                   <div className={styles.matchesSubsection}>
@@ -621,7 +665,7 @@ export default function UserDashboardPage() {
                 )}
 
                 {/* Matches rechazados */}
-                {matches.filter(m => m.status === 'rejected').length > 0 && (
+                {filteredMatches.filter(m => m.status === 'rejected').length > 0 && (
                   <div className={styles.matchesSubsection}>
                     <h3 className={styles.matchesSubsectionTitle}>
                       <X size={18} />
@@ -631,7 +675,7 @@ export default function UserDashboardPage() {
                       Proveedores que has descartado. Puedes cambiar de opinión.
                     </p>
                     <div className={styles.rejectedMatchesGrid}>
-                      {matches.filter(m => m.status === 'rejected').map((match) => {
+                      {filteredMatches.filter(m => m.status === 'rejected').map((match) => {
                         const isProcessing = processingMatchId === match.id;
                         
                         return (
@@ -695,28 +739,31 @@ export default function UserDashboardPage() {
                     return (
                       <div 
                         key={category} 
-                        className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''} ${styles.surveyItemPriority}`}
+                        className={`${styles.surveyCard} ${isCompleted ? styles.surveyCardCompleted : ''} ${styles.surveyCardPriority}`}
                       >
-                        <div className={styles.surveyItemIcon}>
-                          {CATEGORY_ICONS[category]}
+                        {/* Badge de matches flotante */}
+                        {isCompleted && categoryMatches.length > 0 && (
+                          <span className={styles.matchesBadge}>
+                            <Star size={12} />
+                            <span>{categoryMatches.length}</span>
+                          </span>
+                        )}
+                        
+                        {/* Header con icono y nombre */}
+                        <div className={styles.surveyCardHeader}>
+                          <div className={styles.surveyCardIcon}>
+                            {CATEGORY_ICONS[category]}
+                          </div>
+                          <div className={styles.surveyCardTitle}>
+                            <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                            <p>{questionCount} preguntas</p>
+                          </div>
                         </div>
-                        <div className={styles.surveyItemInfo}>
-                          <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
-                          <p>{questionCount} preguntas</p>
-                          {isCompleted && categoryMatches.length > 0 && (
-                            <span className={styles.matchesBadge}>
-                              <Star size={12} />
-                              <span>{categoryMatches.length} matches</span>
-                            </span>
-                          )}
-                        </div>
-                        <div className={styles.surveyItemActions}>
+                        
+                        {/* Acciones */}
+                        <div className={styles.surveyCardActions}>
                           {isCompleted ? (
                             <>
-                              <span className={styles.completedBadge}>
-                                <Check size={14} />
-                                <span>Completado</span>
-                              </span>
                               {categoryMatches.length > 0 ? (
                                 <Link 
                                   href={`/dashboard/category/${categoryId}/matches`}
@@ -730,10 +777,14 @@ export default function UserDashboardPage() {
                                   href={`/dashboard/category/${categoryId}/survey`}
                                   className={styles.retryLink}
                                 >
-                                  <span>Volver a cotizar</span>
+                                  <span>Reintentar</span>
                                   <ChevronRight size={16} />
                                 </Link>
                               )}
+                              <span className={styles.completedBadge}>
+                                <Check size={12} />
+                                <span>Completado</span>
+                              </span>
                             </>
                           ) : (
                             <Link 
@@ -741,7 +792,7 @@ export default function UserDashboardPage() {
                               className={styles.startSurveyLink}
                             >
                               <ClipboardCheck size={16} />
-                              <span>Completar encuesta</span>
+                              <span>Completar</span>
                               <ChevronRight size={16} />
                             </Link>
                           )}
@@ -783,28 +834,31 @@ export default function UserDashboardPage() {
                       return (
                         <div 
                           key={category} 
-                          className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''} ${styles.surveyItemSecondary}`}
+                          className={`${styles.surveyCard} ${isCompleted ? styles.surveyCardCompleted : ''} ${styles.surveyCardSecondary}`}
                         >
-                          <div className={styles.surveyItemIcon}>
-                            {CATEGORY_ICONS[category]}
+                          {/* Badge de matches flotante */}
+                          {isCompleted && categoryMatches.length > 0 && (
+                            <span className={styles.matchesBadge}>
+                              <Star size={12} />
+                              <span>{categoryMatches.length}</span>
+                            </span>
+                          )}
+                          
+                          {/* Header con icono y nombre */}
+                          <div className={styles.surveyCardHeader}>
+                            <div className={styles.surveyCardIcon}>
+                              {CATEGORY_ICONS[category]}
+                            </div>
+                            <div className={styles.surveyCardTitle}>
+                              <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                              <p>{questionCount} preguntas</p>
+                            </div>
                           </div>
-                          <div className={styles.surveyItemInfo}>
-                            <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
-                            <p>{questionCount} preguntas</p>
-                            {isCompleted && categoryMatches.length > 0 && (
-                              <span className={styles.matchesBadge}>
-                                <Star size={12} />
-                                <span>{categoryMatches.length} matches</span>
-                              </span>
-                            )}
-                          </div>
-                          <div className={styles.surveyItemActions}>
+                          
+                          {/* Acciones */}
+                          <div className={styles.surveyCardActions}>
                             {isCompleted ? (
                               <>
-                                <span className={styles.completedBadge}>
-                                  <Check size={14} />
-                                  <span>Completado</span>
-                                </span>
                                 {categoryMatches.length > 0 ? (
                                   <Link 
                                     href={`/dashboard/category/${categoryId}/matches`}
@@ -818,10 +872,14 @@ export default function UserDashboardPage() {
                                     href={`/dashboard/category/${categoryId}/survey`}
                                     className={styles.retryLink}
                                   >
-                                    <span>Volver a cotizar</span>
+                                    <span>Reintentar</span>
                                     <ChevronRight size={16} />
                                   </Link>
                                 )}
+                                <span className={styles.completedBadge}>
+                                  <Check size={12} />
+                                  <span>Completado</span>
+                                </span>
                               </>
                             ) : (
                               <Link 
@@ -829,7 +887,7 @@ export default function UserDashboardPage() {
                                 className={styles.startSurveyLink}
                               >
                                 <ClipboardCheck size={16} />
-                                <span>Completar encuesta</span>
+                                <span>Completar</span>
                                 <ChevronRight size={16} />
                               </Link>
                             )}
@@ -1328,17 +1386,6 @@ export default function UserDashboardPage() {
                   {selectedMatch.status === 'pending' && (
                     <>
                       <button 
-                        className={styles.providerModalRejectButton}
-                        onClick={() => {
-                          handleRejectMatch(selectedMatch.id);
-                          handleCloseProviderDetails();
-                        }}
-                        disabled={processingMatchId === selectedMatch.id}
-                      >
-                        <X size={16} />
-                        <span>Descartar</span>
-                      </button>
-                      <button 
                         className={styles.providerModalApproveButton}
                         onClick={() => {
                           handleApproveMatch(selectedMatch.id);
@@ -1346,8 +1393,19 @@ export default function UserDashboardPage() {
                         }}
                         disabled={processingMatchId === selectedMatch.id}
                       >
-                        <Heart size={16} />
+                        <Heart size={18} />
                         <span>Me interesa</span>
+                      </button>
+                      <button 
+                        className={styles.providerModalRejectButton}
+                        onClick={() => {
+                          handleRejectMatch(selectedMatch.id);
+                          handleCloseProviderDetails();
+                        }}
+                        disabled={processingMatchId === selectedMatch.id}
+                      >
+                        <X size={18} />
+                        <span>Descartar</span>
                       </button>
                     </>
                   )}
@@ -1360,7 +1418,7 @@ export default function UserDashboardPage() {
                       }}
                       disabled={processingMatchId === selectedMatch.id}
                     >
-                      <RotateCcw size={16} />
+                      <RotateCcw size={18} />
                       <span>Cambiar de opinión</span>
                     </button>
                   )}
@@ -1373,7 +1431,7 @@ export default function UserDashboardPage() {
                       }}
                       disabled={processingMatchId === selectedMatch.id}
                     >
-                      <RotateCcw size={16} />
+                      <RotateCcw size={18} />
                       <span>Recuperar proveedor</span>
                     </button>
                   )}

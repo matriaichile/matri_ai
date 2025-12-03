@@ -31,57 +31,17 @@
   box-shadow: none;
 }
 
-/* Header - Logo pequeño */
-.sidebarHeader {
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  min-height: 48px;
-  flex-shrink: 0;
-}
-
-.logoLink {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-width: 0;
-}
-
-.logoFull {
-  height: 24px;
-  width: auto;
-  object-fit: contain;
-  opacity: 0;
-  animation: fadeIn 0.15s ease forwards;
-  animation-delay: 0.05s;
-}
-
 @keyframes fadeIn {
   to { opacity: 1; }
 }
 
-.logoIcon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #000;
-}
-
-/* Pin button */
+/* Pin button - Ahora dentro del perfil */
 .pinButton {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 5px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,6 +52,7 @@
   opacity: 0;
   animation: fadeIn 0.15s ease forwards;
   animation-delay: 0.1s;
+  margin-left: auto;
 }
 
 .pinButton:hover {
@@ -106,15 +67,18 @@
   color: var(--color-primary);
 }
 
-/* Perfil en sidebar */
+/* Perfil en sidebar - Ahora es la primera sección */
+/* IMPORTANTE: La altura debe coincidir con el header del dashboard */
 .sidebarProfile {
-  padding: 0.75rem;
+  padding: 0 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
-  min-height: 56px;
+  height: 64px;
+  box-sizing: border-box;
+  background: rgba(212, 175, 55, 0.02);
 }
 
 .profileAvatar {
