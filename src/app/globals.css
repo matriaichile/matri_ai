@@ -5,19 +5,26 @@
   --font-cormorant: 'Cormorant Garamond', serif;
   --font-outfit: 'Outfit', sans-serif;
   
-  /* Paleta Negro y Dorado Elegante (Lamborghini/Louis Vuitton) */
-  --color-primary: #D4AF37; /* Gold elegante */
-  --color-primary-dark: #B8941E; /* Gold oscuro para hover */
-  --color-primary-light: #E8D090; /* Gold claro para acentos */
-  --color-secondary: #000000; /* Negro profundo */
-  --color-background: #0A0A0A; /* Negro carbón */
-  --color-background-elevated: #1A1A1A; /* Negro elevado para cards */
-  --color-background-glass: rgba(26, 26, 26, 0.7); /* Glass effect */
-  --color-text: #FFFFFF; /* Texto blanco */
-  --color-text-secondary: #CCCCCC; /* Texto gris claro */
-  --color-text-muted: #888888; /* Texto gris medio */
-  --color-border: rgba(212, 175, 55, 0.2); /* Bordes dorados sutiles */
-  --color-border-subtle: rgba(255, 255, 255, 0.1); /* Bordes blancos sutiles */
+  /* Paleta Elegante - Negro y Dorado Refinado */
+  --color-primary: #D4AF37;
+  --color-primary-dark: #B8941E;
+  --color-primary-light: #E8D090;
+  --color-secondary: #000000;
+  
+  /* Fondos más refinados */
+  --color-background: #080808;
+  --color-background-elevated: #111111;
+  --color-background-glass: rgba(17, 17, 17, 0.8);
+  
+  /* Texto con mejor contraste */
+  --color-text: #F5F5F5;
+  --color-text-secondary: #B8B8B8;
+  --color-text-muted: #6B6B6B;
+  
+  /* Bordes más sutiles */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-subtle: rgba(255, 255, 255, 0.03);
+  --color-border-accent: rgba(212, 175, 55, 0.2);
 }
 
 * {
@@ -38,12 +45,15 @@ body {
   background-color: var(--color-background);
   line-height: 1.6;
   font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -51,29 +61,53 @@ a {
   text-decoration: none;
 }
 
-/* Custom Scrollbar - Elegante Negro y Dorado */
+/* Custom Scrollbar - Minimalista */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: 0;
-  border: none;
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-dark);
+  background: rgba(212, 175, 55, 0.5);
 }
 
 /* Firefox */
 html {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) var(--color-background);
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
   scroll-behavior: smooth;
-  /* Removed scroll-padding-top to fix gap issue, handled in CSS modules */
+}
+
+/* Selection */
+::selection {
+  background: rgba(212, 175, 55, 0.3);
+  color: var(--color-text);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.5);
+  outline-offset: 2px;
+}
+
+/* Button reset */
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Input reset */
+input, textarea, select {
+  font-family: inherit;
 }

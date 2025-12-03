@@ -1,8 +1,21 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { LogOut, Heart, Calendar, User, Sparkles, FileText, BarChart3, Inbox } from 'lucide-react';
+import { 
+  LogOut, 
+  Heart, 
+  Calendar, 
+  User, 
+  Sparkles, 
+  FileText, 
+  BarChart3, 
+  Inbox,
+  ChevronLeft,
+  Menu,
+  Mail
+} from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 // Definición de tipos para las secciones
@@ -21,6 +34,7 @@ interface UserSidebarProps extends BaseSidebarProps {
     coupleNames?: string;
     eventDate?: string;
     priorityCategories?: string[];
+    email?: string;
   } | null;
   activeSection: UserSection;
   onSectionChange: (section: UserSection) => void;
@@ -40,6 +54,7 @@ interface ProviderSidebarProps extends BaseSidebarProps {
     leadLimit?: number;
     leadsUsed?: number;
     categorySurveyStatus?: Record<string, 'not_started' | 'pending' | 'completed' | 'matches_generated'>;
+    email?: string;
   } | null;
   activeSection: ProviderSection;
   onSectionChange: (section: ProviderSection) => void;
@@ -51,42 +66,86 @@ interface ProviderSidebarProps extends BaseSidebarProps {
 type SidebarProps = UserSidebarProps | ProviderSidebarProps;
 
 /**
- * Sidebar reutilizable para los dashboards de usuario y proveedor.
- * Diseño elegante con navegación y estadísticas.
+ * Sidebar moderno colapsable para los dashboards.
+ * Se expande en hover, estilo Make/Supabase.
  */
 export default function Sidebar(props: SidebarProps) {
   const { variant, onLogout } = props;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+
+  // Determina si el sidebar debe mostrarse expandido
+  const showExpanded = isExpanded || isPinned;
+
+  // Toggle pin del sidebar
+  const togglePin = () => {
+    setIsPinned(!isPinned);
+  };
 
   // Renderizado para usuario
   if (variant === 'user') {
     const { profile, activeSection, onSectionChange, pendingMatchesCount, completedSurveysCount, matchesCount, approvedCount } = props;
     
     return (
-      <aside className={styles.sidebar}>
+      <aside 
+        className={`${styles.sidebar} ${showExpanded ? styles.sidebarExpanded : ''} ${isPinned ? styles.sidebarPinned : ''}`}
+        onMouseEnter={() => !isPinned && setIsExpanded(true)}
+        onMouseLeave={() => !isPinned && setIsExpanded(false)}
+      >
+        {/* Header con perfil del usuario */}
         <div className={styles.sidebarHeader}>
           <Link href="/" className={styles.logoLink}>
-            <Image 
-              src="/logo.png" 
-              alt="Matri.AI" 
-              width={140} 
-              height={50}
-              className={styles.logo}
-            />
+            {showExpanded ? (
+              <Image 
+                src="/logo.png" 
+                alt="Matri.AI" 
+                width={100} 
+                height={32}
+                className={styles.logoFull}
+              />
+            ) : (
+              <div className={styles.logoIcon}>
+                <Heart size={16} />
+              </div>
+            )}
           </Link>
+          
+          {/* Botón para fijar sidebar */}
+          {showExpanded && (
+            <button 
+              className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
+              onClick={togglePin}
+              title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
+            >
+              {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
+            </button>
+          )}
         </div>
 
-        {/* Perfil resumido */}
+        {/* Perfil del usuario */}
         <div className={styles.sidebarProfile}>
           <div className={styles.profileAvatar}>
-            <Heart size={24} />
+            {showExpanded ? (
+              profile?.coupleNames?.charAt(0)?.toUpperCase() || 'U'
+            ) : (
+              <User size={16} />
+            )}
           </div>
-          <div className={styles.profileInfo}>
-            <h3 className={styles.profileName}>{profile?.coupleNames || 'Pareja'}</h3>
-            <p className={styles.profileDate}>
-              <Calendar size={12} />
-              <span>{profile?.eventDate || 'Fecha por definir'}</span>
-            </p>
-          </div>
+          {showExpanded && (
+            <div className={styles.profileInfo}>
+              <h3 className={styles.profileName}>{profile?.coupleNames || 'Usuario'}</h3>
+              <p className={styles.profileEmail}>
+                <Mail size={10} />
+                <span>{profile?.email || 'email@ejemplo.com'}</span>
+              </p>
+              {profile?.eventDate && (
+                <p className={styles.profileDate}>
+                  <Calendar size={10} />
+                  <span>{profile.eventDate}</span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navegación */}
@@ -94,21 +153,25 @@ export default function Sidebar(props: SidebarProps) {
           <button 
             className={`${styles.navItem} ${activeSection === 'matches' ? styles.navItemActive : ''}`}
             onClick={() => onSectionChange('matches')}
+            title={!showExpanded ? 'Mis Matches' : undefined}
           >
-            <Sparkles size={20} />
-            <span>Mis Matches</span>
+            <Sparkles size={18} />
+            {showExpanded && <span>Mis Matches</span>}
             {pendingMatchesCount > 0 && (
-              <span className={styles.navBadge}>{pendingMatchesCount}</span>
+              <span className={`${styles.navBadge} ${!showExpanded ? styles.navBadgeCompact : ''}`}>
+                {pendingMatchesCount}
+              </span>
             )}
           </button>
           
           <button 
             className={`${styles.navItem} ${activeSection === 'surveys' ? styles.navItemActive : ''}`}
             onClick={() => onSectionChange('surveys')}
+            title={!showExpanded ? 'Mini Encuestas' : undefined}
           >
-            <FileText size={20} />
-            <span>Mini Encuestas</span>
-            {profile?.priorityCategories && (
+            <FileText size={18} />
+            {showExpanded && <span>Encuestas</span>}
+            {profile?.priorityCategories && showExpanded && (
               <span className={styles.navBadge}>
                 {completedSurveysCount}/{profile.priorityCategories.length}
               </span>
@@ -118,29 +181,37 @@ export default function Sidebar(props: SidebarProps) {
           <button 
             className={`${styles.navItem} ${activeSection === 'profile' ? styles.navItemActive : ''}`}
             onClick={() => onSectionChange('profile')}
+            title={!showExpanded ? 'Mi Perfil' : undefined}
           >
-            <User size={20} />
-            <span>Mi Perfil</span>
+            <User size={18} />
+            {showExpanded && <span>Mi Perfil</span>}
           </button>
         </nav>
 
-        {/* Stats rápidos */}
-        <div className={styles.sidebarStats}>
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{matchesCount}</span>
-            <span className={styles.statLabel}>Matches</span>
+        {/* Stats rápidos - Solo visible cuando está expandido */}
+        {showExpanded && (
+          <div className={styles.sidebarStats}>
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{matchesCount}</span>
+              <span className={styles.statLabel}>Matches</span>
+            </div>
+            <div className={styles.statDivider} />
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{approvedCount}</span>
+              <span className={styles.statLabel}>Aprobados</span>
+            </div>
           </div>
-          <div className={styles.statItem}>
-            <span className={styles.statValue}>{approvedCount}</span>
-            <span className={styles.statLabel}>Aprobados</span>
-          </div>
-        </div>
+        )}
 
         {/* Logout */}
         <div className={styles.sidebarFooter}>
-          <button onClick={onLogout} className={styles.logoutButton}>
-            <LogOut size={18} />
-            <span>Cerrar sesión</span>
+          <button 
+            onClick={onLogout} 
+            className={styles.logoutButton}
+            title={!showExpanded ? 'Cerrar sesión' : undefined}
+          >
+            <LogOut size={16} />
+            {showExpanded && <span>Salir</span>}
           </button>
         </div>
       </aside>
@@ -153,31 +224,62 @@ export default function Sidebar(props: SidebarProps) {
   const leadsUsedPercentage = ((profile?.leadsUsed || 0) / (profile?.leadLimit || 10)) * 100;
 
   return (
-    <aside className={styles.sidebar}>
+    <aside 
+      className={`${styles.sidebar} ${showExpanded ? styles.sidebarExpanded : ''} ${isPinned ? styles.sidebarPinned : ''}`}
+      onMouseEnter={() => !isPinned && setIsExpanded(true)}
+      onMouseLeave={() => !isPinned && setIsExpanded(false)}
+    >
+      {/* Header con logo */}
       <div className={styles.sidebarHeader}>
         <Link href="/" className={styles.logoLink}>
-          <Image 
-            src="/logo.png" 
-            alt="Matri.AI" 
-            width={140} 
-            height={50}
-            className={styles.logo}
-          />
+          {showExpanded ? (
+            <Image 
+              src="/logo.png" 
+              alt="Matri.AI" 
+              width={100} 
+              height={32}
+              className={styles.logoFull}
+            />
+          ) : (
+            <div className={styles.logoIcon}>
+              {categoryIcon || <User size={16} />}
+            </div>
+          )}
         </Link>
+        
+        {showExpanded && (
+          <button 
+            className={`${styles.pinButton} ${isPinned ? styles.pinButtonActive : ''}`}
+            onClick={togglePin}
+            title={isPinned ? 'Contraer sidebar' : 'Fijar sidebar'}
+          >
+            {isPinned ? <ChevronLeft size={14} /> : <Menu size={14} />}
+          </button>
+        )}
       </div>
 
-      {/* Perfil resumido */}
+      {/* Perfil del proveedor */}
       <div className={styles.sidebarProfile}>
         <div className={styles.profileAvatar}>
-          {categoryIcon || <User size={24} />}
+          {showExpanded ? (
+            profile?.providerName?.charAt(0)?.toUpperCase() || 'P'
+          ) : (
+            categoryIcon || <User size={16} />
+          )}
         </div>
-        <div className={styles.profileInfo}>
-          <h3 className={styles.profileName}>{profile?.providerName || 'Proveedor'}</h3>
-          <div className={`${styles.statusBadge} ${styles[`status${profile?.status?.charAt(0).toUpperCase()}${profile?.status?.slice(1)}`]}`}>
-            {profile?.status === 'active' ? 'Activo' : 
-             profile?.status === 'pending' ? 'Pendiente' : 'Cerrado'}
+        {showExpanded && (
+          <div className={styles.profileInfo}>
+            <h3 className={styles.profileName}>{profile?.providerName || 'Proveedor'}</h3>
+            <p className={styles.profileEmail}>
+              <Mail size={10} />
+              <span>{profile?.email || 'email@ejemplo.com'}</span>
+            </p>
+            <div className={`${styles.statusBadge} ${styles[`status${profile?.status?.charAt(0).toUpperCase()}${profile?.status?.slice(1)}`]}`}>
+              {profile?.status === 'active' ? 'Activo' : 
+               profile?.status === 'pending' ? 'Pendiente' : 'Cerrado'}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Navegación */}
@@ -185,29 +287,34 @@ export default function Sidebar(props: SidebarProps) {
         <button 
           className={`${styles.navItem} ${activeSection === 'overview' ? styles.navItemActive : ''}`}
           onClick={() => onSectionChange('overview')}
+          title={!showExpanded ? 'Resumen' : undefined}
         >
-          <BarChart3 size={20} />
-          <span>Resumen</span>
+          <BarChart3 size={18} />
+          {showExpanded && <span>Resumen</span>}
         </button>
         
         <button 
           className={`${styles.navItem} ${activeSection === 'leads' ? styles.navItemActive : ''}`}
           onClick={() => onSectionChange('leads')}
+          title={!showExpanded ? 'Mis Leads' : undefined}
         >
-          <Inbox size={20} />
-          <span>Mis Leads</span>
+          <Inbox size={18} />
+          {showExpanded && <span>Mis Leads</span>}
           {pendingLeadsCount > 0 && (
-            <span className={styles.navBadge}>{pendingLeadsCount}</span>
+            <span className={`${styles.navBadge} ${!showExpanded ? styles.navBadgeCompact : ''}`}>
+              {pendingLeadsCount}
+            </span>
           )}
         </button>
 
         <button 
           className={`${styles.navItem} ${activeSection === 'surveys' ? styles.navItemActive : ''}`}
           onClick={() => onSectionChange('surveys')}
+          title={!showExpanded ? 'Encuestas' : undefined}
         >
-          <FileText size={20} />
-          <span>Encuestas</span>
-          {profile?.categories && (
+          <FileText size={18} />
+          {showExpanded && <span>Encuestas</span>}
+          {profile?.categories && showExpanded && (
             <span className={styles.navBadge}>
               {completedSurveysCount}/{profile.categories.length}
             </span>
@@ -217,34 +324,40 @@ export default function Sidebar(props: SidebarProps) {
         <button 
           className={`${styles.navItem} ${activeSection === 'profile' ? styles.navItemActive : ''}`}
           onClick={() => onSectionChange('profile')}
+          title={!showExpanded ? 'Mi Perfil' : undefined}
         >
-          <User size={20} />
-          <span>Mi Perfil</span>
+          <User size={18} />
+          {showExpanded && <span>Mi Perfil</span>}
         </button>
       </nav>
 
-      {/* Leads disponibles */}
-      <div className={styles.leadsQuota}>
-        <div className={styles.quotaHeader}>
-          <span className={styles.quotaLabel}>Leads disponibles</span>
-          <span className={styles.quotaValue}>{leadsRemaining}/{profile?.leadLimit || 10}</span>
+      {/* Leads disponibles - Solo visible cuando está expandido */}
+      {showExpanded && (
+        <div className={styles.leadsQuota}>
+          <div className={styles.quotaHeader}>
+            <span className={styles.quotaLabel}>Leads disponibles</span>
+            <span className={styles.quotaValue}>{leadsRemaining}/{profile?.leadLimit || 10}</span>
+          </div>
+          <div className={styles.quotaBar}>
+            <div 
+              className={styles.quotaProgress}
+              style={{ width: `${leadsUsedPercentage}%` }}
+            />
+          </div>
         </div>
-        <div className={styles.quotaBar}>
-          <div 
-            className={styles.quotaProgress}
-            style={{ width: `${leadsUsedPercentage}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Logout */}
       <div className={styles.sidebarFooter}>
-        <button onClick={onLogout} className={styles.logoutButton}>
-          <LogOut size={18} />
-          <span>Cerrar sesión</span>
+        <button 
+          onClick={onLogout} 
+          className={styles.logoutButton}
+          title={!showExpanded ? 'Cerrar sesión' : undefined}
+        >
+          <LogOut size={16} />
+          {showExpanded && <span>Salir</span>}
         </button>
       </div>
     </aside>
   );
 }
-

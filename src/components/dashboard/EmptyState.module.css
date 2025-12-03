@@ -1,6 +1,6 @@
 /* ====================================
-   EMPTY STATE - Shared Component
-   Matri.AI - Black & Gold Premium
+   EMPTY STATE - Modern Minimal Design
+   Matri.AI - Elegant Dark Theme
    ==================================== */
 
 .emptyState {
@@ -8,39 +8,40 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 3rem 1.5rem;
   text-align: center;
-  background: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
   width: 100%;
 }
 
 .iconWrapper {
   color: var(--color-primary);
-  opacity: 0.5;
-  margin-bottom: 1.5rem;
+  opacity: 0.4;
+  margin-bottom: 1rem;
 }
 
 .iconWrapper svg {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 500;
   color: var(--color-text);
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.375rem;
   line-height: 1.3;
 }
 
 .description {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
-  margin: 0 0 1.5rem;
-  max-width: 300px;
+  margin: 0 0 1.25rem;
+  max-width: 280px;
   line-height: 1.5;
 }
 
@@ -48,21 +49,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  gap: 0.375rem;
+  padding: 0.625rem 1.25rem;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #000;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .actionButton:hover {
-  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 3px 14px rgba(212, 175, 55, 0.35);
 }
-

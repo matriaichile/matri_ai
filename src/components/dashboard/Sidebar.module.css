@@ -1,59 +1,136 @@
 /* ====================================
-   SIDEBAR COMPONENT - Shared Styles
-   Matri.AI - Black & Gold Premium
+   SIDEBAR - Modern Collapsible Design
+   Matri.AI - Elegant Dark Theme
    ==================================== */
 
 .sidebar {
+  --sidebar-collapsed-width: 56px;
+  --sidebar-expanded-width: 220px;
+  --sidebar-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  
   position: fixed;
   left: 0;
   top: 0;
-  width: 280px;
+  width: var(--sidebar-collapsed-width);
   height: 100vh;
-  background: linear-gradient(180deg, #0f0f0f 0%, #0a0a0a 100%);
-  border-right: 1px solid var(--color-border);
+  background: #0a0a0a;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  transition: var(--sidebar-transition);
 }
 
+.sidebarExpanded {
+  width: var(--sidebar-expanded-width);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.sidebarPinned {
+  box-shadow: none;
+}
+
+/* Header - Logo pequeño */
 .sidebarHeader {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  min-height: 48px;
   flex-shrink: 0;
 }
 
 .logoLink {
-  display: block;
-}
-
-.logo {
-  height: 50px;
-  width: auto;
-  object-fit: contain;
-}
-
-/* Perfil en sidebar */
-.sidebarProfile {
-  padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
 }
 
-.profileAvatar {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+.logoFull {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.05s;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #000;
+}
+
+/* Pin button */
+.pinButton {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.1s;
+}
+
+.pinButton:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.2);
+  color: var(--color-primary);
+}
+
+.pinButtonActive {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--color-primary);
+}
+
+/* Perfil en sidebar */
+.sidebarProfile {
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  min-height: 56px;
+}
+
+.profileAvatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.08));
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
   flex-shrink: 0;
 }
 
@@ -62,138 +139,208 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.125rem;
   overflow: hidden;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.05s;
 }
 
 .profileName {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
-.profileDate {
+.profileEmail {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.2rem;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   color: var(--color-text-muted);
   margin: 0;
   white-space: nowrap;
 }
 
-.profileDate span {
+.profileEmail span {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.profileDate {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  white-space: nowrap;
+  opacity: 0.7;
 }
 
 /* Status Badge para proveedor */
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.5rem;
   font-weight: 500;
   width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 0.125rem;
 }
 
 .statusActive {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
 }
 
 .statusPending {
-  background: rgba(234, 179, 8, 0.15);
-  color: #fbbf24;
+  background: rgba(234, 179, 8, 0.1);
+  color: #facc15;
 }
 
 .statusClosed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
 }
 
 /* Navegación */
 .sidebarNav {
-  padding: 1rem;
+  padding: 0.5rem;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.2rem;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebarNav::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
   background: transparent;
   border: none;
-  border-radius: 10px;
-  color: var(--color-text-secondary);
+  border-radius: 6px;
+  color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.12s ease;
   text-align: left;
   width: 100%;
   white-space: nowrap;
+  position: relative;
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--color-text);
 }
 
 .navItem svg {
   flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.12s ease;
+}
+
+.navItem:hover svg {
+  opacity: 1;
 }
 
 .navItem span {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
 }
 
 .navItemActive {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--color-primary);
+}
+
+.navItemActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 50%;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.navItemActive svg {
+  opacity: 1;
   color: var(--color-primary);
 }
 
 .navItemActive:hover {
-  background: rgba(212, 175, 55, 0.15);
-  color: var(--color-primary);
+  background: rgba(212, 175, 55, 0.1);
 }
 
 .navBadge {
   margin-left: auto;
-  padding: 0.125rem 0.5rem;
-  background: rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-  font-size: 0.7rem;
+  padding: 0.1rem 0.35rem;
+  background: rgba(212, 175, 55, 0.12);
+  border-radius: 5px;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--color-primary);
   flex-shrink: 0;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.05s;
 }
 
-/* Stats en sidebar (solo usuario) */
+.navBadgeCompact {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin-left: 0;
+  padding: 0.05rem 0.25rem;
+  font-size: 0.5rem;
+  min-width: 12px;
+  text-align: center;
+  opacity: 1;
+  animation: none;
+}
+
+/* Stats en sidebar */
 .sidebarStats {
-  padding: 1.25rem 1.5rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  border-top: 1px solid var(--color-border);
-  background: rgba(212, 175, 55, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(212, 175, 55, 0.02);
   flex-shrink: 0;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.1s;
 }
 
 .statItem {
@@ -201,15 +348,12 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
+  gap: 0.1rem;
 }
 
 .statValue {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-primary);
   line-height: 1;
@@ -217,58 +361,66 @@
 
 .statLabel {
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.5rem;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 0.25rem;
+  letter-spacing: 0.04em;
 }
 
-/* Leads quota (solo proveedor) */
+.statDivider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Leads quota */
 .leadsQuota {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--color-border);
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.1s;
 }
 
 .quotaHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .quotaLabel {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.55rem;
   color: var(--color-text-muted);
 }
 
 .quotaValue {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.55rem;
   font-weight: 600;
   color: var(--color-primary);
 }
 
 .quotaBar {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
   overflow: hidden;
 }
 
 .quotaProgress {
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: 2px;
+  border-radius: 1px;
   transition: width 0.3s ease;
 }
 
 /* Footer sidebar */
 .sidebarFooter {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--color-border);
+  padding: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
 }
 
@@ -276,24 +428,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.4rem;
   background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .logoutButton:hover {
-  border-color: rgba(239, 68, 68, 0.5);
+  border-color: rgba(239, 68, 68, 0.25);
   color: #f87171;
-  background: rgba(239, 68, 68, 0.05);
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.logoutButton span {
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
 }
 
 /* ====================================
@@ -302,12 +459,30 @@
 @media (max-width: 1024px) {
   .sidebar {
     position: fixed;
-    left: -280px;
-    transition: left 0.3s ease;
+    left: 0;
+    width: var(--sidebar-collapsed-width);
   }
 
-  .sidebar.open {
-    left: 0;
+  .sidebar:hover {
+    width: var(--sidebar-expanded-width);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebarPinned {
+    width: var(--sidebar-expanded-width);
   }
 }
 
+@media (max-width: 640px) {
+  .sidebar {
+    --sidebar-collapsed-width: 0px;
+    left: -56px;
+    opacity: 0;
+  }
+  
+  .sidebar:hover,
+  .sidebarExpanded {
+    left: 0;
+    opacity: 1;
+  }
+}

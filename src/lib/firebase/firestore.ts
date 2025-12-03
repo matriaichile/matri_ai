@@ -630,7 +630,8 @@ export const createCategoryLead = async (
   try {
     const now = Timestamp.now();
     
-    const leadData = {
+    // Construir objeto base sin campos undefined (Firebase no acepta undefined)
+    const leadData: Record<string, unknown> = {
       userId,
       providerId,
       category,
@@ -645,12 +646,18 @@ export const createCategoryLead = async (
         availabilityMatch: 0,
         specificCriteriaMatch: 0,
       },
-      userSurveyId: userSurveyId || undefined,
-      providerSurveyId: providerSurveyId || undefined,
       assignedByAdmin: false,
       createdAt: now,
       updatedAt: now,
     };
+    
+    // Solo agregar campos opcionales si tienen valor
+    if (userSurveyId) {
+      leadData.userSurveyId = userSurveyId;
+    }
+    if (providerSurveyId) {
+      leadData.providerSurveyId = providerSurveyId;
+    }
     
     const docRef = await addDoc(collection(db, COLLECTIONS.LEADS), leadData);
     
