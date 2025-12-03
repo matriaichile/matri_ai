@@ -1,6 +1,7 @@
 'use client';
 
 import { SurveyQuestion } from '@/lib/surveys/types';
+import { playUiClick } from '@/utils/sound';
 import styles from './QuestionTypes.module.css';
 
 // Props base para todos los tipos de pregunta
@@ -16,6 +17,12 @@ interface BaseQuestionProps {
 export function SingleSelectQuestion({ question, value, onChange }: BaseQuestionProps) {
   const selectedValue = typeof value === 'string' ? value : '';
 
+  // Manejar selección con sonido
+  const handleSelect = (optionId: string) => {
+    playUiClick();
+    onChange(optionId);
+  };
+
   return (
     <div className={styles.optionsGrid}>
       {question.options?.map((option, index) => (
@@ -25,7 +32,7 @@ export function SingleSelectQuestion({ question, value, onChange }: BaseQuestion
           className={`${styles.optionCard} ${
             selectedValue === option.id ? styles.optionCardSelected : ''
           }`}
-          onClick={() => onChange(option.id)}
+          onClick={() => handleSelect(option.id)}
           style={{ animationDelay: `${index * 50}ms` }}
         >
           <div className={styles.optionContent}>
@@ -60,7 +67,9 @@ export function SingleSelectQuestion({ question, value, onChange }: BaseQuestion
 export function MultiSelectQuestion({ question, value, onChange }: BaseQuestionProps) {
   const selectedValues = Array.isArray(value) ? value : [];
 
+  // Manejar toggle con sonido
   const handleToggle = (optionId: string) => {
+    playUiClick();
     if (selectedValues.includes(optionId)) {
       onChange(selectedValues.filter((v) => v !== optionId));
     } else {
@@ -113,6 +122,12 @@ export function MultiSelectQuestion({ question, value, onChange }: BaseQuestionP
 export function BooleanQuestion({ question, value, onChange }: BaseQuestionProps) {
   const selectedValue = typeof value === 'boolean' ? value : undefined;
 
+  // Manejar selección booleana con sonido
+  const handleBooleanSelect = (val: boolean) => {
+    playUiClick();
+    onChange(val);
+  };
+
   return (
     <div className={styles.booleanContainer}>
       <button
@@ -120,7 +135,7 @@ export function BooleanQuestion({ question, value, onChange }: BaseQuestionProps
         className={`${styles.booleanButton} ${
           selectedValue === true ? styles.booleanButtonSelected : ''
         }`}
-        onClick={() => onChange(true)}
+        onClick={() => handleBooleanSelect(true)}
       >
         <div className={styles.booleanIcon}>
           <svg
@@ -142,7 +157,7 @@ export function BooleanQuestion({ question, value, onChange }: BaseQuestionProps
         className={`${styles.booleanButton} ${
           selectedValue === false ? styles.booleanButtonSelected : ''
         }`}
-        onClick={() => onChange(false)}
+        onClick={() => handleBooleanSelect(false)}
       >
         <div className={styles.booleanIcon}>
           <svg

@@ -1,5 +1,5 @@
 /* ====================================
-   MATCHES PAGE - ESTILO ELEGANTE
+   MATCHES PAGE - ESTILO GALÁCTICO ELEGANTE
    Negro y Dorado Premium - Matri.AI
    ==================================== */
 
@@ -7,6 +7,65 @@
 .container {
   min-height: 100vh;
   background: var(--color-background);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fondo decorativo galáctico */
+.backgroundPattern {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.02) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Partículas flotantes */
+.particles {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: floatParticle 20s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { left: 5%; top: 15%; }
+.particle:nth-child(2) { left: 15%; top: 75%; animation-delay: 2s; }
+.particle:nth-child(3) { left: 35%; top: 35%; animation-delay: 4s; }
+.particle:nth-child(4) { left: 55%; top: 65%; animation-delay: 1s; }
+.particle:nth-child(5) { left: 75%; top: 25%; animation-delay: 3s; }
+.particle:nth-child(6) { left: 90%; top: 55%; animation-delay: 5s; }
+
+@keyframes floatParticle {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.2;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) scale(1.2);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-10px) translateX(-8px) scale(0.9);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translateY(-25px) translateX(15px) scale(1.1);
+    opacity: 0.35;
+  }
 }
 
 /* Loading container */
@@ -18,6 +77,8 @@
   min-height: 100vh;
   gap: 1rem;
   color: var(--color-text-muted);
+  position: relative;
+  z-index: 10;
 }
 
 .spinner {
@@ -38,6 +99,8 @@
   min-height: 100vh;
   gap: 1.5rem;
   color: var(--color-text);
+  position: relative;
+  z-index: 10;
 }
 
 .errorContainer h2 {
@@ -60,9 +123,12 @@
 
 /* Header */
 .header {
-  padding: 2rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-background-elevated);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10;
 }
 
 .backButton {
@@ -72,8 +138,8 @@
   color: var(--color-text-muted);
   text-decoration: none;
   font-family: var(--font-body);
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
   transition: color 0.3s ease;
 }
 
@@ -87,26 +153,28 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 500;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .subtitle {
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.85rem;
 }
 
 /* Main content */
 .main {
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
 /* Loading matches */
@@ -216,87 +284,154 @@
 
 /* Sections */
 .section {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .sectionTitle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--color-text);
-  margin-bottom: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem;
 }
 
 .sectionTitle svg {
   color: var(--color-primary);
+  width: 14px;
+  height: 14px;
 }
 
 .sectionDescription {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #000;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--color-primary);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  min-width: 24px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  min-width: 20px;
 }
 
 .badgeSuccess {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #fff;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  min-width: 24px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  min-width: 20px;
 }
 
-/* Matches grid */
+/* Matches grid - Tarjetas compactas */
 .matchesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.875rem;
+}
+
+/* Grid centrado para nuevos matches (siempre 3) */
+.matchesGridCentered {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .matchesGridCompact {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.5rem;
 }
 
-/* Match card */
+/* Card wrapper con score prominente */
+.matchCardWithScore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 280px;
+  animation: cardFadeIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+/* Score prominente arriba de la tarjeta */
+.prominentScore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 20px;
+  color: var(--color-primary);
+}
+
+.prominentScore svg {
+  fill: var(--color-primary);
+  width: 16px;
+  height: 16px;
+}
+
+.prominentScoreValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.prominentScoreLabel {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+/* Match card - Diseño elegante compacto */
 .matchCard {
-  background: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
   overflow: hidden;
   animation: cardFadeIn 0.4s ease-out forwards;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Card dentro de wrapper con score - sin animación propia */
+.matchCardWithScore .matchCard {
+  animation: none;
+  opacity: 1;
 }
 
 .matchCard:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(212, 175, 55, 0.25);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes cardFadeIn {
@@ -306,123 +441,207 @@
 }
 
 .matchCardApproved {
-  border-color: rgba(34, 197, 94, 0.3);
-  background: linear-gradient(135deg, var(--color-background-elevated), rgba(34, 197, 94, 0.05));
+  border-color: rgba(34, 197, 94, 0.15);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(34, 197, 94, 0.03));
 }
 
 .matchCardApproved:hover {
-  border-color: rgba(34, 197, 94, 0.5);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
 .matchCardRejected {
-  opacity: 0.7;
+  opacity: 0.6;
+}
+
+/* Imagen del match */
+.matchImage {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.matchImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.matchCard:hover .matchImage img {
+  transform: scale(1.05);
+}
+
+/* Score badge en imagen */
+.matchScore {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: 12px;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.matchScore svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Category badge en imagen */
+.matchCategory {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Approved badge en imagen */
+.approvedBadge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.4rem;
+  background: rgba(34, 197, 94, 0.9);
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.approvedBadge svg {
+  width: 8px;
+  height: 8px;
 }
 
 .matchHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.matchScore {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--color-primary);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.matchScore svg {
-  fill: var(--color-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .statusBadgeApproved {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 500;
-  padding: 0.375rem 0.75rem;
-  border-radius: 20px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  padding: 0.3rem 0.6rem;
+  border-radius: 16px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.statusBadgeApproved svg {
+  width: 10px;
+  height: 10px;
 }
 
 .matchBody {
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .providerName {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
   font-weight: 500;
   color: var(--color-text);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
 
 .matchMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .metaItem {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   color: var(--color-text-muted);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 .metaItem svg {
   color: var(--color-primary);
-  opacity: 0.7;
+  opacity: 0.6;
+  width: 12px;
+  height: 12px;
 }
 
 /* Match actions */
 .matchActions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   background: rgba(0, 0, 0, 0.15);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .viewDetailsButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   color: var(--color-text-secondary);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   width: 100%;
 }
 
 .viewDetailsButton:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.viewDetailsButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .actionButtons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .rejectButton,
@@ -431,59 +650,78 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.625rem 1rem;
-  border-radius: 8px;
+  gap: 0.3rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border: none;
 }
 
 .rejectButton {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   flex-shrink: 0;
-  width: 44px;
+  width: 36px;
+  height: 32px;
 }
 
 .rejectButton:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.rejectButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .approveButton {
   flex: 1;
+  height: 32px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: #000;
+  font-weight: 600;
 }
 
 .approveButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.approveButton svg {
+  width: 14px;
+  height: 14px;
 }
 
 .revertButton {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
-  width: 40px;
+  width: 32px;
+  height: 32px;
 }
 
 .revertButton:hover:not(:disabled) {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.revertButton svg {
+  width: 12px;
+  height: 12px;
 }
 
 .rejectButton:disabled,
 .approveButton:disabled,
 .revertButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -496,62 +734,67 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  opacity: 0.7;
-  transition: all 0.2s ease;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  opacity: 0.6;
+  transition: all 0.15s ease;
 }
 
 .matchCardCompact:hover {
-  opacity: 1;
-  border-color: rgba(212, 175, 55, 0.3);
+  opacity: 0.9;
+  border-color: rgba(212, 175, 55, 0.15);
 }
 
 .matchCardCompactContent {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .providerNameCompact {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .matchScoreCompact {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
 }
 
 .revertButtonCompact {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.875rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 6px;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 5px;
   color: var(--color-primary);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .revertButtonCompact:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .revertButtonCompact:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.revertButtonCompact svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* ====================================
@@ -560,14 +803,14 @@
 .detailsOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  animation: overlayFadeIn 0.3s ease-out;
+  animation: overlayFadeIn 0.2s ease-out;
 }
 
 @keyframes overlayFadeIn {
@@ -582,21 +825,21 @@
 .detailsPanel {
   position: relative;
   width: 100%;
-  max-width: 560px;
-  max-height: 90vh;
-  background: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
+  max-width: 520px;
+  max-height: 85vh;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: panelSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: panelSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes panelSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(16px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -606,21 +849,26 @@
 
 .closeButton {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  padding: 0.4rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
   z-index: 10;
 }
 
 .closeButton:hover {
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.closeButton svg {
+  width: 20px;
+  height: 20px;
 }
 
 .detailsLoading {
@@ -628,64 +876,66 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  gap: 1rem;
+  padding: 3rem 1.5rem;
+  gap: 0.75rem;
   color: var(--color-text-muted);
 }
 
 .detailsHeader {
-  padding: 2rem 2rem 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
   text-align: center;
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), transparent);
-  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.06), transparent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .detailsScore {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: 20px;
+  border-radius: 16px;
   color: #000;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
 }
 
 .detailsScore svg {
   fill: #000;
+  width: 14px;
+  height: 14px;
 }
 
 .detailsScoreLabel {
   font-weight: 500;
-  opacity: 0.8;
-  font-size: 0.85rem;
+  opacity: 0.75;
+  font-size: 0.8rem;
 }
 
 .detailsTitle {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 500;
   color: var(--color-text);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
 }
 
 .detailsSubtitle {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
 .detailsContent {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .detailsSection {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .detailsSection:last-child {
@@ -694,56 +944,58 @@
 
 .detailsSection h3 {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--color-primary);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .detailsDescription {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .detailsGrid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .detailsItem {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 6px;
 }
 
 .detailsItem svg {
   color: var(--color-primary);
   flex-shrink: 0;
-  margin-top: 0.125rem;
+  margin-top: 0.1rem;
+  width: 14px;
+  height: 14px;
 }
 
 .detailsItem div {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: 0.1rem;
 }
 
 .detailsLabel {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   color: var(--color-text-muted);
 }
 
 .detailsValue {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--color-text);
 }
 
@@ -751,98 +1003,109 @@
 .contactButtons {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .contactButton {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: 10px;
-  color: #22c55e;
+  gap: 0.6rem;
+  padding: 0.7rem 0.875rem;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 8px;
+  color: #4ade80;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .contactButton:hover {
-  background: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.5);
-  transform: translateX(4px);
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.25);
+  transform: translateX(3px);
+}
+
+.contactButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Social links */
 .socialLinks {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .socialLink {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+  gap: 0.6rem;
+  padding: 0.7rem 0.875rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
   color: var(--color-text-secondary);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .socialLink:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(212, 175, 55, 0.03);
 }
 
 .socialLink svg:first-child {
   color: var(--color-primary);
+  width: 16px;
+  height: 16px;
 }
 
 .socialLink svg:last-child {
   margin-left: auto;
-  opacity: 0.5;
+  opacity: 0.4;
+  width: 12px;
+  height: 12px;
 }
 
 /* Notice */
 .detailsNotice {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(212, 175, 55, 0.08);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-  margin-top: 1rem;
+  gap: 0.6rem;
+  padding: 0.875rem;
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 8px;
+  margin-top: 0.75rem;
 }
 
 .detailsNotice svg {
   color: var(--color-primary);
   flex-shrink: 0;
-  margin-top: 0.125rem;
+  margin-top: 0.1rem;
+  width: 16px;
+  height: 16px;
 }
 
 .detailsNotice p {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 /* Panel actions */
 .detailsActions {
   display: flex;
-  gap: 0.75rem;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid var(--color-border);
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.2);
 }
 
@@ -853,26 +1116,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  border-radius: 10px;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   border: none;
 }
 
 .detailsRejectButton {
   flex: 1;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
   color: #f87171;
 }
 
 .detailsRejectButton:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .detailsApproveButton {
@@ -882,14 +1145,14 @@
 }
 
 .detailsApproveButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
 }
 
 .detailsRevertButton {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--color-text-secondary);
 }
 
@@ -900,40 +1163,61 @@
 
 .detailsRecoverButton {
   flex: 1;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.15);
   color: var(--color-primary);
 }
 
 .detailsRecoverButton:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .detailsRejectButton:disabled,
 .detailsApproveButton:disabled,
 .detailsRevertButton:disabled,
 .detailsRecoverButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Responsive */
+@media (max-width: 968px) {
+  .matchesGridCentered {
+    gap: 1rem;
+  }
+  
+  .matchCardWithScore {
+    width: 260px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .main {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
   }
 
   .matchesGrid {
     grid-template-columns: 1fr;
+  }
+  
+  .matchesGridCentered {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  
+  .matchCardWithScore {
+    width: 100%;
+    max-width: 320px;
   }
 
   .matchActions {
@@ -941,8 +1225,8 @@
   }
 
   .detailsPanel {
-    max-height: 100vh;
-    border-radius: 20px 20px 0 0;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
     margin-top: auto;
   }
 

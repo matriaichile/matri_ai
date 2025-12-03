@@ -199,6 +199,13 @@ export default function UserCategorySurveyPage() {
   // Pantalla de carga mientras se genera el matching
   if (showLoadingScreen) {
     const categoryInfo = getCategoryInfo(categoryId);
+    const loadingMessages = getLoadingMessages();
+    // Calcular índice del mensaje actual basado en el progreso
+    const currentMessageIndex = Math.min(
+      Math.floor(loadingProgress / 25),
+      loadingMessages.length - 1
+    );
+    
     return (
       <main className={styles.matchingLoadingScreen}>
         {/* Fondo decorativo */}
@@ -248,7 +255,7 @@ export default function UserCategorySurveyPage() {
             {loadingMessage}
           </p>
 
-          {/* Barra de progreso */}
+          {/* Barra de progreso con porcentaje a la derecha */}
           <div className={styles.progressContainer}>
             <div className={styles.progressBar}>
               <div 
@@ -259,9 +266,19 @@ export default function UserCategorySurveyPage() {
             <span className={styles.progressText}>{loadingProgress}%</span>
           </div>
 
+          {/* Indicadores de pasos (puntos) */}
+          <div className={styles.steps}>
+            {loadingMessages.map((_, index) => (
+              <div 
+                key={index}
+                className={`${styles.step} ${index <= currentMessageIndex ? styles.stepActive : ''}`}
+              />
+            ))}
+          </div>
+
           {/* Texto inferior */}
           <p className={styles.matchingFooterText}>
-            Nuestro algoritmo está analizando proveedores para encontrar los mejores para ti
+            Nuestro algoritmo está analizando cientos de proveedores para encontrar los mejores para ti
           </p>
         </div>
       </main>

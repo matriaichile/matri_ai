@@ -27,7 +27,19 @@ import {
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus } from '@/lib/firebase/firestore';
-import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
+import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
+
+// Imágenes placeholder para categorías
+const CATEGORY_IMAGES: Record<string, string> = {
+  photography: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=400',
+  video: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400',
+  dj: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400',
+  catering: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=400',
+  venue: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=400',
+  decoration: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?w=400',
+  wedding_planner: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400',
+  makeup: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400',
+};
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import styles from './page.module.css';
@@ -199,6 +211,16 @@ export default function CategoryMatchesPage() {
 
   return (
     <div className={styles.container}>
+      {/* Fondo decorativo galáctico */}
+      <div className={styles.backgroundPattern} />
+      
+      {/* Partículas flotantes */}
+      <div className={styles.particles}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className={styles.particle} />
+        ))}
+      </div>
+      
       {/* Header */}
       <header className={styles.header}>
         <Link href="/dashboard" className={styles.backButton}>
@@ -252,77 +274,94 @@ export default function CategoryMatchesPage() {
                   Revisa estos proveedores y decide si quieres contactarlos
                 </p>
                 
-                <div className={styles.matchesGrid}>
-                  {pendingMatches.map((match, index) => (
-                    <div 
-                      key={match.id} 
-                      className={styles.matchCard}
-                      style={{ animationDelay: `${index * 80}ms` }}
-                    >
-                      <div className={styles.matchHeader}>
-                        <div className={styles.matchScore}>
-                          <Star size={14} />
-                          <span>{match.matchScore}% compatible</span>
+                <div className={styles.matchesGridCentered}>
+                  {pendingMatches.map((match, index) => {
+                    const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
+                    
+                    return (
+                      <div 
+                        key={match.id} 
+                        className={styles.matchCardWithScore}
+                        style={{ animationDelay: `${index * 80}ms` }}
+                      >
+                        {/* Porcentaje de compatibilidad prominente */}
+                        <div className={styles.prominentScore}>
+                          <Star size={16} />
+                          <span className={styles.prominentScoreValue}>{match.matchScore}%</span>
+                          <span className={styles.prominentScoreLabel}>compatible</span>
+                        </div>
+                        
+                        <div className={styles.matchCard}>
+                          {/* Imagen del proveedor */}
+                          <div className={styles.matchImage}>
+                            <img 
+                              src={categoryImage} 
+                              alt={match.providerInfo.providerName}
+                            />
+                            <div className={styles.matchCategory}>
+                              <span>{categoryInfo?.name}</span>
+                            </div>
+                          </div>
+
+                        <div className={styles.matchBody}>
+                          <h3 className={styles.providerName}>
+                            {match.providerInfo.providerName}
+                          </h3>
+
+                          <div className={styles.matchMeta}>
+                            <span className={styles.metaItem}>
+                              <MapPin size={14} />
+                              <span>{getRegionLabel(match.userInfo.region)}</span>
+                            </span>
+                            <span className={styles.metaItem}>
+                              <DollarSign size={14} />
+                              <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                          <div className={styles.matchActions}>
+                            <button 
+                              className={styles.viewDetailsButton}
+                              onClick={() => handleViewDetails(match)}
+                            >
+                              <Eye size={16} />
+                              <span>Ver detalles</span>
+                            </button>
+                            <div className={styles.actionButtons}>
+                              <button 
+                                className={styles.rejectButton}
+                                onClick={() => handleReject(match.id)}
+                                disabled={processingId === match.id}
+                                title="Descartar"
+                              >
+                                {processingId === match.id ? (
+                                  <Loader2 size={16} className={styles.buttonSpinner} />
+                                ) : (
+                                  <X size={16} />
+                                )}
+                              </button>
+                              <button 
+                                className={styles.approveButton}
+                                onClick={() => handleApprove(match.id)}
+                                disabled={processingId === match.id}
+                                title="Me interesa"
+                              >
+                                {processingId === match.id ? (
+                                  <Loader2 size={16} className={styles.buttonSpinner} />
+                                ) : (
+                                  <>
+                                    <Heart size={16} />
+                                    <span>Me interesa</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-
-                      <div className={styles.matchBody}>
-                        <h3 className={styles.providerName}>
-                          {match.providerInfo.providerName}
-                        </h3>
-
-                        <div className={styles.matchMeta}>
-                          <span className={styles.metaItem}>
-                            <MapPin size={14} />
-                            <span>{getRegionLabel(match.userInfo.region)}</span>
-                          </span>
-                          <span className={styles.metaItem}>
-                            <DollarSign size={14} />
-                            <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.matchActions}>
-                        <button 
-                          className={styles.viewDetailsButton}
-                          onClick={() => handleViewDetails(match)}
-                        >
-                          <Eye size={16} />
-                          <span>Ver detalles</span>
-                        </button>
-                        <div className={styles.actionButtons}>
-                          <button 
-                            className={styles.rejectButton}
-                            onClick={() => handleReject(match.id)}
-                            disabled={processingId === match.id}
-                            title="Descartar"
-                          >
-                            {processingId === match.id ? (
-                              <Loader2 size={16} className={styles.buttonSpinner} />
-                            ) : (
-                              <X size={16} />
-                            )}
-                          </button>
-                          <button 
-                            className={styles.approveButton}
-                            onClick={() => handleApprove(match.id)}
-                            disabled={processingId === match.id}
-                            title="Me interesa"
-                          >
-                            {processingId === match.id ? (
-                              <Loader2 size={16} className={styles.buttonSpinner} />
-                            ) : (
-                              <>
-                                <Heart size={16} />
-                                <span>Me interesa</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -340,63 +379,75 @@ export default function CategoryMatchesPage() {
                 </p>
                 
                 <div className={styles.matchesGrid}>
-                  {approvedMatches.map((match) => (
-                    <div 
-                      key={match.id} 
-                      className={`${styles.matchCard} ${styles.matchCardApproved}`}
-                    >
-                      <div className={styles.matchHeader}>
-                        <div className={styles.matchScore}>
-                          <Star size={14} />
-                          <span>{match.matchScore}%</span>
+                  {approvedMatches.map((match) => {
+                    const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
+                    
+                    return (
+                      <div 
+                        key={match.id} 
+                        className={`${styles.matchCard} ${styles.matchCardApproved}`}
+                      >
+                        {/* Imagen del proveedor */}
+                        <div className={styles.matchImage}>
+                          <img 
+                            src={categoryImage} 
+                            alt={match.providerInfo.providerName}
+                          />
+                          <div className={styles.matchScore}>
+                            <Star size={12} />
+                            <span>{match.matchScore}%</span>
+                          </div>
+                          <div className={styles.matchCategory}>
+                            <span>{categoryInfo?.name}</span>
+                          </div>
+                          <div className={styles.approvedBadge}>
+                            <Heart size={10} />
+                            <span>Te interesa</span>
+                          </div>
                         </div>
-                        <span className={styles.statusBadgeApproved}>
-                          <Heart size={12} />
-                          <span>Te interesa</span>
-                        </span>
-                      </div>
 
-                      <div className={styles.matchBody}>
-                        <h3 className={styles.providerName}>
-                          {match.providerInfo.providerName}
-                        </h3>
+                        <div className={styles.matchBody}>
+                          <h3 className={styles.providerName}>
+                            {match.providerInfo.providerName}
+                          </h3>
 
-                        <div className={styles.matchMeta}>
-                          <span className={styles.metaItem}>
-                            <MapPin size={14} />
-                            <span>{getRegionLabel(match.userInfo.region)}</span>
-                          </span>
-                          <span className={styles.metaItem}>
-                            <DollarSign size={14} />
-                            <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
-                          </span>
+                          <div className={styles.matchMeta}>
+                            <span className={styles.metaItem}>
+                              <MapPin size={14} />
+                              <span>{getRegionLabel(match.userInfo.region)}</span>
+                            </span>
+                            <span className={styles.metaItem}>
+                              <DollarSign size={14} />
+                              <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={styles.matchActions}>
+                          <button 
+                            className={styles.viewDetailsButton}
+                            onClick={() => handleViewDetails(match)}
+                          >
+                            <Eye size={16} />
+                            <span>Ver contacto</span>
+                            <ChevronRight size={14} />
+                          </button>
+                          <button 
+                            className={styles.revertButton}
+                            onClick={() => handleRevert(match.id)}
+                            disabled={processingId === match.id}
+                            title="Cambiar de opinión"
+                          >
+                            {processingId === match.id ? (
+                              <Loader2 size={14} className={styles.buttonSpinner} />
+                            ) : (
+                              <RotateCcw size={14} />
+                            )}
+                          </button>
                         </div>
                       </div>
-
-                      <div className={styles.matchActions}>
-                        <button 
-                          className={styles.viewDetailsButton}
-                          onClick={() => handleViewDetails(match)}
-                        >
-                          <Eye size={16} />
-                          <span>Ver contacto</span>
-                          <ChevronRight size={14} />
-                        </button>
-                        <button 
-                          className={styles.revertButton}
-                          onClick={() => handleRevert(match.id)}
-                          disabled={processingId === match.id}
-                          title="Cambiar de opinión"
-                        >
-                          {processingId === match.id ? (
-                            <Loader2 size={14} className={styles.buttonSpinner} />
-                          ) : (
-                            <RotateCcw size={14} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
