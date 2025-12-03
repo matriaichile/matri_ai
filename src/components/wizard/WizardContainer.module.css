@@ -275,7 +275,7 @@
   width: 100%;
 }
 
-/* Contenido del wizard - SIN SCROLL */
+/* Contenido del wizard */
 .wizardContent {
   position: absolute;
   inset: 0;
@@ -286,8 +286,31 @@
   justify-content: center;
   z-index: 10;
   animation: wizardFadeIn 600ms ease-out forwards;
-  overflow: hidden; /* Nunca scroll */
-  padding: 1rem;
+  /* Permitir scroll vertical si es necesario, pero ocultar horizontal */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Padding extra en bottom para que el glow del botón no se corte */
+  padding: 1rem 1rem 2rem 1rem;
+  /* Scrollbar elegante */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+}
+
+.wizardContent::-webkit-scrollbar {
+  width: 4px;
+}
+
+.wizardContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wizardContent::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 2px;
+}
+
+.wizardContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
 }
 
 @keyframes wizardFadeIn {

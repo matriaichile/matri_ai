@@ -7,11 +7,35 @@
 .stepContainer {
   width: 100%;
   max-width: 700px;
-  max-height: calc(100vh - 2rem);
-  padding: 1rem 1.5rem;
+  /* Reducir max-height para dejar espacio al glow del botón */
+  max-height: calc(100vh - 4rem);
+  /* Padding extra en bottom para que el glow del botón no se corte */
+  padding: 1rem 1.5rem 2rem 1.5rem;
   transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
+  /* Scroll si el contenido excede - con scrollbar elegante */
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+}
+
+.stepContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.stepContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stepContainer::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 2px;
+}
+
+.stepContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
 }
 
 .stepContainerHidden {
@@ -76,19 +100,16 @@
   }
 }
 
-/* Contenido - flexible, scroll oculto pero funcional si es necesario */
+/* Contenido - flexible con espacio para efectos visuales */
 .content {
   width: 100%;
   flex: 1;
   min-height: 0;
-  overflow: visible; /* Permite que dropdowns/calendarios se muestren fuera */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-/* Ocultar scrollbar en WebKit */
-.content::-webkit-scrollbar {
-  display: none;
+  /* Permitir overflow visible para efectos de hover/glow y dropdowns */
+  overflow: visible;
+  /* Padding interno para que los efectos no se corten en los bordes */
+  padding: 0.5rem;
+  margin: -0.5rem;
 }
 
 /* Barra inferior con navegación y progreso */
@@ -100,6 +121,9 @@
   flex-shrink: 0;
   padding-top: 1rem;
   margin-top: auto;
+  /* Padding extra para que el glow de los botones no se corte */
+  padding-bottom: 0.5rem;
+  overflow: visible;
 }
 
 /* Contenedor principal centrado: Atrás - Progreso - Siguiente */
@@ -185,13 +209,14 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 300ms ease;
-  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  /* Glow más sutil para evitar cortes */
+  box-shadow: 0 2px 12px rgba(212, 175, 55, 0.35);
   white-space: nowrap;
 }
 
 .nextButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.45);
   background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
 }
 

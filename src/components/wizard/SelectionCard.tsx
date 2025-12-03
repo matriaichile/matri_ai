@@ -104,20 +104,19 @@ export default function SelectionCard({
         <span className={styles.label}>{label}</span>
         {description && <span className={styles.description}>{description}</span>}
       </div>
-      {isSelected && (
-        <div className={styles.checkmark}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-      )}
+      {/* Siempre reservar espacio para el checkmark para evitar layout shift */}
+      <div className={`${styles.checkmark} ${isSelected ? styles.checkmarkVisible : styles.checkmarkHidden}`}>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
     </button>
   );
 }

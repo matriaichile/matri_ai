@@ -25,24 +25,24 @@ export function SingleSelectQuestion({ question, value, onChange }: BaseQuestion
 
   return (
     <div className={styles.optionsGrid}>
-      {question.options?.map((option, index) => (
-        <button
-          key={option.id}
-          type="button"
-          className={`${styles.optionCard} ${
-            selectedValue === option.id ? styles.optionCardSelected : ''
-          }`}
-          onClick={() => handleSelect(option.id)}
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
-          <div className={styles.optionContent}>
-            <span className={styles.optionLabel}>{option.label}</span>
-            {option.description && (
-              <span className={styles.optionDescription}>{option.description}</span>
-            )}
-          </div>
-          {selectedValue === option.id && (
-            <div className={styles.checkmark}>
+      {question.options?.map((option, index) => {
+        const isSelected = selectedValue === option.id;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            className={`${styles.optionCard} ${isSelected ? styles.optionCardSelected : ''}`}
+            onClick={() => handleSelect(option.id)}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className={styles.optionContent}>
+              <span className={styles.optionLabel}>{option.label}</span>
+              {option.description && (
+                <span className={styles.optionDescription}>{option.description}</span>
+              )}
+            </div>
+            {/* Siempre reservar espacio para el checkmark para evitar layout shift */}
+            <div className={`${styles.checkmark} ${isSelected ? styles.checkmarkVisible : styles.checkmarkHidden}`}>
               <svg
                 width="16"
                 height="16"
@@ -54,9 +54,9 @@ export function SingleSelectQuestion({ question, value, onChange }: BaseQuestion
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-          )}
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -79,24 +79,24 @@ export function MultiSelectQuestion({ question, value, onChange }: BaseQuestionP
 
   return (
     <div className={styles.optionsGrid}>
-      {question.options?.map((option, index) => (
-        <button
-          key={option.id}
-          type="button"
-          className={`${styles.optionCard} ${
-            selectedValues.includes(option.id) ? styles.optionCardSelected : ''
-          }`}
-          onClick={() => handleToggle(option.id)}
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
-          <div className={styles.optionContent}>
-            <span className={styles.optionLabel}>{option.label}</span>
-            {option.description && (
-              <span className={styles.optionDescription}>{option.description}</span>
-            )}
-          </div>
-          {selectedValues.includes(option.id) && (
-            <div className={styles.checkmark}>
+      {question.options?.map((option, index) => {
+        const isSelected = selectedValues.includes(option.id);
+        return (
+          <button
+            key={option.id}
+            type="button"
+            className={`${styles.optionCard} ${isSelected ? styles.optionCardSelected : ''}`}
+            onClick={() => handleToggle(option.id)}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className={styles.optionContent}>
+              <span className={styles.optionLabel}>{option.label}</span>
+              {option.description && (
+                <span className={styles.optionDescription}>{option.description}</span>
+              )}
+            </div>
+            {/* Siempre reservar espacio para el checkmark para evitar layout shift */}
+            <div className={`${styles.checkmark} ${isSelected ? styles.checkmarkVisible : styles.checkmarkHidden}`}>
               <svg
                 width="16"
                 height="16"
@@ -108,9 +108,9 @@ export function MultiSelectQuestion({ question, value, onChange }: BaseQuestionP
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-          )}
-        </button>
-      ))}
+          </button>
+        );
+      })}
       <p className={styles.multiSelectHint}>Puedes seleccionar varias opciones</p>
     </div>
   );
