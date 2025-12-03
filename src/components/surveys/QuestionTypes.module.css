@@ -9,6 +9,8 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+  /* Prevenir scroll durante animaciones */
+  overflow: visible;
 }
 
 /* Tarjeta de opción */
@@ -28,15 +30,18 @@
   position: relative;
   text-align: left;
   width: 100%;
-  animation: cardAppear 400ms ease-out forwards;
+  animation: cardAppear 300ms ease-out forwards;
   opacity: 0;
-  transform: translateY(10px);
+  /* Usar solo opacity para evitar scroll */
+  will-change: opacity;
 }
 
 @keyframes cardAppear {
+  from {
+    opacity: 0;
+  }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -128,7 +133,9 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-  padding: 1rem 0;
+  padding: 1.5rem 0.5rem;
+  /* Espacio extra para que el glow no se corte */
+  margin: -0.5rem;
 }
 
 .booleanButton {
@@ -147,6 +154,9 @@
   cursor: pointer;
   transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 120px;
+  /* Asegurar que el glow se vea */
+  position: relative;
+  z-index: 1;
 }
 
 .booleanButton:hover {
@@ -160,8 +170,10 @@
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
   color: var(--color-primary-light);
   box-shadow: 
-    0 0 0 3px rgba(212, 175, 55, 0.2),
+    0 0 0 3px rgba(212, 175, 55, 0.3),
+    0 0 20px rgba(212, 175, 55, 0.25),
     0 8px 30px rgba(212, 175, 55, 0.2);
+  z-index: 2;
 }
 
 .booleanIcon {
@@ -178,6 +190,7 @@
 .booleanButtonSelected .booleanIcon {
   background: var(--color-primary);
   color: #000000;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
 }
 
 /* Contenedor numérico */

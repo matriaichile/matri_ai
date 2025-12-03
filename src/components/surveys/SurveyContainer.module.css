@@ -334,19 +334,20 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
-  animation: surveyFadeIn 600ms ease-out forwards;
+  animation: surveyFadeIn 400ms ease-out forwards;
+  /* Prevenir scroll horizontal y vertical durante animaciones */
   overflow: hidden;
   padding: 1rem;
+  /* Contener elementos animados */
+  contain: layout paint;
 }
 
 @keyframes surveyFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

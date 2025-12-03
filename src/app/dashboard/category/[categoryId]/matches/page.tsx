@@ -8,31 +8,50 @@ import {
   X, 
   Star, 
   MapPin, 
+  MapPinned,
   DollarSign, 
   ExternalLink,
   ChevronLeft,
   Sparkles,
-  Loader2
+  Loader2,
+  Mail,
+  Phone,
+  Globe,
+  Instagram,
+  Eye,
+  RotateCcw,
+  ChevronRight,
+  Heart,
+  XCircle
 } from 'lucide-react';
-import { useAuthStore, CategoryId, UserProfile } from '@/store/authStore';
+import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus } from '@/lib/firebase/firestore';
-import { REGIONS, PRICE_RANGES_PROVIDER } from '@/store/wizardStore';
+import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import styles from './page.module.css';
 
 /**
  * Página de matches por categoría para usuarios.
  * Muestra los proveedores recomendados después de completar la encuesta.
  */
+// Interfaz extendida para incluir datos completos del proveedor
+interface ExtendedLead extends Lead {
+  providerDetails?: ProviderProfile;
+}
+
 export default function CategoryMatchesPage() {
   const router = useRouter();
   const params = useParams();
   const categoryId = params.categoryId as CategoryId;
   
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser } = useAuthStore();
-  const [matches, setMatches] = useState<Lead[]>([]);
+  const [matches, setMatches] = useState<ExtendedLead[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<ExtendedLead | null>(null);
+  const [loadingProviderDetails, setLoadingProviderDetails] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
@@ -96,9 +115,60 @@ export default function CategoryMatchesPage() {
     }
   };
 
+  // Revertir estado a pendiente
+  const handleRevert = async (leadId: string) => {
+    try {
+      setProcessingId(leadId);
+      await updateLeadStatus(leadId, 'pending');
+      setMatches(prev => prev.map(m => 
+        m.id === leadId ? { ...m, status: 'pending' as const } : m
+      ));
+    } catch (error) {
+      console.error('Error revirtiendo estado:', error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Abrir panel de detalles del proveedor
+  const handleViewDetails = async (match: ExtendedLead) => {
+    setSelectedMatch(match);
+    
+    // Cargar detalles completos del proveedor si no los tenemos
+    if (!match.providerDetails) {
+      setLoadingProviderDetails(true);
+      try {
+        const providerDoc = await getDoc(doc(db, 'providers', match.providerId));
+        if (providerDoc.exists()) {
+          const providerData = {
+            id: providerDoc.id,
+            type: 'provider' as const,
+            ...providerDoc.data(),
+          } as ProviderProfile;
+          
+          // Actualizar el match con los detalles del proveedor
+          setMatches(prev => prev.map(m => 
+            m.id === match.id ? { ...m, providerDetails: providerData } : m
+          ));
+          setSelectedMatch({ ...match, providerDetails: providerData });
+        }
+      } catch (error) {
+        console.error('Error cargando detalles del proveedor:', error);
+      } finally {
+        setLoadingProviderDetails(false);
+      }
+    }
+  };
+
+  // Cerrar panel de detalles
+  const handleCloseDetails = () => {
+    setSelectedMatch(null);
+  };
+
   // Helpers
   const getRegionLabel = (id: string) => REGIONS.find((r) => r.id === id)?.label || id;
   const getPriceLabel = (id: string) => PRICE_RANGES_PROVIDER.find((p) => p.id === id)?.label || id;
+  const getStyleLabel = (id: string) => SERVICE_STYLES.find((s) => s.id === id)?.label || id;
 
   // Loading state
   if (isLoading) {
@@ -124,7 +194,8 @@ export default function CategoryMatchesPage() {
   }
 
   const pendingMatches = matches.filter(m => m.status === 'pending');
-  const processedMatches = matches.filter(m => m.status !== 'pending');
+  const approvedMatches = matches.filter(m => m.status === 'approved');
+  const rejectedMatches = matches.filter(m => m.status === 'rejected');
 
   return (
     <div className={styles.container}>
@@ -132,7 +203,7 @@ export default function CategoryMatchesPage() {
       <header className={styles.header}>
         <Link href="/dashboard" className={styles.backButton}>
           <ChevronLeft size={20} />
-          <span>Volver</span>
+          <span>Volver al dashboard</span>
         </Link>
         
         <div className={styles.headerContent}>
@@ -173,21 +244,25 @@ export default function CategoryMatchesPage() {
             {pendingMatches.length > 0 && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>
+                  <Sparkles size={18} />
                   <span>Nuevos matches</span>
                   <span className={styles.badge}>{pendingMatches.length}</span>
                 </h2>
+                <p className={styles.sectionDescription}>
+                  Revisa estos proveedores y decide si quieres contactarlos
+                </p>
                 
                 <div className={styles.matchesGrid}>
                   {pendingMatches.map((match, index) => (
                     <div 
                       key={match.id} 
                       className={styles.matchCard}
-                      style={{ animationDelay: `${index * 100}ms` }}
+                      style={{ animationDelay: `${index * 80}ms` }}
                     >
                       <div className={styles.matchHeader}>
                         <div className={styles.matchScore}>
-                          <Star size={16} />
-                          <span>{match.matchScore}%</span>
+                          <Star size={14} />
+                          <span>{match.matchScore}% compatible</span>
                         </div>
                       </div>
 
@@ -210,33 +285,41 @@ export default function CategoryMatchesPage() {
 
                       <div className={styles.matchActions}>
                         <button 
-                          className={styles.rejectButton}
-                          onClick={() => handleReject(match.id)}
-                          disabled={processingId === match.id}
+                          className={styles.viewDetailsButton}
+                          onClick={() => handleViewDetails(match)}
                         >
-                          {processingId === match.id ? (
-                            <Loader2 size={16} className={styles.buttonSpinner} />
-                          ) : (
-                            <X size={16} />
-                          )}
+                          <Eye size={16} />
+                          <span>Ver detalles</span>
                         </button>
-                        <button 
-                          className={styles.approveButton}
-                          onClick={() => handleApprove(match.id)}
-                          disabled={processingId === match.id}
-                        >
-                          {processingId === match.id ? (
-                            <Loader2 size={16} className={styles.buttonSpinner} />
-                          ) : (
-                            <>
-                              <Check size={16} />
-                              <span>Aprobar</span>
-                            </>
-                          )}
-                        </button>
-                        <button className={styles.detailsButton}>
-                          <ExternalLink size={16} />
-                        </button>
+                        <div className={styles.actionButtons}>
+                          <button 
+                            className={styles.rejectButton}
+                            onClick={() => handleReject(match.id)}
+                            disabled={processingId === match.id}
+                            title="Descartar"
+                          >
+                            {processingId === match.id ? (
+                              <Loader2 size={16} className={styles.buttonSpinner} />
+                            ) : (
+                              <X size={16} />
+                            )}
+                          </button>
+                          <button 
+                            className={styles.approveButton}
+                            onClick={() => handleApprove(match.id)}
+                            disabled={processingId === match.id}
+                            title="Me interesa"
+                          >
+                            {processingId === match.id ? (
+                              <Loader2 size={16} className={styles.buttonSpinner} />
+                            ) : (
+                              <>
+                                <Heart size={16} />
+                                <span>Me interesa</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -244,30 +327,32 @@ export default function CategoryMatchesPage() {
               </section>
             )}
 
-            {/* Matches procesados */}
-            {processedMatches.length > 0 && (
+            {/* Matches aprobados - con info de contacto */}
+            {approvedMatches.length > 0 && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>
-                  <span>Matches procesados</span>
+                  <Heart size={18} />
+                  <span>Proveedores de interés</span>
+                  <span className={styles.badgeSuccess}>{approvedMatches.length}</span>
                 </h2>
+                <p className={styles.sectionDescription}>
+                  Has mostrado interés en estos proveedores. ¡Contáctalos!
+                </p>
                 
                 <div className={styles.matchesGrid}>
-                  {processedMatches.map((match) => (
+                  {approvedMatches.map((match) => (
                     <div 
                       key={match.id} 
-                      className={`${styles.matchCard} ${styles.matchCardProcessed}`}
+                      className={`${styles.matchCard} ${styles.matchCardApproved}`}
                     >
                       <div className={styles.matchHeader}>
                         <div className={styles.matchScore}>
-                          <Star size={16} />
+                          <Star size={14} />
                           <span>{match.matchScore}%</span>
                         </div>
-                        <span className={`${styles.statusBadge} ${styles[`status${match.status.charAt(0).toUpperCase() + match.status.slice(1)}`]}`}>
-                          {match.status === 'approved' && <Check size={12} />}
-                          {match.status === 'rejected' && <X size={12} />}
-                          <span>
-                            {match.status === 'approved' ? 'Aprobado' : 'Rechazado'}
-                          </span>
+                        <span className={styles.statusBadgeApproved}>
+                          <Heart size={12} />
+                          <span>Te interesa</span>
                         </span>
                       </div>
 
@@ -287,6 +372,74 @@ export default function CategoryMatchesPage() {
                           </span>
                         </div>
                       </div>
+
+                      <div className={styles.matchActions}>
+                        <button 
+                          className={styles.viewDetailsButton}
+                          onClick={() => handleViewDetails(match)}
+                        >
+                          <Eye size={16} />
+                          <span>Ver contacto</span>
+                          <ChevronRight size={14} />
+                        </button>
+                        <button 
+                          className={styles.revertButton}
+                          onClick={() => handleRevert(match.id)}
+                          disabled={processingId === match.id}
+                          title="Cambiar de opinión"
+                        >
+                          {processingId === match.id ? (
+                            <Loader2 size={14} className={styles.buttonSpinner} />
+                          ) : (
+                            <RotateCcw size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Matches rechazados */}
+            {rejectedMatches.length > 0 && (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <X size={18} />
+                  <span>Descartados</span>
+                </h2>
+                <p className={styles.sectionDescription}>
+                  Proveedores que has descartado. Puedes cambiar de opinión cuando quieras.
+                </p>
+                
+                <div className={styles.matchesGridCompact}>
+                  {rejectedMatches.map((match) => (
+                    <div 
+                      key={match.id} 
+                      className={`${styles.matchCardCompact} ${styles.matchCardRejected}`}
+                    >
+                      <div className={styles.matchCardCompactContent}>
+                        <h4 className={styles.providerNameCompact}>
+                          {match.providerInfo.providerName}
+                        </h4>
+                        <span className={styles.matchScoreCompact}>
+                          {match.matchScore}%
+                        </span>
+                      </div>
+                      <button 
+                        className={styles.revertButtonCompact}
+                        onClick={() => handleRevert(match.id)}
+                        disabled={processingId === match.id}
+                      >
+                        {processingId === match.id ? (
+                          <Loader2 size={14} className={styles.buttonSpinner} />
+                        ) : (
+                          <>
+                            <RotateCcw size={14} />
+                            <span>Recuperar</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -295,6 +448,227 @@ export default function CategoryMatchesPage() {
           </>
         )}
       </main>
+
+      {/* Panel de detalles del proveedor */}
+      {selectedMatch && (
+        <div className={styles.detailsOverlay} onClick={handleCloseDetails}>
+          <div className={styles.detailsPanel} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.closeButton} onClick={handleCloseDetails}>
+              <XCircle size={24} />
+            </button>
+
+            {loadingProviderDetails ? (
+              <div className={styles.detailsLoading}>
+                <Loader2 size={32} className={styles.buttonSpinner} />
+                <p>Cargando información del proveedor...</p>
+              </div>
+            ) : (
+              <>
+                {/* Header del panel */}
+                <div className={styles.detailsHeader}>
+                  <div className={styles.detailsScore}>
+                    <Star size={20} />
+                    <span>{selectedMatch.matchScore}%</span>
+                    <span className={styles.detailsScoreLabel}>compatible</span>
+                  </div>
+                  <h2 className={styles.detailsTitle}>
+                    {selectedMatch.providerInfo.providerName}
+                  </h2>
+                  <p className={styles.detailsSubtitle}>
+                    {categoryInfo?.name}
+                  </p>
+                </div>
+
+                {/* Información del proveedor */}
+                <div className={styles.detailsContent}>
+                  {/* Descripción */}
+                  {selectedMatch.providerDetails?.description && (
+                    <div className={styles.detailsSection}>
+                      <h3>Sobre este proveedor</h3>
+                      <p className={styles.detailsDescription}>
+                        {selectedMatch.providerDetails.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Información básica */}
+                  <div className={styles.detailsSection}>
+                    <h3>Información</h3>
+                    <div className={styles.detailsGrid}>
+                      <div className={styles.detailsItem}>
+                        <MapPin size={16} />
+                        <div>
+                          <span className={styles.detailsLabel}>Región principal</span>
+                          <span className={styles.detailsValue}>
+                            {getRegionLabel(selectedMatch.providerDetails?.workRegion || selectedMatch.userInfo.region)}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedMatch.providerDetails?.acceptsOutsideZone && (
+                        <div className={styles.detailsItem}>
+                          <MapPinned size={16} />
+                          <div>
+                            <span className={styles.detailsLabel}>Cobertura</span>
+                            <span className={styles.detailsValue}>
+                              Disponible en otras regiones
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div className={styles.detailsItem}>
+                        <DollarSign size={16} />
+                        <div>
+                          <span className={styles.detailsLabel}>Rango de precios</span>
+                          <span className={styles.detailsValue}>
+                            {getPriceLabel(selectedMatch.providerInfo.priceRange)}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedMatch.providerDetails?.serviceStyle && (
+                        <div className={styles.detailsItem}>
+                          <Sparkles size={16} />
+                          <div>
+                            <span className={styles.detailsLabel}>Estilo</span>
+                            <span className={styles.detailsValue}>
+                              {getStyleLabel(selectedMatch.providerDetails.serviceStyle)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contacto - Solo visible si está aprobado */}
+                  {selectedMatch.status === 'approved' && (
+                    <div className={styles.detailsSection}>
+                      <h3>Contacto</h3>
+                      <div className={styles.contactButtons}>
+                        {selectedMatch.providerDetails?.email && (
+                          <a 
+                            href={`mailto:${selectedMatch.providerDetails.email}`}
+                            className={styles.contactButton}
+                          >
+                            <Mail size={18} />
+                            <span>{selectedMatch.providerDetails.email}</span>
+                          </a>
+                        )}
+                        {selectedMatch.providerDetails?.phone && (
+                          <a 
+                            href={`tel:${selectedMatch.providerDetails.phone}`}
+                            className={styles.contactButton}
+                          >
+                            <Phone size={18} />
+                            <span>{selectedMatch.providerDetails.phone}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Redes sociales y web */}
+                  {(selectedMatch.providerDetails?.website || selectedMatch.providerDetails?.instagram) && (
+                    <div className={styles.detailsSection}>
+                      <h3>Conoce más</h3>
+                      <div className={styles.socialLinks}>
+                        {selectedMatch.providerDetails?.website && (
+                          <a 
+                            href={selectedMatch.providerDetails.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.socialLink}
+                          >
+                            <Globe size={18} />
+                            <span>Sitio web</span>
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                        {selectedMatch.providerDetails?.instagram && (
+                          <a 
+                            href={`https://instagram.com/${selectedMatch.providerDetails.instagram.replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.socialLink}
+                          >
+                            <Instagram size={18} />
+                            <span>{selectedMatch.providerDetails.instagram}</span>
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mensaje si no está aprobado */}
+                  {selectedMatch.status !== 'approved' && (
+                    <div className={styles.detailsNotice}>
+                      <Heart size={20} />
+                      <p>
+                        Marca este proveedor como &quot;Me interesa&quot; para ver su información de contacto completa.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones del panel */}
+                <div className={styles.detailsActions}>
+                  {selectedMatch.status === 'pending' && (
+                    <>
+                      <button 
+                        className={styles.detailsRejectButton}
+                        onClick={() => {
+                          handleReject(selectedMatch.id);
+                          handleCloseDetails();
+                        }}
+                        disabled={processingId === selectedMatch.id}
+                      >
+                        <X size={16} />
+                        <span>Descartar</span>
+                      </button>
+                      <button 
+                        className={styles.detailsApproveButton}
+                        onClick={() => {
+                          handleApprove(selectedMatch.id);
+                          handleCloseDetails();
+                        }}
+                        disabled={processingId === selectedMatch.id}
+                      >
+                        <Heart size={16} />
+                        <span>Me interesa</span>
+                      </button>
+                    </>
+                  )}
+                  {selectedMatch.status === 'approved' && (
+                    <button 
+                      className={styles.detailsRevertButton}
+                      onClick={() => {
+                        handleRevert(selectedMatch.id);
+                        handleCloseDetails();
+                      }}
+                      disabled={processingId === selectedMatch.id}
+                    >
+                      <RotateCcw size={16} />
+                      <span>Cambiar de opinión</span>
+                    </button>
+                  )}
+                  {selectedMatch.status === 'rejected' && (
+                    <button 
+                      className={styles.detailsRecoverButton}
+                      onClick={() => {
+                        handleRevert(selectedMatch.id);
+                        handleCloseDetails();
+                      }}
+                      disabled={processingId === selectedMatch.id}
+                    >
+                      <RotateCcw size={16} />
+                      <span>Recuperar proveedor</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -25,12 +25,25 @@ import {
   Heart,
   Search,
   Mail,
-  ClipboardCheck
+  ClipboardCheck,
+  Edit3,
+  Save,
+  XCircle,
+  Lock,
+  Eye,
+  RotateCcw,
+  Loader2,
+  Phone,
+  Globe,
+  Instagram,
+  CheckCircle,
+  MapPinned
 } from 'lucide-react';
-import { useAuthStore, UserProfile, CategoryId } from '@/store/authStore';
+import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
-import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES } from '@/store/wizardStore';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { updateUserProfile, updateLeadStatus } from '@/lib/firebase/firestore';
+import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES, CEREMONY_TYPES, EVENT_STYLES, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
+import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
@@ -48,6 +61,8 @@ interface LeadMatch {
     categories: string[];
     priceRange: string;
   };
+  // Datos completos del proveedor (cargados al abrir detalles)
+  providerDetails?: ProviderProfile;
 }
 
 // Interfaz para proveedores
@@ -58,9 +73,14 @@ interface Provider {
   serviceStyle: string;
   priceRange: string;
   workRegion: string;
+  acceptsOutsideZone?: boolean;
   description: string;
   instagram: string;
   website: string;
+  facebook?: string;
+  tiktok?: string;
+  email?: string;
+  phone?: string;
   portfolioImages: string[];
 }
 
@@ -95,11 +115,21 @@ const CATEGORY_IMAGES: Record<string, string> = {
  */
 export default function UserDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser } = useAuthStore();
+  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'matches' | 'surveys' | 'profile'>('matches');
   const [matches, setMatches] = useState<LeadMatch[]>([]);
   const [providers, setProviders] = useState<Record<string, Provider>>({});
   const [loadingMatches, setLoadingMatches] = useState(true);
+  
+  // Estado para edición de perfil
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
+  
+  // Estado para el panel de detalles del proveedor
+  const [selectedMatch, setSelectedMatch] = useState<LeadMatch | null>(null);
+  const [loadingProviderDetails, setLoadingProviderDetails] = useState(false);
+  const [processingMatchId, setProcessingMatchId] = useState<string | null>(null);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -173,16 +203,157 @@ export default function UserDashboardPage() {
     }
   };
 
-  const handleApproveMatch = (leadId: string) => {
-    setMatches(prev => prev.map(m => 
-      m.id === leadId ? { ...m, status: 'approved' as const } : m
-    ));
+  // Aprobar match - guarda en la base de datos
+  const handleApproveMatch = async (leadId: string) => {
+    try {
+      setProcessingMatchId(leadId);
+      await updateLeadStatus(leadId, 'approved');
+      setMatches(prev => prev.map(m => 
+        m.id === leadId ? { ...m, status: 'approved' as const } : m
+      ));
+    } catch (error) {
+      console.error('Error aprobando match:', error);
+    } finally {
+      setProcessingMatchId(null);
+    }
   };
 
-  const handleRejectMatch = (leadId: string) => {
-    setMatches(prev => prev.map(m => 
-      m.id === leadId ? { ...m, status: 'rejected' as const } : m
-    ));
+  // Rechazar match - guarda en la base de datos
+  const handleRejectMatch = async (leadId: string) => {
+    try {
+      setProcessingMatchId(leadId);
+      await updateLeadStatus(leadId, 'rejected');
+      setMatches(prev => prev.map(m => 
+        m.id === leadId ? { ...m, status: 'rejected' as const } : m
+      ));
+    } catch (error) {
+      console.error('Error rechazando match:', error);
+    } finally {
+      setProcessingMatchId(null);
+    }
+  };
+
+  // Revertir estado a pendiente - guarda en la base de datos
+  const handleRevertMatch = async (leadId: string) => {
+    try {
+      setProcessingMatchId(leadId);
+      await updateLeadStatus(leadId, 'pending');
+      setMatches(prev => prev.map(m => 
+        m.id === leadId ? { ...m, status: 'pending' as const } : m
+      ));
+    } catch (error) {
+      console.error('Error revirtiendo match:', error);
+    } finally {
+      setProcessingMatchId(null);
+    }
+  };
+
+  // Abrir panel de detalles del proveedor
+  const handleViewProviderDetails = async (match: LeadMatch) => {
+    setSelectedMatch(match);
+    
+    // Cargar detalles completos del proveedor si no los tenemos
+    if (!match.providerDetails && !providers[match.providerId]?.email) {
+      setLoadingProviderDetails(true);
+      try {
+        const providerDoc = await getDoc(doc(db, 'providers', match.providerId));
+        if (providerDoc.exists()) {
+          const providerData = providerDoc.data() as Provider;
+          
+          // Actualizar providers cache
+          setProviders(prev => ({
+            ...prev,
+            [match.providerId]: {
+              id: providerDoc.id,
+              ...providerData,
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Error cargando detalles del proveedor:', error);
+      } finally {
+        setLoadingProviderDetails(false);
+      }
+    }
+  };
+
+  // Cerrar panel de detalles
+  const handleCloseProviderDetails = () => {
+    setSelectedMatch(null);
+  };
+
+  // Iniciar edición del perfil
+  const handleStartEditProfile = () => {
+    if (profile) {
+      setEditedProfile({
+        coupleNames: profile.coupleNames,
+        phone: profile.phone,
+        eventDate: profile.eventDate,
+        isDateTentative: profile.isDateTentative,
+        budget: profile.budget,
+        guestCount: profile.guestCount,
+        region: profile.region,
+        ceremonyTypes: profile.ceremonyTypes,
+        eventStyle: profile.eventStyle,
+        priorityCategories: profile.priorityCategories,
+        expectations: profile.expectations,
+      });
+      setIsEditingProfile(true);
+    }
+  };
+
+  // Cancelar edición del perfil
+  const handleCancelEditProfile = () => {
+    setIsEditingProfile(false);
+    setEditedProfile({});
+  };
+
+  // Guardar cambios del perfil
+  const handleSaveProfile = async () => {
+    if (!firebaseUser?.uid || !editedProfile) return;
+
+    try {
+      setIsSavingProfile(true);
+      await updateUserProfile(firebaseUser.uid, editedProfile);
+      
+      // Actualizar el store local
+      if (profile) {
+        const updatedProfile = { ...profile, ...editedProfile };
+        setUserProfile(updatedProfile);
+      }
+      
+      setIsEditingProfile(false);
+      setEditedProfile({});
+    } catch (error) {
+      console.error('Error al guardar perfil:', error);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  // Actualizar campo del perfil editado
+  const updateEditedField = (field: keyof UserProfile, value: unknown) => {
+    setEditedProfile(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Toggle categoría prioritaria
+  const togglePriorityCategory = (categoryId: string) => {
+    const current = editedProfile.priorityCategories || [];
+    if (current.includes(categoryId)) {
+      updateEditedField('priorityCategories', current.filter(c => c !== categoryId));
+    } else {
+      updateEditedField('priorityCategories', [...current, categoryId]);
+    }
+  };
+
+  // Toggle tipo de ceremonia
+  const toggleCeremonyType = (type: string) => {
+    const current = editedProfile.ceremonyTypes || [];
+    if (current.includes(type)) {
+      updateEditedField('ceremonyTypes', current.filter(c => c !== type));
+    } else {
+      updateEditedField('ceremonyTypes', [...current, type]);
+    }
   };
 
   // Obtener labels
@@ -190,15 +361,8 @@ export default function UserDashboardPage() {
   const getGuestLabel = (id: string) => GUEST_COUNTS.find((g) => g.id === id)?.label || id;
   const getRegionLabel = (id: string) => REGIONS.find((r) => r.id === id)?.label || id;
   const getCategoryLabel = (id: string) => PRIORITY_CATEGORIES.find((c) => c.id === id)?.label || id;
-  const getPriceLabel = (id: string) => {
-    const labels: Record<string, string> = {
-      budget: 'Económico',
-      mid: 'Rango Medio',
-      premium: 'Premium',
-      luxury: 'Lujo',
-    };
-    return labels[id] || id;
-  };
+  const getPriceLabel = (id: string) => PRICE_RANGES_PROVIDER.find((p) => p.id === id)?.label || id;
+  const getStyleLabel = (id: string) => SERVICE_STYLES.find((s) => s.id === id)?.label || id;
 
   if (isLoading) {
     return <LoadingState message="Cargando tu dashboard..." fullScreen />;
@@ -258,87 +422,252 @@ export default function UserDashboardPage() {
                 }}
               />
             ) : (
-              <div className={styles.matchesGrid}>
-                {matches.map((match) => {
-                  const provider = providers[match.providerId];
-                  const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
-                  
-                  return (
-                    <div 
-                      key={match.id} 
-                      className={`${styles.matchCard} ${match.status !== 'pending' ? styles.matchCardProcessed : ''}`}
-                    >
-                      <div className={styles.matchImage}>
-                        <img 
-                          src={categoryImage} 
-                          alt={match.providerInfo.providerName}
-                        />
-                        <div className={styles.matchScore}>
-                          <Star size={14} />
-                          <span>{match.matchScore}%</span>
-                        </div>
-                        <div className={styles.matchCategory}>
-                          {CATEGORY_ICONS[match.category]}
-                          <span>{getCategoryLabel(match.category)}</span>
-                        </div>
-                      </div>
-
-                      <div className={styles.matchInfo}>
-                        <h3 className={styles.matchName}>
-                          {match.providerInfo.providerName}
-                        </h3>
+              <>
+                {/* Matches pendientes */}
+                {pendingMatches.length > 0 && (
+                  <div className={styles.matchesSubsection}>
+                    <h3 className={styles.matchesSubsectionTitle}>
+                      <Sparkles size={18} />
+                      <span>Nuevos matches</span>
+                      <span className={styles.matchesBadgeCount}>{pendingMatches.length}</span>
+                    </h3>
+                    <p className={styles.matchesSubsectionDesc}>
+                      Revisa estos proveedores y decide si quieres contactarlos
+                    </p>
+                    <div className={styles.matchesGrid}>
+                      {pendingMatches.map((match) => {
+                        const provider = providers[match.providerId];
+                        const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
+                        const isProcessing = processingMatchId === match.id;
                         
-                        <p className={styles.matchDescription}>
-                          {provider?.description || 'Proveedor profesional para tu evento.'}
-                        </p>
+                        return (
+                          <div 
+                            key={match.id} 
+                            className={styles.matchCard}
+                          >
+                            <div className={styles.matchImage}>
+                              <img 
+                                src={categoryImage} 
+                                alt={match.providerInfo.providerName}
+                              />
+                              <div className={styles.matchScore}>
+                                <Star size={14} />
+                                <span>{match.matchScore}%</span>
+                              </div>
+                              <div className={styles.matchCategory}>
+                                {CATEGORY_ICONS[match.category]}
+                                <span>{getCategoryLabel(match.category)}</span>
+                              </div>
+                            </div>
 
-                        <div className={styles.matchMeta}>
-                          <span className={styles.matchMetaItem}>
-                            <MapPin size={14} />
-                            <span>{provider?.workRegion ? getRegionLabel(provider.workRegion) : 'Chile'}</span>
-                          </span>
-                          <span className={styles.matchMetaItem}>
-                            <DollarSign size={14} />
-                            <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
-                          </span>
-                        </div>
+                            <div className={styles.matchInfo}>
+                              <h3 className={styles.matchName}>
+                                {match.providerInfo.providerName}
+                              </h3>
+                              
+                              <p className={styles.matchDescription}>
+                                {provider?.description || 'Proveedor profesional para tu evento.'}
+                              </p>
 
-                        {match.status !== 'pending' && (
-                          <div className={`${styles.statusBadge} ${styles[`status${match.status.charAt(0).toUpperCase() + match.status.slice(1)}`]}`}>
-                            {match.status === 'approved' && <Check size={14} />}
-                            {match.status === 'rejected' && <X size={14} />}
-                            <span>
-                              {match.status === 'approved' ? 'Aprobado' : 
-                               match.status === 'rejected' ? 'Rechazado' : 'Contactado'}
-                            </span>
+                              <div className={styles.matchMeta}>
+                                <span className={styles.matchMetaItem}>
+                                  <MapPin size={14} />
+                                  <span>{provider?.workRegion ? getRegionLabel(provider.workRegion) : 'Chile'}</span>
+                                </span>
+                                {provider?.acceptsOutsideZone && (
+                                  <span className={styles.matchMetaItem} title="Trabaja fuera de su zona">
+                                    <MapPinned size={14} />
+                                    <span>+Zonas</span>
+                                  </span>
+                                )}
+                                <span className={styles.matchMetaItem}>
+                                  <DollarSign size={14} />
+                                  <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
+                                </span>
+                              </div>
+
+                              <div className={styles.matchActions}>
+                                <button 
+                                  className={styles.viewDetailsButton}
+                                  onClick={() => handleViewProviderDetails(match)}
+                                >
+                                  <Eye size={16} />
+                                  <span>Ver detalles</span>
+                                </button>
+                                <div className={styles.matchActionsButtons}>
+                                  <button 
+                                    className={styles.rejectButton}
+                                    onClick={() => handleRejectMatch(match.id)}
+                                    disabled={isProcessing}
+                                    title="Descartar"
+                                  >
+                                    {isProcessing ? <Loader2 size={16} className={styles.spinnerIcon} /> : <X size={16} />}
+                                  </button>
+                                  <button 
+                                    className={styles.approveButton}
+                                    onClick={() => handleApproveMatch(match.id)}
+                                    disabled={isProcessing}
+                                  >
+                                    {isProcessing ? (
+                                      <Loader2 size={16} className={styles.spinnerIcon} />
+                                    ) : (
+                                      <>
+                                        <Heart size={16} />
+                                        <span>Me interesa</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        )}
-
-                        {match.status === 'pending' && (
-                          <div className={styles.matchActions}>
-                            <button 
-                              className={styles.rejectButton}
-                              onClick={() => handleRejectMatch(match.id)}
-                            >
-                              <X size={16} />
-                            </button>
-                            <button 
-                              className={styles.approveButton}
-                              onClick={() => handleApproveMatch(match.id)}
-                            >
-                              <Check size={16} />
-                              <span>Aprobar</span>
-                            </button>
-                            <button className={styles.detailsButton}>
-                              <ExternalLink size={16} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                )}
+
+                {/* Matches aprobados */}
+                {approvedMatches.length > 0 && (
+                  <div className={styles.matchesSubsection}>
+                    <h3 className={styles.matchesSubsectionTitle}>
+                      <Heart size={18} />
+                      <span>Proveedores de interés</span>
+                      <span className={styles.matchesBadgeSuccess}>{approvedMatches.length}</span>
+                    </h3>
+                    <p className={styles.matchesSubsectionDesc}>
+                      Has mostrado interés en estos proveedores. ¡Contáctalos!
+                    </p>
+                    <div className={styles.matchesGrid}>
+                      {approvedMatches.map((match) => {
+                        const provider = providers[match.providerId];
+                        const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
+                        const isProcessing = processingMatchId === match.id;
+                        
+                        return (
+                          <div 
+                            key={match.id} 
+                            className={`${styles.matchCard} ${styles.matchCardApproved}`}
+                          >
+                            <div className={styles.matchImage}>
+                              <img 
+                                src={categoryImage} 
+                                alt={match.providerInfo.providerName}
+                              />
+                              <div className={styles.matchScore}>
+                                <Star size={14} />
+                                <span>{match.matchScore}%</span>
+                              </div>
+                              <div className={styles.matchCategory}>
+                                {CATEGORY_ICONS[match.category]}
+                                <span>{getCategoryLabel(match.category)}</span>
+                              </div>
+                              <div className={styles.approvedBadge}>
+                                <CheckCircle size={14} />
+                                <span>Te interesa</span>
+                              </div>
+                            </div>
+
+                            <div className={styles.matchInfo}>
+                              <h3 className={styles.matchName}>
+                                {match.providerInfo.providerName}
+                              </h3>
+                              
+                              <p className={styles.matchDescription}>
+                                {provider?.description || 'Proveedor profesional para tu evento.'}
+                              </p>
+
+                              <div className={styles.matchMeta}>
+                                <span className={styles.matchMetaItem}>
+                                  <MapPin size={14} />
+                                  <span>{provider?.workRegion ? getRegionLabel(provider.workRegion) : 'Chile'}</span>
+                                </span>
+                                {provider?.acceptsOutsideZone && (
+                                  <span className={styles.matchMetaItem} title="Trabaja fuera de su zona">
+                                    <MapPinned size={14} />
+                                    <span>+Zonas</span>
+                                  </span>
+                                )}
+                                <span className={styles.matchMetaItem}>
+                                  <DollarSign size={14} />
+                                  <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
+                                </span>
+                              </div>
+
+                              <div className={styles.matchActions}>
+                                <button 
+                                  className={styles.viewContactButton}
+                                  onClick={() => handleViewProviderDetails(match)}
+                                >
+                                  <Eye size={16} />
+                                  <span>Ver contacto</span>
+                                  <ChevronRight size={14} />
+                                </button>
+                                <button 
+                                  className={styles.revertButton}
+                                  onClick={() => handleRevertMatch(match.id)}
+                                  disabled={isProcessing}
+                                  title="Cambiar de opinión"
+                                >
+                                  {isProcessing ? <Loader2 size={14} className={styles.spinnerIcon} /> : <RotateCcw size={14} />}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Matches rechazados */}
+                {matches.filter(m => m.status === 'rejected').length > 0 && (
+                  <div className={styles.matchesSubsection}>
+                    <h3 className={styles.matchesSubsectionTitle}>
+                      <X size={18} />
+                      <span>Descartados</span>
+                    </h3>
+                    <p className={styles.matchesSubsectionDesc}>
+                      Proveedores que has descartado. Puedes cambiar de opinión.
+                    </p>
+                    <div className={styles.rejectedMatchesGrid}>
+                      {matches.filter(m => m.status === 'rejected').map((match) => {
+                        const isProcessing = processingMatchId === match.id;
+                        
+                        return (
+                          <div 
+                            key={match.id} 
+                            className={styles.rejectedMatchCard}
+                          >
+                            <div className={styles.rejectedMatchInfo}>
+                              <span className={styles.rejectedMatchName}>
+                                {match.providerInfo.providerName}
+                              </span>
+                              <span className={styles.rejectedMatchCategory}>
+                                {getCategoryLabel(match.category)} · {match.matchScore}%
+                              </span>
+                            </div>
+                            <button 
+                              className={styles.recoverButton}
+                              onClick={() => handleRevertMatch(match.id)}
+                              disabled={isProcessing}
+                            >
+                              {isProcessing ? (
+                                <Loader2 size={14} className={styles.spinnerIcon} />
+                              ) : (
+                                <>
+                                  <RotateCcw size={14} />
+                                  <span>Recuperar</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -346,92 +675,227 @@ export default function UserDashboardPage() {
         {/* Sección de Mini Encuestas */}
         {activeSection === 'surveys' && (
           <div className={styles.surveysSection}>
-            <div className={styles.surveysGrid}>
-              {profile?.priorityCategories?.map((category) => {
-                const categoryId = category as CategoryId;
-                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
-                // Considerar completado tanto 'completed' como 'matches_generated'
-                const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
-                const hasMatchesGenerated = surveyStatus === 'matches_generated';
-                const categoryInfo = getCategoryInfo(categoryId);
-                const surveyConfig = CATEGORY_SURVEYS[categoryId];
-                const questionCount = surveyConfig?.userQuestions.length || 0;
-                
-                // Contar matches de esta categoría
-                const categoryMatches = matches.filter(m => m.category === categoryId);
-                
-                return (
-                  <div 
-                    key={category} 
-                    className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''}`}
-                  >
-                    <div className={styles.surveyItemIcon}>
-                      {CATEGORY_ICONS[category]}
-                    </div>
-                    <div className={styles.surveyItemInfo}>
-                      <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
-                      <p>{questionCount} preguntas</p>
-                      {isCompleted && categoryMatches.length > 0 && (
-                        <span className={styles.matchesBadge}>
-                          <Star size={12} />
-                          <span>{categoryMatches.length} matches</span>
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.surveyItemActions}>
-                      {isCompleted ? (
-                        <>
-                          <span className={styles.completedBadge}>
-                            <Check size={14} />
-                            <span>Completado</span>
-                          </span>
-                          {categoryMatches.length > 0 ? (
-                            <Link 
-                              href={`/dashboard/category/${categoryId}/matches`}
-                              className={styles.viewMatchesLink}
-                            >
-                              <span>Ver matches</span>
-                              <ChevronRight size={16} />
-                            </Link>
+            {/* Categorías prioritarias */}
+            {profile?.priorityCategories && profile.priorityCategories.length > 0 && (
+              <>
+                <h3 className={styles.surveysSectionTitle}>
+                  <Star size={18} />
+                  <span>Tus categorías prioritarias</span>
+                </h3>
+                <div className={styles.surveysGrid}>
+                  {profile.priorityCategories.map((category) => {
+                    const categoryId = category as CategoryId;
+                    const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                    const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+                    const categoryInfo = getCategoryInfo(categoryId);
+                    const surveyConfig = CATEGORY_SURVEYS[categoryId];
+                    const questionCount = surveyConfig?.userQuestions.length || 0;
+                    const categoryMatches = matches.filter(m => m.category === categoryId);
+                    
+                    return (
+                      <div 
+                        key={category} 
+                        className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''} ${styles.surveyItemPriority}`}
+                      >
+                        <div className={styles.surveyItemIcon}>
+                          {CATEGORY_ICONS[category]}
+                        </div>
+                        <div className={styles.surveyItemInfo}>
+                          <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                          <p>{questionCount} preguntas</p>
+                          {isCompleted && categoryMatches.length > 0 && (
+                            <span className={styles.matchesBadge}>
+                              <Star size={12} />
+                              <span>{categoryMatches.length} matches</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.surveyItemActions}>
+                          {isCompleted ? (
+                            <>
+                              <span className={styles.completedBadge}>
+                                <Check size={14} />
+                                <span>Completado</span>
+                              </span>
+                              {categoryMatches.length > 0 ? (
+                                <Link 
+                                  href={`/dashboard/category/${categoryId}/matches`}
+                                  className={styles.viewMatchesLink}
+                                >
+                                  <span>Ver matches</span>
+                                  <ChevronRight size={16} />
+                                </Link>
+                              ) : (
+                                <Link 
+                                  href={`/dashboard/category/${categoryId}/survey`}
+                                  className={styles.retryLink}
+                                >
+                                  <span>Volver a cotizar</span>
+                                  <ChevronRight size={16} />
+                                </Link>
+                              )}
+                            </>
                           ) : (
                             <Link 
                               href={`/dashboard/category/${categoryId}/survey`}
-                              className={styles.retryLink}
+                              className={styles.startSurveyLink}
                             >
-                              <span>Volver a cotizar</span>
+                              <ClipboardCheck size={16} />
+                              <span>Completar encuesta</span>
                               <ChevronRight size={16} />
                             </Link>
                           )}
-                        </>
-                      ) : (
-                        <Link 
-                          href={`/dashboard/category/${categoryId}/survey`}
-                          className={styles.startSurveyLink}
-                        >
-                          <ClipboardCheck size={16} />
-                          <span>Completar encuesta</span>
-                          <ChevronRight size={16} />
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
-              {(!profile?.priorityCategories || profile.priorityCategories.length === 0) && (
-                <EmptyState
-                  icon={<FileText size={48} />}
-                  title="No hay categorías seleccionadas"
-                  description="Actualiza tu perfil para seleccionar las categorías de proveedores que necesitas"
-                />
-              )}
-            </div>
+            {/* Otras categorías disponibles */}
+            {(() => {
+              const otherCategories = ALL_CATEGORIES.filter(
+                cat => !profile?.priorityCategories?.includes(cat)
+              );
+              
+              if (otherCategories.length === 0) return null;
+              
+              return (
+                <>
+                  <h3 className={styles.surveysSectionTitle}>
+                    <Search size={18} />
+                    <span>Otras categorías disponibles</span>
+                  </h3>
+                  <p className={styles.surveysSubtitle}>
+                    ¿Necesitas más proveedores? Explora estas categorías adicionales
+                  </p>
+                  <div className={styles.surveysGrid}>
+                    {otherCategories.map((category) => {
+                      const categoryId = category as CategoryId;
+                      const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                      const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+                      const categoryInfo = getCategoryInfo(categoryId);
+                      const surveyConfig = CATEGORY_SURVEYS[categoryId];
+                      const questionCount = surveyConfig?.userQuestions.length || 0;
+                      const categoryMatches = matches.filter(m => m.category === categoryId);
+                      
+                      return (
+                        <div 
+                          key={category} 
+                          className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''} ${styles.surveyItemSecondary}`}
+                        >
+                          <div className={styles.surveyItemIcon}>
+                            {CATEGORY_ICONS[category]}
+                          </div>
+                          <div className={styles.surveyItemInfo}>
+                            <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                            <p>{questionCount} preguntas</p>
+                            {isCompleted && categoryMatches.length > 0 && (
+                              <span className={styles.matchesBadge}>
+                                <Star size={12} />
+                                <span>{categoryMatches.length} matches</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className={styles.surveyItemActions}>
+                            {isCompleted ? (
+                              <>
+                                <span className={styles.completedBadge}>
+                                  <Check size={14} />
+                                  <span>Completado</span>
+                                </span>
+                                {categoryMatches.length > 0 ? (
+                                  <Link 
+                                    href={`/dashboard/category/${categoryId}/matches`}
+                                    className={styles.viewMatchesLink}
+                                  >
+                                    <span>Ver matches</span>
+                                    <ChevronRight size={16} />
+                                  </Link>
+                                ) : (
+                                  <Link 
+                                    href={`/dashboard/category/${categoryId}/survey`}
+                                    className={styles.retryLink}
+                                  >
+                                    <span>Volver a cotizar</span>
+                                    <ChevronRight size={16} />
+                                  </Link>
+                                )}
+                              </>
+                            ) : (
+                              <Link 
+                                href={`/dashboard/category/${categoryId}/survey`}
+                                className={styles.startSurveyLink}
+                              >
+                                <ClipboardCheck size={16} />
+                                <span>Completar encuesta</span>
+                                <ChevronRight size={16} />
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+
+            {(!profile?.priorityCategories || profile.priorityCategories.length === 0) && (
+              <EmptyState
+                icon={<FileText size={48} />}
+                title="No hay categorías seleccionadas"
+                description="Actualiza tu perfil para seleccionar las categorías de proveedores que necesitas"
+              />
+            )}
           </div>
         )}
 
         {/* Sección de Perfil */}
         {activeSection === 'profile' && (
           <div className={styles.profileSection}>
+            {/* Botones de acción del perfil */}
+            <div className={styles.profileActions}>
+              {isEditingProfile ? (
+                <>
+                  <button 
+                    className={styles.cancelEditButton}
+                    onClick={handleCancelEditProfile}
+                    disabled={isSavingProfile}
+                  >
+                    <XCircle size={16} />
+                    <span>Cancelar</span>
+                  </button>
+                  <button 
+                    className={styles.saveProfileButton}
+                    onClick={handleSaveProfile}
+                    disabled={isSavingProfile}
+                  >
+                    {isSavingProfile ? (
+                      <>
+                        <span className={styles.buttonSpinner} />
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        <span>Guardar cambios</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className={styles.editProfileButton}
+                  onClick={handleStartEditProfile}
+                >
+                  <Edit3 size={16} />
+                  <span>Editar perfil</span>
+                </button>
+              )}
+            </div>
+
             <div className={styles.profileGrid}>
               {/* Información del evento */}
               <div className={styles.profileCard}>
@@ -442,20 +906,65 @@ export default function UserDashboardPage() {
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Fecha del evento</span>
-                    <span className={styles.fieldValue}>
-                      {profile?.eventDate || 'Por definir'}
-                      {profile?.isDateTentative && <span className={styles.tentativeBadge}>Tentativa</span>}
-                    </span>
+                    {isEditingProfile ? (
+                      <div className={styles.editFieldGroup}>
+                        <input
+                          type="date"
+                          className={styles.editInput}
+                          value={editedProfile.eventDate || ''}
+                          onChange={(e) => updateEditedField('eventDate', e.target.value)}
+                        />
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={editedProfile.isDateTentative || false}
+                            onChange={(e) => updateEditedField('isDateTentative', e.target.checked)}
+                          />
+                          <span>Fecha tentativa</span>
+                        </label>
+                      </div>
+                    ) : (
+                      <span className={styles.fieldValue}>
+                        {profile?.eventDate || 'Por definir'}
+                        {profile?.isDateTentative && <span className={styles.tentativeBadge}>Tentativa</span>}
+                      </span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Región</span>
-                    <span className={styles.fieldValue}>
-                      {profile?.region ? getRegionLabel(profile.region) : 'Por definir'}
-                    </span>
+                    {isEditingProfile ? (
+                      <select
+                        className={styles.editSelect}
+                        value={editedProfile.region || ''}
+                        onChange={(e) => updateEditedField('region', e.target.value)}
+                      >
+                        <option value="">Seleccionar región</option>
+                        {REGIONS.map((r) => (
+                          <option key={r.id} value={r.id}>{r.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>
+                        {profile?.region ? getRegionLabel(profile.region) : 'Por definir'}
+                      </span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Estilo del evento</span>
-                    <span className={styles.fieldValue}>{profile?.eventStyle || 'Por definir'}</span>
+                    {isEditingProfile ? (
+                      <select
+                        className={styles.editSelect}
+                        value={editedProfile.eventStyle || ''}
+                        onChange={(e) => updateEditedField('eventStyle', e.target.value)}
+                      >
+                        <option value="">Seleccionar estilo</option>
+                        {EVENT_STYLES.map((s) => (
+                          <option key={s.id} value={s.id}>{s.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>{profile?.eventStyle || 'Por definir'}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -469,15 +978,41 @@ export default function UserDashboardPage() {
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Presupuesto</span>
-                    <span className={styles.fieldValue}>
-                      {profile?.budget ? getBudgetLabel(profile.budget) : 'Por definir'}
-                    </span>
+                    {isEditingProfile ? (
+                      <select
+                        className={styles.editSelect}
+                        value={editedProfile.budget || ''}
+                        onChange={(e) => updateEditedField('budget', e.target.value)}
+                      >
+                        <option value="">Seleccionar presupuesto</option>
+                        {BUDGET_RANGES.map((b) => (
+                          <option key={b.id} value={b.id}>{b.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>
+                        {profile?.budget ? getBudgetLabel(profile.budget) : 'Por definir'}
+                      </span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Número de invitados</span>
-                    <span className={styles.fieldValue}>
-                      {profile?.guestCount ? getGuestLabel(profile.guestCount) : 'Por definir'}
-                    </span>
+                    {isEditingProfile ? (
+                      <select
+                        className={styles.editSelect}
+                        value={editedProfile.guestCount || ''}
+                        onChange={(e) => updateEditedField('guestCount', e.target.value)}
+                      >
+                        <option value="">Seleccionar cantidad</option>
+                        {GUEST_COUNTS.map((g) => (
+                          <option key={g.id} value={g.id}>{g.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={styles.fieldValue}>
+                        {profile?.guestCount ? getGuestLabel(profile.guestCount) : 'Por definir'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -489,14 +1024,31 @@ export default function UserDashboardPage() {
                   <span>Ceremonia</span>
                 </h3>
                 <div className={styles.profileCardContent}>
-                  <div className={styles.tagsList}>
-                    {profile?.ceremonyTypes?.map((type) => (
-                      <span key={type} className={styles.tag}>
-                        {type === 'civil' ? 'Civil' : 
-                         type === 'religious' ? 'Religiosa' : 'Simbólica'}
-                      </span>
-                    ))}
-                  </div>
+                  {isEditingProfile ? (
+                    <div className={styles.editTagsGrid}>
+                      {CEREMONY_TYPES.map((type) => (
+                        <button
+                          key={type.id}
+                          type="button"
+                          className={`${styles.editTagButton} ${
+                            editedProfile.ceremonyTypes?.includes(type.id) ? styles.editTagButtonSelected : ''
+                          }`}
+                          onClick={() => toggleCeremonyType(type.id)}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.tagsList}>
+                      {profile?.ceremonyTypes?.map((type) => (
+                        <span key={type} className={styles.tag}>
+                          {type === 'civil' ? 'Civil' : 
+                           type === 'religious' ? 'Religiosa' : 'Simbólica'}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -507,14 +1059,32 @@ export default function UserDashboardPage() {
                   <span>Buscando proveedores de</span>
                 </h3>
                 <div className={styles.profileCardContent}>
-                  <div className={styles.tagsList}>
-                    {profile?.priorityCategories?.map((cat) => (
-                      <span key={cat} className={styles.tag}>
-                        {CATEGORY_ICONS[cat]}
-                        <span>{getCategoryLabel(cat)}</span>
-                      </span>
-                    ))}
-                  </div>
+                  {isEditingProfile ? (
+                    <div className={styles.editTagsGrid}>
+                      {PRIORITY_CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className={`${styles.editTagButton} ${
+                            editedProfile.priorityCategories?.includes(cat.id) ? styles.editTagButtonSelected : ''
+                          }`}
+                          onClick={() => togglePriorityCategory(cat.id)}
+                        >
+                          {CATEGORY_ICONS[cat.id]}
+                          <span>{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.tagsList}>
+                      {profile?.priorityCategories?.map((cat) => (
+                        <span key={cat} className={styles.tag}>
+                          {CATEGORY_ICONS[cat]}
+                          <span>{getCategoryLabel(cat)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -526,12 +1096,39 @@ export default function UserDashboardPage() {
                 </h3>
                 <div className={styles.profileCardContent}>
                   <div className={styles.profileField}>
-                    <span className={styles.fieldLabel}>Email</span>
+                    <span className={styles.fieldLabel}>
+                      Email
+                      <Lock size={12} className={styles.lockIcon} />
+                    </span>
                     <span className={styles.fieldValue}>{profile?.email}</span>
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Teléfono</span>
-                    <span className={styles.fieldValue}>{profile?.phone || 'No registrado'}</span>
+                    {isEditingProfile ? (
+                      <input
+                        type="tel"
+                        className={styles.editInput}
+                        value={editedProfile.phone || ''}
+                        onChange={(e) => updateEditedField('phone', e.target.value)}
+                        placeholder="+56 9 1234 5678"
+                      />
+                    ) : (
+                      <span className={styles.fieldValue}>{profile?.phone || 'No registrado'}</span>
+                    )}
+                  </div>
+                  <div className={styles.profileField}>
+                    <span className={styles.fieldLabel}>Nombre de la pareja</span>
+                    {isEditingProfile ? (
+                      <input
+                        type="text"
+                        className={styles.editInput}
+                        value={editedProfile.coupleNames || ''}
+                        onChange={(e) => updateEditedField('coupleNames', e.target.value)}
+                        placeholder="Ej: Juan y María"
+                      />
+                    ) : (
+                      <span className={styles.fieldValue}>{profile?.coupleNames || 'No registrado'}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -543,15 +1140,249 @@ export default function UserDashboardPage() {
                   <span>Tus expectativas</span>
                 </h3>
                 <div className={styles.profileCardContent}>
-                  <p className={styles.expectationsText}>
-                    {profile?.expectations || 'No has agregado expectativas aún.'}
-                  </p>
+                  {isEditingProfile ? (
+                    <textarea
+                      className={styles.editTextarea}
+                      value={editedProfile.expectations || ''}
+                      onChange={(e) => updateEditedField('expectations', e.target.value)}
+                      placeholder="Describe lo que esperas de tu boda perfecta..."
+                      rows={4}
+                    />
+                  ) : (
+                    <p className={styles.expectationsText}>
+                      {profile?.expectations || 'No has agregado expectativas aún.'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Modal de detalles del proveedor */}
+      {selectedMatch && (
+        <div className={styles.providerModal} onClick={handleCloseProviderDetails}>
+          <div className={styles.providerModalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.providerModalClose} onClick={handleCloseProviderDetails}>
+              <XCircle size={24} />
+            </button>
+
+            {loadingProviderDetails ? (
+              <div className={styles.providerModalLoading}>
+                <Loader2 size={32} className={styles.spinnerIcon} />
+                <p>Cargando información del proveedor...</p>
+              </div>
+            ) : (
+              <>
+                {/* Header del modal */}
+                <div className={styles.providerModalHeader}>
+                  <div className={styles.providerModalScore}>
+                    <Star size={18} />
+                    <span>{selectedMatch.matchScore}%</span>
+                    <span className={styles.providerModalScoreLabel}>compatible</span>
+                  </div>
+                  <h2 className={styles.providerModalTitle}>
+                    {selectedMatch.providerInfo.providerName}
+                  </h2>
+                  <p className={styles.providerModalCategory}>
+                    {getCategoryLabel(selectedMatch.category)}
+                  </p>
+                </div>
+
+                {/* Contenido del modal */}
+                <div className={styles.providerModalBody}>
+                  {/* Descripción */}
+                  {providers[selectedMatch.providerId]?.description && (
+                    <div className={styles.providerModalSection}>
+                      <h4>Sobre este proveedor</h4>
+                      <p className={styles.providerModalDescription}>
+                        {providers[selectedMatch.providerId]?.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Información */}
+                  <div className={styles.providerModalSection}>
+                    <h4>Información</h4>
+                    <div className={styles.providerModalInfoGrid}>
+                      <div className={styles.providerModalInfoItem}>
+                        <MapPin size={16} />
+                        <div>
+                          <span className={styles.providerModalInfoLabel}>Región principal</span>
+                          <span className={styles.providerModalInfoValue}>
+                            {getRegionLabel(providers[selectedMatch.providerId]?.workRegion || '')}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {providers[selectedMatch.providerId]?.acceptsOutsideZone && (
+                        <div className={styles.providerModalInfoItem}>
+                          <MapPinned size={16} />
+                          <div>
+                            <span className={styles.providerModalInfoLabel}>Cobertura</span>
+                            <span className={styles.providerModalInfoValue}>
+                              Trabaja en otras regiones
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className={styles.providerModalInfoItem}>
+                        <DollarSign size={16} />
+                        <div>
+                          <span className={styles.providerModalInfoLabel}>Rango de precios</span>
+                          <span className={styles.providerModalInfoValue}>
+                            {getPriceLabel(selectedMatch.providerInfo.priceRange)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {providers[selectedMatch.providerId]?.serviceStyle && (
+                        <div className={styles.providerModalInfoItem}>
+                          <Sparkles size={16} />
+                          <div>
+                            <span className={styles.providerModalInfoLabel}>Estilo</span>
+                            <span className={styles.providerModalInfoValue}>
+                              {getStyleLabel(providers[selectedMatch.providerId]?.serviceStyle || '')}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contacto - Solo visible si está aprobado */}
+                  {selectedMatch.status === 'approved' && (
+                    <div className={styles.providerModalSection}>
+                      <h4>Contacto</h4>
+                      <div className={styles.providerModalContactButtons}>
+                        {providers[selectedMatch.providerId]?.email && (
+                          <a 
+                            href={`mailto:${providers[selectedMatch.providerId]?.email}`}
+                            className={styles.providerModalContactButton}
+                          >
+                            <Mail size={18} />
+                            <span>{providers[selectedMatch.providerId]?.email}</span>
+                          </a>
+                        )}
+                        {providers[selectedMatch.providerId]?.phone && (
+                          <a 
+                            href={`tel:${providers[selectedMatch.providerId]?.phone}`}
+                            className={styles.providerModalContactButton}
+                          >
+                            <Phone size={18} />
+                            <span>{providers[selectedMatch.providerId]?.phone}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Redes sociales y web */}
+                  {(providers[selectedMatch.providerId]?.website || providers[selectedMatch.providerId]?.instagram) && (
+                    <div className={styles.providerModalSection}>
+                      <h4>Conoce más</h4>
+                      <div className={styles.providerModalSocialLinks}>
+                        {providers[selectedMatch.providerId]?.website && (
+                          <a 
+                            href={providers[selectedMatch.providerId]?.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.providerModalSocialLink}
+                          >
+                            <Globe size={18} />
+                            <span>Sitio web</span>
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                        {providers[selectedMatch.providerId]?.instagram && (
+                          <a 
+                            href={`https://instagram.com/${providers[selectedMatch.providerId]?.instagram?.replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.providerModalSocialLink}
+                          >
+                            <Instagram size={18} />
+                            <span>{providers[selectedMatch.providerId]?.instagram}</span>
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Aviso si no está aprobado */}
+                  {selectedMatch.status !== 'approved' && (
+                    <div className={styles.providerModalNotice}>
+                      <Heart size={20} />
+                      <p>
+                        Marca este proveedor como &quot;Me interesa&quot; para ver su información de contacto completa.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones del modal */}
+                <div className={styles.providerModalActions}>
+                  {selectedMatch.status === 'pending' && (
+                    <>
+                      <button 
+                        className={styles.providerModalRejectButton}
+                        onClick={() => {
+                          handleRejectMatch(selectedMatch.id);
+                          handleCloseProviderDetails();
+                        }}
+                        disabled={processingMatchId === selectedMatch.id}
+                      >
+                        <X size={16} />
+                        <span>Descartar</span>
+                      </button>
+                      <button 
+                        className={styles.providerModalApproveButton}
+                        onClick={() => {
+                          handleApproveMatch(selectedMatch.id);
+                          handleCloseProviderDetails();
+                        }}
+                        disabled={processingMatchId === selectedMatch.id}
+                      >
+                        <Heart size={16} />
+                        <span>Me interesa</span>
+                      </button>
+                    </>
+                  )}
+                  {selectedMatch.status === 'approved' && (
+                    <button 
+                      className={styles.providerModalRevertButton}
+                      onClick={() => {
+                        handleRevertMatch(selectedMatch.id);
+                        handleCloseProviderDetails();
+                      }}
+                      disabled={processingMatchId === selectedMatch.id}
+                    >
+                      <RotateCcw size={16} />
+                      <span>Cambiar de opinión</span>
+                    </button>
+                  )}
+                  {selectedMatch.status === 'rejected' && (
+                    <button 
+                      className={styles.providerModalRecoverButton}
+                      onClick={() => {
+                        handleRevertMatch(selectedMatch.id);
+                        handleCloseProviderDetails();
+                      }}
+                      disabled={processingMatchId === selectedMatch.id}
+                    >
+                      <RotateCcw size={16} />
+                      <span>Recuperar proveedor</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
