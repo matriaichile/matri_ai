@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from 'react';
 import styles from './FinalCallToAction.module.css';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import RegisterModal from './RegisterModal';
 
 export default function FinalCallToAction() {
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
   return (
     <section className={styles.section}>
       <div className={styles.container}>
@@ -21,13 +24,22 @@ export default function FinalCallToAction() {
           </p>
 
           <div className={styles.actionWrapper}>
-            <Link href="/register/user" className={styles.button}>
+            <button 
+              onClick={() => setIsRegisterModalOpen(true)} 
+              className={styles.button}
+            >
               Crea tu usuario <ArrowRight size={20} />
-            </Link>
+            </button>
             <p className={styles.subtext}>o Empieza esta aventura</p>
           </div>
         </motion.div>
       </div>
+
+      {/* Modal de registro */}
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={() => setIsRegisterModalOpen(false)} 
+      />
     </section>
   );
 }
