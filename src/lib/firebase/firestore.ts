@@ -1052,19 +1052,24 @@ export const getAvailableProvidersForCategory = async (
   }
 };
 
+// Constante para el máximo de leads por usuario/categoría
+export const MAX_LEADS_PER_CATEGORY = 3;
+
 /**
  * Generar matches para un usuario después de completar una encuesta de categoría
  * Este proceso:
  * 1. Obtiene la encuesta del usuario
  * 2. Busca proveedores disponibles que hayan completado su encuesta
  * 3. Calcula el match score usando el servicio de matching
- * 4. Crea leads para los mejores matches
+ * 4. Crea leads para los mejores matches (MÁXIMO 3)
+ * 
+ * IMPORTANTE: Siempre generamos máximo 3 leads por categoría
  */
 export const generateMatchesForUserSurvey = async (
   userId: string,
   category: CategoryId,
   region: string,
-  maxMatches: number = 5
+  maxMatches: number = MAX_LEADS_PER_CATEGORY // Por defecto máximo 3
 ): Promise<Lead[]> => {
   try {
     console.log(`\n🚀 ========== GENERANDO MATCHES ==========`);
@@ -1184,9 +1189,13 @@ export const generateMatchesForUserSurvey = async (
       });
     }
 
-    // 8. Ordenar por score y tomar los mejores
+    // 8. Ordenar por score y tomar los mejores (MÁXIMO 3)
     matchResults.sort((a, b) => b.score - a.score);
-    const topMatches = matchResults.slice(0, maxMatches);
+    // Asegurar que nunca generamos más de MAX_LEADS_PER_CATEGORY leads
+    const effectiveMaxMatches = Math.min(maxMatches, MAX_LEADS_PER_CATEGORY);
+    const topMatches = matchResults.slice(0, effectiveMaxMatches);
+    
+    console.log(`📊 Seleccionados ${topMatches.length} mejores matches (máximo permitido: ${effectiveMaxMatches})`);
 
     // 9. Crear leads para cada match
     const createdLeads: Lead[] = [];
@@ -1282,9 +1291,11 @@ async function generateMatchesWithWizardOnly(
     matchResults.push({ provider, score });
   }
 
-  // Ordenar y tomar los mejores
+  // Ordenar y tomar los mejores (MÁXIMO 3)
   matchResults.sort((a, b) => b.score - a.score);
-  const topMatches = matchResults.slice(0, maxMatches);
+  // Asegurar que nunca generamos más de MAX_LEADS_PER_CATEGORY leads
+  const effectiveMaxMatches = Math.min(maxMatches, MAX_LEADS_PER_CATEGORY);
+  const topMatches = matchResults.slice(0, effectiveMaxMatches);
 
   // Crear leads
   const createdLeads: Lead[] = [];

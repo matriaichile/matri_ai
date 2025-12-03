@@ -53,6 +53,8 @@ import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, SurveyQuestion } from '@/lib/surveys';
 import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
+import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
+import { CATEGORY_MATCHING_CRITERIA, calculateCriterionMatch } from '@/lib/matching/comparisonUtils';
 import styles from './page.module.css';
 
 // Interfaz para los leads con info extendida
@@ -625,9 +627,11 @@ export default function ProviderDashboardPage() {
                           </span>
                           <h4>{lead.userInfo.coupleNames}</h4>
                         </div>
-                        <span className={styles.matchScore}>
-                          <Star size={12} />
-                          <span>{lead.matchScore}%</span>
+                        <span 
+                          className={styles.matchBadge}
+                          style={getMatchCategoryStylesCompact(lead.matchScore)}
+                        >
+                          {getMatchCategory(lead.matchScore).label}
                         </span>
                       </div>
                       <div className={styles.leadPreviewMeta}>
@@ -771,9 +775,11 @@ export default function ProviderDashboardPage() {
                     </div>
 
                     <div className={styles.leadCardFooter}>
-                      <div className={styles.leadMatchScore}>
-                        <Star size={14} />
-                        <span>{lead.matchScore}% match</span>
+                      <div 
+                        className={styles.matchBadgeLarge}
+                        style={getMatchCategoryStyles(lead.matchScore)}
+                      >
+                        {getMatchCategory(lead.matchScore).label}
                       </div>
                       <span className={styles.leadDate}>
                         {lead.createdAt.toLocaleDateString('es-CL')}
@@ -1201,9 +1207,11 @@ export default function ProviderDashboardPage() {
                   <span>{getCategoryLabel(selectedLead.category)}</span>
                 </span>
                 <h2>{selectedLead.userInfo.coupleNames}</h2>
-                <div className={styles.modalMatchBadge}>
-                  <Star size={16} />
-                  <span>{selectedLead.matchScore}% compatibilidad</span>
+                <div 
+                  className={styles.modalMatchBadge}
+                  style={getMatchCategoryStylesLarge(selectedLead.matchScore)}
+                >
+                  {getMatchCategory(selectedLead.matchScore).label}
                 </div>
               </div>
               <button 
@@ -1410,61 +1418,86 @@ export default function ProviderDashboardPage() {
                           
                           <div className={styles.comparisonGrid}>
                             {(() => {
-                              const userQuestions = getSurveyQuestions(selectedLead.category as CategoryId, 'user');
-                              const providerQuestions = getSurveyQuestions(selectedLead.category as CategoryId, 'provider');
+                              const categoryId = selectedLead.category as CategoryId;
+                              const userQuestions = getSurveyQuestions(categoryId, 'user');
+                              const providerQuestions = getSurveyQuestions(categoryId, 'provider');
                               const userResponses = extendedUserInfo.categorySurvey?.responses || {};
                               const providerResponses = providerSurvey.responses || {};
                               
-                              // Mapear preguntas relacionadas
+                              // Obtener los criterios de matching para esta categoría
+                              const matchingCriteria = CATEGORY_MATCHING_CRITERIA[categoryId] || [];
+                              
+                              // Crear comparaciones basadas en los criterios de matching
                               const comparisons: Array<{
                                 label: string;
                                 userValue: string;
                                 providerValue: string;
                                 isMatch: boolean;
+                                explanation: string;
                               }> = [];
                               
-                              // Iterar sobre las respuestas del usuario
-                              Object.keys(userResponses).forEach(questionId => {
-                                const userQuestion = userQuestions.find(q => q.id === questionId);
+                              // Iterar sobre los criterios de matching definidos
+                              matchingCriteria.forEach(criterion => {
+                                const userQuestion = userQuestions.find(q => q.id === criterion.userQuestionId);
+                                const providerQuestion = providerQuestions.find(q => q.id === criterion.providerQuestionId);
+                                
                                 if (!userQuestion) return;
                                 
-                                // Buscar pregunta equivalente del proveedor
-                                const providerQuestionId = questionId.replace('user_', 'provider_').replace('_preference', '_offer');
-                                const providerQuestion = providerQuestions.find(q => 
-                                  q.id === providerQuestionId || 
-                                  q.id === questionId ||
-                                  q.question.toLowerCase().includes(userQuestion.question.toLowerCase().split(' ')[0])
+                                const userAnswer = userResponses[criterion.userQuestionId];
+                                const providerAnswer = providerResponses[criterion.providerQuestionId];
+                                const providerMaxAnswer = criterion.providerQuestionIdMax 
+                                  ? providerResponses[criterion.providerQuestionIdMax]
+                                  : undefined;
+                                
+                                // Si el usuario no respondió esta pregunta, saltarla
+                                if (userAnswer === undefined || userAnswer === null || userAnswer === '') return;
+                                
+                                // Usar la lógica correcta del matchmaking para determinar si cumple
+                                const matchResult = calculateCriterionMatch(
+                                  userAnswer,
+                                  providerAnswer,
+                                  providerMaxAnswer,
+                                  criterion
                                 );
                                 
-                                const userValue = getSurveyAnswerLabel(questionId, userResponses[questionId], userQuestions);
-                                const providerValue = providerQuestion && providerResponses[providerQuestion.id]
-                                  ? getSurveyAnswerLabel(providerQuestion.id, providerResponses[providerQuestion.id], providerQuestions)
+                                // Formatear los valores para mostrar
+                                const userValue = getSurveyAnswerLabel(criterion.userQuestionId, userAnswer, userQuestions);
+                                const providerValue = providerQuestion && providerAnswer !== undefined
+                                  ? getSurveyAnswerLabel(criterion.providerQuestionId, providerAnswer, providerQuestions)
                                   : 'No especificado';
-                                
-                                // Determinar si hay match
-                                const userAnswer = userResponses[questionId];
-                                const providerAnswer = providerQuestion ? providerResponses[providerQuestion.id] : null;
-                                let isMatch = false;
-                                
-                                if (userAnswer && providerAnswer) {
-                                  if (Array.isArray(userAnswer) && Array.isArray(providerAnswer)) {
-                                    isMatch = userAnswer.some(ua => providerAnswer.includes(ua));
-                                  } else if (Array.isArray(providerAnswer)) {
-                                    isMatch = providerAnswer.includes(String(userAnswer));
-                                  } else if (Array.isArray(userAnswer)) {
-                                    isMatch = userAnswer.includes(String(providerAnswer));
-                                  } else {
-                                    isMatch = String(userAnswer) === String(providerAnswer);
-                                  }
-                                }
                                 
                                 comparisons.push({
                                   label: userQuestion.question,
                                   userValue,
                                   providerValue,
-                                  isMatch,
+                                  isMatch: matchResult.matches,
+                                  explanation: matchResult.explanation,
                                 });
                               });
+                              
+                              // Si no hay criterios definidos, usar el método antiguo como fallback
+                              if (comparisons.length === 0) {
+                                Object.keys(userResponses).forEach(questionId => {
+                                  const userQuestion = userQuestions.find(q => q.id === questionId);
+                                  if (!userQuestion) return;
+                                  
+                                  const providerQuestionId = questionId.replace('_u_', '_p_');
+                                  const providerQuestion = providerQuestions.find(q => q.id === providerQuestionId);
+                                  
+                                  const userValue = getSurveyAnswerLabel(questionId, userResponses[questionId], userQuestions);
+                                  const providerValue = providerQuestion && providerResponses[providerQuestion.id]
+                                    ? getSurveyAnswerLabel(providerQuestion.id, providerResponses[providerQuestion.id], providerQuestions)
+                                    : 'No especificado';
+                                  
+                                  comparisons.push({
+                                    label: userQuestion.question,
+                                    userValue,
+                                    providerValue,
+                                    isMatch: true, // Marcar como match por defecto en fallback
+                                    explanation: 'Comparación básica',
+                                  });
+                                });
+                              }
                               
                               return comparisons.map((comp, index) => (
                                 <div 
@@ -1488,6 +1521,12 @@ export default function ProviderDashboardPage() {
                                       <span className={styles.comparisonTag}>Ofreces</span>
                                       <span className={styles.comparisonText}>{comp.providerValue}</span>
                                     </div>
+                                  </div>
+                                  {/* Mostrar explicación del match */}
+                                  <div className={styles.comparisonExplanation}>
+                                    <span className={comp.isMatch ? styles.explanationMatch : styles.explanationDiff}>
+                                      {comp.explanation}
+                                    </span>
                                   </div>
                                 </div>
                               ));

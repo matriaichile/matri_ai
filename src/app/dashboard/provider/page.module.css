@@ -319,6 +319,55 @@
   min-width: 0;
 }
 
+/* ====================================
+   MATCH BADGES - Diseño Premium
+   ==================================== */
+
+/* Badge compacto para tarjetas pequeñas */
+.matchBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matchBadge:hover {
+  transform: translateY(-1px);
+}
+
+/* Badge grande para listados */
+.matchBadgeLarge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matchBadgeLarge:hover {
+  transform: translateY(-1px);
+}
+
+/* Badge legacy para compatibilidad */
 .matchScore {
   display: flex;
   align-items: center;
@@ -1363,15 +1412,16 @@
 .modalMatchBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: 16px;
-  color: #000;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border-radius: 24px;
   font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .modalClose {
@@ -1734,6 +1784,27 @@
 
 .diffIcon {
   color: #ef4444;
+}
+
+/* Explicación del match */
+.comparisonExplanation {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.explanationMatch {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: #22c55e;
+  font-style: italic;
+}
+
+.explanationDiff {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: #f59e0b;
+  font-style: italic;
 }
 
 /* No Survey Message */

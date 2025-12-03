@@ -48,6 +48,7 @@ import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebas
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
+import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 import styles from './page.module.css';
 
 // Interfaz para los leads/matches
@@ -494,9 +495,11 @@ export default function UserDashboardPage() {
                                 src={categoryImage} 
                                 alt={match.providerInfo.providerName}
                               />
-                              <div className={styles.matchScore}>
-                                <Star size={14} />
-                                <span>{match.matchScore}%</span>
+                              <div 
+                                className={styles.matchBadgeFloating}
+                                style={getMatchCategoryStyles(match.matchScore)}
+                              >
+                                {getMatchCategory(match.matchScore).label}
                               </div>
                               <div className={styles.matchCategory}>
                                 {CATEGORY_ICONS[match.category]}
@@ -598,9 +601,11 @@ export default function UserDashboardPage() {
                                 src={categoryImage} 
                                 alt={match.providerInfo.providerName}
                               />
-                              <div className={styles.matchScore}>
-                                <Star size={14} />
-                                <span>{match.matchScore}%</span>
+                              <div 
+                                className={styles.matchBadgeFloating}
+                                style={getMatchCategoryStyles(match.matchScore)}
+                              >
+                                {getMatchCategory(match.matchScore).label}
                               </div>
                               <div className={styles.matchCategory}>
                                 {CATEGORY_ICONS[match.category]}
@@ -688,7 +693,7 @@ export default function UserDashboardPage() {
                                 {match.providerInfo.providerName}
                               </span>
                               <span className={styles.rejectedMatchCategory}>
-                                {getCategoryLabel(match.category)} · {match.matchScore}%
+                                {getCategoryLabel(match.category)} · {getMatchCategory(match.matchScore).label}
                               </span>
                             </div>
                             <button 
@@ -1235,10 +1240,11 @@ export default function UserDashboardPage() {
               <>
                 {/* Header del modal */}
                 <div className={styles.providerModalHeader}>
-                  <div className={styles.providerModalScore}>
-                    <Star size={18} />
-                    <span>{selectedMatch.matchScore}%</span>
-                    <span className={styles.providerModalScoreLabel}>compatible</span>
+                  <div 
+                    className={styles.providerModalBadge}
+                    style={getMatchCategoryStylesLarge(selectedMatch.matchScore)}
+                  >
+                    {getMatchCategory(selectedMatch.matchScore).label}
                   </div>
                   <h2 className={styles.providerModalTitle}>
                     {selectedMatch.providerInfo.providerName}

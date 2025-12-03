@@ -28,6 +28,7 @@ import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus } from '@/lib/firebase/firestore';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
+import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 
 // Imágenes placeholder para categorías
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -289,11 +290,12 @@ export default function CategoryMatchesPage() {
                         className={styles.matchCardWithScore}
                         style={{ animationDelay: `${index * 80}ms` }}
                       >
-                        {/* Porcentaje de compatibilidad prominente */}
-                        <div className={styles.prominentScore}>
-                          <Star size={16} />
-                          <span className={styles.prominentScoreValue}>{match.matchScore}%</span>
-                          <span className={styles.prominentScoreLabel}>compatible</span>
+                        {/* Badge de compatibilidad flotante */}
+                        <div 
+                          className={styles.matchBadgeFloating}
+                          style={getMatchCategoryStyles(match.matchScore)}
+                        >
+                          {getMatchCategory(match.matchScore).label}
                         </div>
                         
                         <div className={styles.matchCard}>
@@ -398,9 +400,11 @@ export default function CategoryMatchesPage() {
                             src={categoryImage} 
                             alt={match.providerInfo.providerName}
                           />
-                          <div className={styles.matchScore}>
-                            <Star size={12} />
-                            <span>{match.matchScore}%</span>
+                          <div 
+                            className={styles.matchBadgeSmall}
+                            style={getMatchCategoryStylesCompact(match.matchScore)}
+                          >
+                            {getMatchCategory(match.matchScore).shortLabel}
                           </div>
                           <div className={styles.matchCategory}>
                             <span>{categoryInfo?.name}</span>
@@ -478,8 +482,11 @@ export default function CategoryMatchesPage() {
                         <h4 className={styles.providerNameCompact}>
                           {match.providerInfo.providerName}
                         </h4>
-                        <span className={styles.matchScoreCompact}>
-                          {match.matchScore}%
+                        <span 
+                          className={styles.matchBadgeCompact}
+                          style={getMatchCategoryStylesCompact(match.matchScore)}
+                        >
+                          {getMatchCategory(match.matchScore).shortLabel}
                         </span>
                       </div>
                       <button 
@@ -522,10 +529,11 @@ export default function CategoryMatchesPage() {
               <>
                 {/* Header del panel */}
                 <div className={styles.detailsHeader}>
-                  <div className={styles.detailsScore}>
-                    <Star size={20} />
-                    <span>{selectedMatch.matchScore}%</span>
-                    <span className={styles.detailsScoreLabel}>compatible</span>
+                  <div 
+                    className={styles.detailsBadge}
+                    style={getMatchCategoryStylesLarge(selectedMatch.matchScore)}
+                  >
+                    {getMatchCategory(selectedMatch.matchScore).label}
                   </div>
                   <h2 className={styles.detailsTitle}>
                     {selectedMatch.providerInfo.providerName}
