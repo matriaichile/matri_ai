@@ -39,7 +39,7 @@ interface ProviderSidebarProps extends BaseSidebarProps {
     categories?: string[];
     leadLimit?: number;
     leadsUsed?: number;
-    categorySurveyStatus?: Record<string, 'pending' | 'completed'>;
+    categorySurveyStatus?: Record<string, 'not_started' | 'pending' | 'completed' | 'matches_generated'>;
   } | null;
   activeSection: ProviderSection;
   onSectionChange: (section: ProviderSection) => void;
