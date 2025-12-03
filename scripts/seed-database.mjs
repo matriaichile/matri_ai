@@ -7,12 +7,21 @@
  * OPCIONES:
  *   --providers    Solo crear proveedores
  *   --users        Solo crear usuarios
- *   --leads        Solo crear leads (requiere usuarios y proveedores existentes)
+ *   --surveys      Solo crear encuestas (requiere usuarios y proveedores existentes)
+ *   --leads        Solo crear leads (requiere encuestas completadas)
  *   --all          Crear todo (default)
  *   --clean        Limpiar datos existentes antes de crear
  * 
  * REQUISITOS:
  *   - Variables de entorno de Firebase Admin configuradas
+ * 
+ * SISTEMA DE MATCHMAKING POR CATEGORÍA:
+ *   Este script genera datos para el sistema de matchmaking por categoría:
+ *   1. Usuarios con información general del evento
+ *   2. Proveedores con sus categorías y límites de leads por categoría
+ *   3. Encuestas de usuarios por categoría (userCategorySurveys)
+ *   4. Encuestas de proveedores por categoría (providerCategorySurveys)
+ *   5. Leads/Matches por categoría específica
  */
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
@@ -32,32 +41,60 @@ const projectRoot = resolve(__dirname, '..');
 const DEFAULT_PASSWORD = '123123';
 const NUM_PROVIDERS = 15;
 const NUM_USERS = 12;
-const LEADS_PER_USER = 3;
+const LEADS_PER_CATEGORY = 3; // 3 matches por categoría por usuario
 
 // ⚠️ IDENTIFICADOR ÚNICO PARA DATOS DUMMY
-// Este ID permite identificar y eliminar todos los datos de prueba fácilmente
 const DUMMY_BATCH_ID = `dummy_${new Date().toISOString().split('T')[0]}_${Date.now()}`;
+
+// ============================================
+// CATEGORÍAS DEL SISTEMA
+// ============================================
+
+const CATEGORIES = {
+  photography: { id: 'photography', name: 'Fotografía' },
+  video: { id: 'video', name: 'Videografía' },
+  dj: { id: 'dj', name: 'DJ/VJ' },
+  catering: { id: 'catering', name: 'Banquetería' },
+  venue: { id: 'venue', name: 'Centro de Eventos' },
+  decoration: { id: 'decoration', name: 'Decoración' },
+  wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner' },
+  makeup: { id: 'makeup', name: 'Maquillaje & Peinado' },
+};
+
+const CATEGORY_IDS = Object.keys(CATEGORIES);
 
 // ============================================
 // DATOS DE PRUEBA - PROVEEDORES
 // ============================================
 
-const PROVIDER_NAMES = [
+const PROVIDER_TEMPLATES = [
+  // Fotografía
   { name: 'Fotografía Elegante', categories: ['photography'], style: 'artistic', price: 'premium' },
   { name: 'Momentos Studio', categories: ['photography', 'video'], style: 'documentary', price: 'mid' },
+  { name: 'Captura Perfecta', categories: ['photography'], style: 'classic', price: 'mid' },
+  // Video
+  { name: 'Cinema Wedding Films', categories: ['video'], style: 'cinematic', price: 'premium' },
+  { name: 'Recuerdos en Video', categories: ['video'], style: 'documentary', price: 'budget' },
+  // DJ
   { name: 'DJ Master Events', categories: ['dj'], style: 'modern', price: 'mid' },
   { name: 'Ritmo & Fiesta DJs', categories: ['dj'], style: 'traditional', price: 'budget' },
+  { name: 'Sound Premium', categories: ['dj'], style: 'modern', price: 'premium' },
+  // Banquetería
   { name: 'Banquetería Gourmet', categories: ['catering'], style: 'traditional', price: 'premium' },
   { name: 'Sabores del Sur', categories: ['catering'], style: 'modern', price: 'mid' },
+  // Venues
   { name: 'Hacienda Los Robles', categories: ['venue'], style: 'traditional', price: 'luxury' },
   { name: 'Espacio Urbano Loft', categories: ['venue'], style: 'modern', price: 'premium' },
   { name: 'Jardín Secreto', categories: ['venue'], style: 'artistic', price: 'mid' },
-  { name: 'Cinema Wedding Films', categories: ['video'], style: 'cinematic', price: 'premium' },
+  // Decoración
   { name: 'Flores & Sueños', categories: ['decoration'], style: 'artistic', price: 'mid' },
-  { name: 'Dulce Tentación', categories: ['cake'], style: 'traditional', price: 'mid' },
-  { name: 'Belleza Nupcial', categories: ['makeup'], style: 'editorial', price: 'premium' },
+  { name: 'Deco Elegance', categories: ['decoration'], style: 'classic', price: 'premium' },
+  // Wedding Planner
   { name: 'Wedding Dreams Planner', categories: ['wedding_planner'], style: 'modern', price: 'luxury' },
-  { name: 'Transporte VIP Bodas', categories: ['transport'], style: 'traditional', price: 'premium' },
+  { name: 'Tu Boda Perfecta', categories: ['wedding_planner'], style: 'traditional', price: 'mid' },
+  // Maquillaje
+  { name: 'Belleza Nupcial', categories: ['makeup'], style: 'editorial', price: 'premium' },
+  { name: 'Glam Studio', categories: ['makeup'], style: 'glamorous', price: 'mid' },
 ];
 
 const PROVIDER_DESCRIPTIONS = [
@@ -68,9 +105,9 @@ const PROVIDER_DESCRIPTIONS = [
   'Un espacio mágico para tu celebración. Jardines hermosos, salones elegantes y atención personalizada.',
   'Transformamos espacios en escenarios de ensueño. Decoración floral y ambientación para bodas únicas.',
   'Películas de boda cinematográficas que cuentan tu historia de amor de manera única y emocionante.',
-  'Tortas y dulces artesanales que deleitan tanto la vista como el paladar. Diseños personalizados.',
-  'Maquillaje y peinado profesional para novias. Resaltamos tu belleza natural en el día más importante.',
   'Planificamos cada detalle de tu boda para que solo te preocupes de disfrutar. Experiencia y dedicación.',
+  'Maquillaje y peinado profesional para novias. Resaltamos tu belleza natural en el día más importante.',
+  'Servicio premium con atención personalizada. Nos adaptamos a tu visión y la hacemos realidad.',
 ];
 
 const REGIONS = ['rm', 'valparaiso', 'ohiggins', 'maule', 'biobio', 'araucania', 'los_lagos', 'coquimbo'];
@@ -100,7 +137,208 @@ const CEREMONY_OPTIONS = ['civil', 'religious', 'symbolic'];
 const EVENT_STYLES = ['classic', 'rustic', 'modern', 'romantic', 'glamorous', 'vintage'];
 const PLANNING_PROGRESS = ['nothing', 'little', 'half', 'most'];
 const INVOLVEMENT_LEVELS = ['100', '80', '60', '40'];
-const PRIORITY_CATEGORIES = ['photography', 'video', 'dj', 'catering', 'venue', 'decoration', 'wedding_planner', 'makeup'];
+
+// ============================================
+// RESPUESTAS DE ENCUESTAS POR CATEGORÍA
+// ============================================
+
+// Respuestas posibles para usuarios por categoría
+const USER_SURVEY_RESPONSES = {
+  photography: {
+    photo_u_style: ['documentary', 'artistic', 'classic', 'editorial', 'candid', 'cinematic'],
+    photo_u_hours: ['4', '6', '8', '10', 'full_day'],
+    photo_u_budget: ['under_500k', '500k_800k', '800k_1200k', '1200k_1800k', 'over_1800k'],
+    photo_u_preboda: [true, false],
+    photo_u_postboda: [true, false],
+    photo_u_second_shooter: ['no', 'preferred', 'required'],
+    photo_u_delivery_time: ['2_weeks', '1_month', '2_months', '3_months', 'flexible'],
+    photo_u_delivery_format: [['digital_hd'], ['digital_hd', 'printed_album'], ['digital_hd', 'online_gallery']],
+    photo_u_photo_count: ['under_200', '200_400', '400_600', 'over_600', 'unlimited'],
+    photo_u_retouching: ['natural', 'moderate', 'editorial'],
+  },
+  video: {
+    video_u_style: ['documentary', 'cinematic', 'narrative', 'traditional', 'artistic'],
+    video_u_duration: ['highlight_3', 'highlight_10', 'medium_20', 'full_45', 'full_extended'],
+    video_u_budget: ['under_600k', '600k_1000k', '1000k_1500k', '1500k_2500k', 'over_2500k'],
+    video_u_hours: ['4', '6', '8', '10', 'full_day'],
+    video_u_second_camera: ['no', 'preferred', 'required'],
+    video_u_drone: ['no', 'nice_to_have', 'required'],
+    video_u_same_day_edit: [true, false],
+    video_u_social_reel: [true, false],
+  },
+  dj: {
+    dj_u_genres: [['reggaeton', 'pop'], ['cumbia', 'salsa', 'bachata'], ['rock', '80s_90s'], ['electronic', 'pop'], ['romantic', 'jazz']],
+    dj_u_style: ['elegant', 'party', 'mixed', 'chill'],
+    dj_u_budget: ['under_400k', '400k_600k', '600k_900k', '900k_1400k', 'over_1400k'],
+    dj_u_hours: ['3', '4', '5', '6', 'unlimited'],
+    dj_u_ceremony_music: [true, false],
+    dj_u_mc: ['no', 'minimal', 'moderate', 'full'],
+    dj_u_lighting: ['basic', 'standard', 'premium', 'custom'],
+    dj_u_effects: [['fog'], ['cold_sparks', 'laser'], ['none'], ['fog', 'confetti']],
+  },
+  catering: {
+    catering_u_service_type: ['plated', 'buffet', 'stations', 'cocktail', 'family_style'],
+    catering_u_cuisine: [['chilean'], ['international', 'gourmet'], ['mediterranean'], ['asian', 'international']],
+    catering_u_budget_pp: ['under_25k', '25k_35k', '35k_50k', '50k_70k', 'over_70k'],
+    catering_u_guest_count: ['under_50', '50_100', '100_150', '150_200', '200_300', 'over_300'],
+    catering_u_courses: ['2', '3', '4', '5_plus'],
+    catering_u_cocktail: [true, false],
+    catering_u_dietary: [['none'], ['vegetarian'], ['vegetarian', 'gluten_free'], ['vegan']],
+    catering_u_beverages: [['soft_drinks', 'wine'], ['wine', 'beer', 'cocktails'], ['open_bar'], ['premium_liquor', 'open_bar']],
+    catering_u_tasting: ['required', 'preferred', 'not_needed'],
+  },
+  venue: {
+    venue_u_type: ['hacienda', 'hotel', 'restaurant', 'garden', 'beach', 'winery', 'loft', 'mansion'],
+    venue_u_setting: ['indoor', 'outdoor', 'both', 'flexible'],
+    venue_u_budget: ['under_1m', '1m_2m', '2m_4m', '4m_7m', 'over_7m'],
+    venue_u_capacity: ['under_50', '50_100', '100_150', '150_200', '200_300', 'over_300'],
+    venue_u_exclusivity: ['required', 'preferred', 'not_needed'],
+    venue_u_ceremony_space: [true, false],
+    venue_u_parking: ['required', 'preferred', 'not_needed'],
+    venue_u_end_time: ['midnight', '2am', '4am', 'sunrise', 'flexible'],
+  },
+  decoration: {
+    deco_u_style: ['romantic', 'rustic', 'modern', 'classic', 'bohemian', 'tropical', 'vintage', 'glamorous'],
+    deco_u_colors: [['white_green'], ['pastels'], ['bold'], ['earth'], ['jewel'], ['custom']],
+    deco_u_budget: ['under_500k', '500k_1m', '1m_2m', '2m_4m', 'over_4m'],
+    deco_u_flowers: [['roses'], ['peonies', 'hydrangeas'], ['eucalyptus', 'wildflowers'], ['tropical'], ['dried']],
+    deco_u_bridal_bouquet: [true, false],
+    deco_u_ceremony_deco: [true, false],
+    deco_u_table_centerpieces: ['low', 'tall', 'mixed', 'non_floral', 'no_preference'],
+    deco_u_extras: [['arch'], ['backdrop', 'candles'], ['hanging'], ['neon'], ['none']],
+  },
+  wedding_planner: {
+    wp_u_service_level: ['full', 'partial', 'day_of', 'consultation'],
+    wp_u_budget: ['under_500k', '500k_1m', '1m_2m', '2m_4m', 'over_4m'],
+    wp_u_months_until: ['under_3', '3_6', '6_12', 'over_12'],
+    wp_u_vendor_help: ['all', 'some', 'none'],
+    wp_u_design_help: ['full', 'guidance', 'none'],
+    wp_u_budget_management: [true, false],
+    wp_u_timeline_management: [true, false],
+    wp_u_guest_management: [true, false],
+  },
+  makeup: {
+    makeup_u_style: ['natural', 'classic', 'glamorous', 'editorial', 'romantic', 'boho'],
+    makeup_u_budget: ['under_100k', '100k_200k', '200k_350k', 'over_350k'],
+    makeup_u_trial: ['required', 'preferred', 'not_needed'],
+    makeup_u_hair: [true, false],
+    makeup_u_hair_style: ['updo', 'half_up', 'down', 'braids', 'undecided'],
+    makeup_u_lashes: ['no', 'natural', 'dramatic', 'undecided'],
+    makeup_u_bridesmaids: ['no', 'some', 'full'],
+    makeup_u_touch_ups: ['no', 'kit', 'person'],
+  },
+};
+
+// Respuestas posibles para proveedores por categoría
+const PROVIDER_SURVEY_RESPONSES = {
+  photography: {
+    photo_p_styles: [['documentary', 'artistic'], ['classic', 'editorial'], ['candid', 'documentary'], ['cinematic', 'artistic']],
+    photo_p_hours_min: [4, 6, 8],
+    photo_p_hours_max: [8, 10, 12, 24],
+    photo_p_price_min: [300000, 500000, 800000, 1200000],
+    photo_p_price_max: [800000, 1200000, 1800000, 3000000],
+    photo_p_preboda: [true, false],
+    photo_p_postboda: [true, false],
+    photo_p_second_shooter: ['no', 'extra_cost', 'included', 'always'],
+    photo_p_delivery_time: ['2_weeks', '1_month', '2_months', '3_months'],
+    photo_p_delivery_formats: [['digital_hd', 'online_gallery'], ['digital_hd', 'printed_album', 'usb_box'], ['digital_hd', 'digital_raw']],
+    photo_p_photo_count_min: [150, 200, 300, 400],
+    photo_p_photo_count_max: [400, 600, 800, 1000],
+    photo_p_retouching_levels: [['natural'], ['natural', 'moderate'], ['moderate', 'editorial'], ['natural', 'moderate', 'editorial']],
+    photo_p_travel: [true, false],
+    photo_p_experience_years: [2, 5, 8, 10, 15],
+  },
+  video: {
+    video_p_styles: [['documentary', 'cinematic'], ['narrative', 'artistic'], ['traditional', 'documentary'], ['cinematic']],
+    video_p_durations: [['highlight_3', 'highlight_10'], ['highlight_10', 'medium_20'], ['medium_20', 'full_45'], ['highlight_3', 'highlight_10', 'medium_20']],
+    video_p_price_min: [400000, 600000, 1000000, 1500000],
+    video_p_price_max: [1000000, 1500000, 2500000, 4000000],
+    video_p_hours_min: [4, 6, 8],
+    video_p_hours_max: [8, 10, 12, 24],
+    video_p_second_camera: ['no', 'extra_cost', 'included', 'always'],
+    video_p_drone: ['no', 'extra_cost', 'included'],
+    video_p_same_day_edit: [true, false],
+    video_p_social_reel: ['no', 'extra_cost', 'included'],
+    video_p_delivery_time: ['1_month', '2_months', '3_months', '6_months'],
+  },
+  dj: {
+    dj_p_genres: [['reggaeton', 'pop', 'cumbia'], ['salsa', 'bachata', 'romantic'], ['rock', '80s_90s', 'electronic'], ['pop', 'disco', 'jazz']],
+    dj_p_styles: [['elegant', 'mixed'], ['party', 'mixed'], ['elegant', 'chill'], ['party']],
+    dj_p_price_min: [250000, 400000, 600000, 900000],
+    dj_p_price_max: [600000, 900000, 1400000, 2000000],
+    dj_p_hours_min: [3, 4, 5],
+    dj_p_hours_max: [6, 8, 10, 12],
+    dj_p_ceremony_music: [true, false],
+    dj_p_mc_levels: [['minimal'], ['minimal', 'moderate'], ['moderate', 'full'], ['no', 'minimal', 'moderate', 'full']],
+    dj_p_lighting_levels: [['basic', 'standard'], ['standard', 'premium'], ['premium', 'custom'], ['basic', 'standard', 'premium']],
+    dj_p_effects: [['fog'], ['fog', 'laser'], ['cold_sparks', 'confetti'], ['fog', 'cold_sparks', 'laser', 'confetti']],
+    dj_p_karaoke: [true, false],
+    dj_p_screens: ['no', 'one', 'multiple'],
+  },
+  catering: {
+    catering_p_service_types: [['plated', 'buffet'], ['stations', 'cocktail'], ['plated', 'buffet', 'stations'], ['family_style', 'buffet']],
+    catering_p_cuisines: [['chilean', 'international'], ['gourmet', 'mediterranean'], ['asian', 'international'], ['chilean', 'comfort']],
+    catering_p_price_pp_min: [15000, 25000, 35000, 50000],
+    catering_p_price_pp_max: [35000, 50000, 70000, 100000],
+    catering_p_guests_min: [30, 50, 80, 100],
+    catering_p_guests_max: [150, 200, 300, 500],
+    catering_p_courses: [['2', '3'], ['3', '4'], ['4', '5_plus'], ['2', '3', '4']],
+    catering_p_cocktail: [true, false],
+    catering_p_dietary: [['vegetarian'], ['vegetarian', 'vegan'], ['vegetarian', 'gluten_free'], ['vegetarian', 'vegan', 'gluten_free']],
+    catering_p_beverages: [['soft_drinks', 'wine'], ['wine', 'beer', 'cocktails'], ['open_bar'], ['soft_drinks', 'wine', 'beer', 'cocktails', 'open_bar']],
+    catering_p_tasting: ['yes_free', 'yes_paid', 'no'],
+  },
+  venue: {
+    venue_p_type: ['hacienda', 'hotel', 'restaurant', 'garden', 'beach', 'winery', 'loft', 'mansion'],
+    venue_p_settings: [['indoor'], ['outdoor'], ['indoor', 'outdoor'], ['both']],
+    venue_p_price_min: [500000, 1000000, 2000000, 4000000],
+    venue_p_price_max: [2000000, 4000000, 7000000, 15000000],
+    venue_p_capacity_min: [30, 50, 80, 100],
+    venue_p_capacity_max: [150, 200, 300, 500],
+    venue_p_exclusivity: [true, false],
+    venue_p_ceremony_space: [true, false],
+    venue_p_parking: ['yes_free', 'yes_paid', 'valet', 'no'],
+    venue_p_end_time: ['midnight', '2am', '4am', 'sunrise', 'flexible'],
+    venue_p_catering_policy: ['exclusive', 'preferred', 'external_ok', 'no_catering'],
+  },
+  decoration: {
+    deco_p_styles: [['romantic', 'classic'], ['rustic', 'bohemian'], ['modern', 'glamorous'], ['vintage', 'romantic']],
+    deco_p_color_expertise: [['white_green', 'pastels'], ['earth', 'rustic'], ['bold', 'jewel'], ['custom']],
+    deco_p_price_min: [300000, 500000, 1000000, 2000000],
+    deco_p_price_max: [1000000, 2000000, 4000000, 8000000],
+    deco_p_flower_types: [['roses', 'peonies'], ['eucalyptus', 'wildflowers'], ['hydrangeas', 'roses'], ['tropical', 'dried']],
+    deco_p_bridal_bouquet: [true, false],
+    deco_p_ceremony_deco: [true, false],
+    deco_p_centerpiece_types: [['low', 'tall'], ['mixed'], ['non_floral', 'low'], ['low', 'tall', 'mixed']],
+    deco_p_extras: [['arch', 'backdrop'], ['candles', 'neon'], ['hanging'], ['arch', 'backdrop', 'candles']],
+    deco_p_rental: [true, false],
+  },
+  wedding_planner: {
+    wp_p_service_levels: [['full', 'partial'], ['day_of', 'consultation'], ['full', 'partial', 'day_of'], ['partial', 'day_of']],
+    wp_p_price_min: [300000, 500000, 1000000, 2000000],
+    wp_p_price_max: [1000000, 2000000, 4000000, 8000000],
+    wp_p_lead_time_min: ['under_3', '3_6', '6_12'],
+    wp_p_vendor_network: ['extensive', 'moderate', 'limited'],
+    wp_p_design_services: [['full', 'guidance'], ['moodboards'], ['full', 'guidance', 'moodboards'], ['none']],
+    wp_p_budget_management: [true, false],
+    wp_p_timeline_management: [true, false],
+    wp_p_guest_management: [true, false],
+    wp_p_team_size: ['1', '2', '3_plus'],
+  },
+  makeup: {
+    makeup_p_styles: [['natural', 'classic'], ['glamorous', 'editorial'], ['romantic', 'boho'], ['natural', 'classic', 'glamorous']],
+    makeup_p_price_bride: [80000, 150000, 250000, 350000],
+    makeup_p_price_bridesmaid: [40000, 60000, 80000, 100000],
+    makeup_p_trial: ['yes_free', 'yes_paid', 'no'],
+    makeup_p_hair: [true, false],
+    makeup_p_hair_styles: [['updo', 'half_up'], ['down', 'braids'], ['updo', 'half_up', 'down'], ['half_up', 'braids']],
+    makeup_p_lashes: ['no', 'natural', 'dramatic', 'both'],
+    makeup_p_team_size: ['1', '2', '3_plus'],
+    makeup_p_max_clients: [3, 5, 8, 10],
+    makeup_p_touch_ups: ['no', 'kit', 'person'],
+    makeup_p_location: [['home', 'venue'], ['salon'], ['home', 'salon', 'venue']],
+  },
+};
 
 // ============================================
 // UTILIDADES
@@ -212,6 +450,45 @@ function generatePhone() {
   return `${prefix} ${number.toString().slice(0, 4)} ${number.toString().slice(4)}`;
 }
 
+// Generar respuestas de encuesta aleatorias
+function generateUserSurveyResponses(category) {
+  const template = USER_SURVEY_RESPONSES[category];
+  if (!template) return {};
+  
+  const responses = {};
+  for (const [key, options] of Object.entries(template)) {
+    responses[key] = randomItem(options);
+  }
+  return responses;
+}
+
+function generateProviderSurveyResponses(category) {
+  const template = PROVIDER_SURVEY_RESPONSES[category];
+  if (!template) return {};
+  
+  const responses = {};
+  for (const [key, options] of Object.entries(template)) {
+    responses[key] = randomItem(options);
+  }
+  return responses;
+}
+
+// Calcular match score basado en respuestas
+function calculateMatchScore(userResponses, providerResponses, category) {
+  // Simulación simplificada del cálculo de match
+  // En producción, esto sería más complejo basado en los criterios de CATEGORY_SURVEYS.md
+  let baseScore = 70 + Math.floor(Math.random() * 25); // 70-95
+  
+  // Bonus por coincidencias específicas (simplificado)
+  if (category === 'photography') {
+    if (userResponses.photo_u_style && providerResponses.photo_p_styles?.includes(userResponses.photo_u_style)) {
+      baseScore = Math.min(99, baseScore + 5);
+    }
+  }
+  
+  return baseScore;
+}
+
 // ============================================
 // FUNCIONES PRINCIPALES
 // ============================================
@@ -224,7 +501,7 @@ async function createProviders(auth, db) {
   const createdProviders = [];
 
   for (let i = 0; i < NUM_PROVIDERS; i++) {
-    const providerData = PROVIDER_NAMES[i % PROVIDER_NAMES.length];
+    const providerData = PROVIDER_TEMPLATES[i % PROVIDER_TEMPLATES.length];
     const email = `provider${i + 1}@test.matri.ai`;
     
     try {
@@ -235,7 +512,6 @@ async function createProviders(auth, db) {
         log.warn(`Usuario ${email} ya existe, actualizando...`);
       } catch (error) {
         if (error.code === 'auth/user-not-found') {
-          // Crear usuario en Firebase Auth
           userRecord = await auth.createUser({
             email,
             password: DEFAULT_PASSWORD,
@@ -247,8 +523,19 @@ async function createProviders(auth, db) {
         }
       }
 
-      // Crear/actualizar documento en Firestore
       const region = randomItem(REGIONS);
+      
+      // Crear límites y contadores de leads por categoría
+      const categoryLeadLimits = {};
+      const categoryLeadsUsed = {};
+      const categorySurveyStatus = {};
+      
+      for (const cat of providerData.categories) {
+        categoryLeadLimits[cat] = 10; // 10 leads por categoría
+        categoryLeadsUsed[cat] = 0;
+        categorySurveyStatus[cat] = 'not_started';
+      }
+
       const providerDoc = {
         id: userRecord.uid,
         type: 'provider',
@@ -266,10 +553,15 @@ async function createProviders(auth, db) {
         facebook: '',
         tiktok: '',
         portfolioImages: [],
-        status: Math.random() > 0.2 ? 'active' : 'pending', // 80% activos
+        status: Math.random() > 0.2 ? 'active' : 'pending',
+        // Sistema de leads POR CATEGORÍA
+        categoryLeadLimits,
+        categoryLeadsUsed,
+        categorySurveyStatus,
+        // Campos legacy para compatibilidad
         leadLimit: 10,
         leadsUsed: 0,
-        // ⚠️ CAMPOS PARA IDENTIFICAR DATOS DE PRUEBA - ELIMINAR EN PRODUCCIÓN
+        // Campos de prueba
         isDummy: true,
         dummyBatch: DUMMY_BATCH_ID,
         createdAt: FieldValue.serverTimestamp(),
@@ -277,7 +569,7 @@ async function createProviders(auth, db) {
       };
 
       await db.collection('providers').doc(userRecord.uid).set(providerDoc);
-      log.success(`Proveedor creado: ${providerData.name} (${region})`);
+      log.success(`Proveedor creado: ${providerData.name} (${providerData.categories.join(', ')}) - ${region}`);
 
       createdProviders.push({
         uid: userRecord.uid,
@@ -304,14 +596,12 @@ async function createUsers(auth, db) {
     const email = `user${i + 1}@test.matri.ai`;
     
     try {
-      // Verificar si el usuario ya existe
       let userRecord;
       try {
         userRecord = await auth.getUserByEmail(email);
         log.warn(`Usuario ${email} ya existe, actualizando...`);
       } catch (error) {
         if (error.code === 'auth/user-not-found') {
-          // Crear usuario en Firebase Auth
           userRecord = await auth.createUser({
             email,
             password: DEFAULT_PASSWORD,
@@ -323,8 +613,14 @@ async function createUsers(auth, db) {
         }
       }
 
-      // Crear/actualizar documento en Firestore
       const region = randomItem(REGIONS);
+      
+      // Estado de encuestas por categoría (todas empiezan en not_started)
+      const categorySurveyStatus = {};
+      for (const cat of CATEGORY_IDS) {
+        categorySurveyStatus[cat] = 'not_started';
+      }
+
       const userDoc = {
         id: userRecord.uid,
         type: 'user',
@@ -340,10 +636,12 @@ async function createUsers(auth, db) {
         eventStyle: randomItem(EVENT_STYLES),
         planningProgress: randomItem(PLANNING_PROGRESS),
         completedItems: randomItems(['dj', 'photography', 'video', 'venue', 'catering'], 0, 2),
-        priorityCategories: randomItems(PRIORITY_CATEGORIES, 2, 5),
+        priorityCategories: randomItems(CATEGORY_IDS, 3, 6),
         involvementLevel: randomItem(INVOLVEMENT_LEVELS),
         expectations: 'Buscamos proveedores profesionales y confiables para hacer de nuestro día algo especial e inolvidable.',
-        // ⚠️ CAMPOS PARA IDENTIFICAR DATOS DE PRUEBA - ELIMINAR EN PRODUCCIÓN
+        // Estado de encuestas por categoría
+        categorySurveyStatus,
+        // Campos de prueba
         isDummy: true,
         dummyBatch: DUMMY_BATCH_ID,
         createdAt: FieldValue.serverTimestamp(),
@@ -351,7 +649,7 @@ async function createUsers(auth, db) {
       };
 
       await db.collection('users').doc(userRecord.uid).set(userDoc);
-      log.success(`Usuario creado: ${coupleName} (${region})`);
+      log.success(`Usuario creado: ${coupleName} (${region}) - ${userDoc.priorityCategories.length} categorías prioritarias`);
 
       createdUsers.push({
         uid: userRecord.uid,
@@ -366,9 +664,108 @@ async function createUsers(auth, db) {
   return createdUsers;
 }
 
-async function createLeads(db, users, providers) {
+async function createProviderSurveys(db, providers) {
   console.log(`\n${colors.blue}═══════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.yellow}  Creando Leads (Matches)${colors.reset}`);
+  console.log(`${colors.yellow}  Creando Encuestas de Proveedores${colors.reset}`);
+  console.log(`${colors.blue}═══════════════════════════════════════${colors.reset}\n`);
+
+  const createdSurveys = [];
+
+  for (const provider of providers) {
+    for (const category of provider.categories) {
+      try {
+        const responses = generateProviderSurveyResponses(category);
+        
+        const surveyDoc = {
+          providerId: provider.uid,
+          category,
+          responses,
+          completedAt: FieldValue.serverTimestamp(),
+          isDummy: true,
+          dummyBatch: DUMMY_BATCH_ID,
+        };
+
+        const docRef = await db.collection('providerCategorySurveys').add(surveyDoc);
+        
+        // Actualizar estado de encuesta del proveedor
+        await db.collection('providers').doc(provider.uid).update({
+          [`categorySurveyStatus.${category}`]: 'completed',
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        log.success(`Encuesta proveedor: ${provider.providerName} - ${CATEGORIES[category]?.name || category}`);
+
+        createdSurveys.push({
+          id: docRef.id,
+          providerId: provider.uid,
+          category,
+          ...surveyDoc,
+        });
+
+      } catch (error) {
+        log.error(`Error creando encuesta proveedor ${provider.providerName} - ${category}: ${error.message}`);
+      }
+    }
+  }
+
+  return createdSurveys;
+}
+
+async function createUserSurveys(db, users) {
+  console.log(`\n${colors.blue}═══════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.yellow}  Creando Encuestas de Usuarios${colors.reset}`);
+  console.log(`${colors.blue}═══════════════════════════════════════${colors.reset}\n`);
+
+  const createdSurveys = [];
+
+  for (const user of users) {
+    // Crear encuestas solo para las categorías prioritarias del usuario
+    const categoriesToSurvey = user.priorityCategories.slice(0, 4); // Máximo 4 categorías con encuesta
+
+    for (const category of categoriesToSurvey) {
+      try {
+        const responses = generateUserSurveyResponses(category);
+        
+        const surveyDoc = {
+          userId: user.uid,
+          category,
+          responses,
+          completedAt: FieldValue.serverTimestamp(),
+          matchesGenerated: false,
+          isDummy: true,
+          dummyBatch: DUMMY_BATCH_ID,
+        };
+
+        const docRef = await db.collection('userCategorySurveys').add(surveyDoc);
+        
+        // Actualizar estado de encuesta del usuario
+        await db.collection('users').doc(user.uid).update({
+          [`categorySurveyStatus.${category}`]: 'completed',
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        log.success(`Encuesta usuario: ${user.coupleNames} - ${CATEGORIES[category]?.name || category}`);
+
+        createdSurveys.push({
+          id: docRef.id,
+          oderId: user.uid,
+          category,
+          responses,
+          ...surveyDoc,
+        });
+
+      } catch (error) {
+        log.error(`Error creando encuesta usuario ${user.coupleNames} - ${category}: ${error.message}`);
+      }
+    }
+  }
+
+  return createdSurveys;
+}
+
+async function createLeads(db, users, providers, userSurveys, providerSurveys) {
+  console.log(`\n${colors.blue}═══════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.yellow}  Creando Leads/Matches por Categoría${colors.reset}`);
   console.log(`${colors.blue}═══════════════════════════════════════${colors.reset}\n`);
 
   const activeProviders = providers.filter(p => p.status === 'active');
@@ -381,60 +778,108 @@ async function createLeads(db, users, providers) {
   const leadStatuses = ['pending', 'approved', 'contacted'];
 
   for (const user of users) {
-    // Seleccionar proveedores aleatorios para este usuario
-    const shuffledProviders = [...activeProviders].sort(() => Math.random() - 0.5);
-    const selectedProviders = shuffledProviders.slice(0, Math.min(LEADS_PER_USER, shuffledProviders.length));
+    // Obtener encuestas completadas del usuario
+    const userCompletedSurveys = userSurveys.filter(s => s.userId === user.uid);
 
-    for (const provider of selectedProviders) {
-      // Calcular match score basado en coincidencias
-      let matchScore = 70 + Math.floor(Math.random() * 25); // 70-95%
+    for (const userSurvey of userCompletedSurveys) {
+      const category = userSurvey.category;
       
-      // Bonus si coincide la región
-      if (user.region === provider.workRegion) {
-        matchScore = Math.min(99, matchScore + 5);
+      // Encontrar proveedores que ofrecen esta categoría
+      const categoryProviders = activeProviders.filter(p => 
+        p.categories.includes(category) && 
+        (p.categoryLeadsUsed?.[category] || 0) < (p.categoryLeadLimits?.[category] || 10)
+      );
+
+      if (categoryProviders.length === 0) {
+        log.warn(`No hay proveedores disponibles para ${category}`);
+        continue;
       }
 
-      const category = provider.categories[0];
-      const status = randomItem(leadStatuses);
+      // Seleccionar hasta 3 proveedores para esta categoría
+      const shuffledProviders = [...categoryProviders].sort(() => Math.random() - 0.5);
+      const selectedProviders = shuffledProviders.slice(0, Math.min(LEADS_PER_CATEGORY, shuffledProviders.length));
 
-      const leadDoc = {
-        userId: user.uid,
-        providerId: provider.uid,
-        category,
-        matchScore,
-        status,
-        userInfo: {
-          coupleNames: user.coupleNames,
-          eventDate: user.eventDate,
-          budget: user.budget,
-          region: user.region,
-          email: user.email,
-          phone: user.phone,
-        },
-        providerInfo: {
-          providerName: provider.providerName,
-          categories: provider.categories,
-          priceRange: provider.priceRange,
-        },
-        assignedByAdmin: false,
-        // ⚠️ CAMPOS PARA IDENTIFICAR DATOS DE PRUEBA - ELIMINAR EN PRODUCCIÓN
-        isDummy: true,
-        dummyBatch: DUMMY_BATCH_ID,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      };
+      for (const provider of selectedProviders) {
+        // Buscar encuesta del proveedor para esta categoría
+        const providerSurvey = providerSurveys.find(s => 
+          s.providerId === provider.uid && s.category === category
+        );
 
-      try {
-        await db.collection('leads').add(leadDoc);
-        
-        // Actualizar leadsUsed del proveedor
-        await db.collection('providers').doc(provider.uid).update({
-          leadsUsed: FieldValue.increment(1),
-        });
+        // Calcular match score
+        const matchScore = calculateMatchScore(
+          userSurvey.responses,
+          providerSurvey?.responses || {},
+          category
+        );
 
-        log.success(`Lead: ${user.coupleNames} → ${provider.providerName} (${matchScore}%)`);
-      } catch (error) {
-        log.error(`Error creando lead: ${error.message}`);
+        // Bonus si coincide la región
+        let finalScore = matchScore;
+        if (user.region === provider.workRegion) {
+          finalScore = Math.min(99, matchScore + 5);
+        }
+
+        const status = randomItem(leadStatuses);
+
+        const leadDoc = {
+          userId: user.uid,
+          providerId: provider.uid,
+          category,
+          matchScore: finalScore,
+          status,
+          userSurveyId: userSurvey.id,
+          providerSurveyId: providerSurvey?.id || null,
+          matchCriteria: {
+            styleMatch: 70 + Math.floor(Math.random() * 30),
+            budgetMatch: 60 + Math.floor(Math.random() * 40),
+            locationMatch: user.region === provider.workRegion ? 100 : (provider.acceptsOutsideZone ? 70 : 30),
+            availabilityMatch: 80 + Math.floor(Math.random() * 20),
+            specificCriteriaMatch: 65 + Math.floor(Math.random() * 35),
+          },
+          userInfo: {
+            coupleNames: user.coupleNames,
+            eventDate: user.eventDate,
+            budget: user.budget,
+            region: user.region,
+            email: user.email,
+            phone: user.phone,
+          },
+          providerInfo: {
+            providerName: provider.providerName,
+            categories: provider.categories,
+            priceRange: provider.priceRange,
+          },
+          assignedByAdmin: false,
+          isDummy: true,
+          dummyBatch: DUMMY_BATCH_ID,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        try {
+          await db.collection('leads').add(leadDoc);
+          
+          // Actualizar leadsUsed del proveedor para esta categoría
+          await db.collection('providers').doc(provider.uid).update({
+            [`categoryLeadsUsed.${category}`]: FieldValue.increment(1),
+            leadsUsed: FieldValue.increment(1), // Legacy
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+
+          // Actualizar estado de encuesta del usuario
+          await db.collection('users').doc(user.uid).update({
+            [`categorySurveyStatus.${category}`]: 'matches_generated',
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+
+          // Marcar encuesta como con matches generados
+          await db.collection('userCategorySurveys').doc(userSurvey.id).update({
+            matchesGenerated: true,
+          });
+
+          log.success(`Lead: ${user.coupleNames} → ${provider.providerName} [${CATEGORIES[category]?.name}] (${finalScore}%)`);
+        } catch (error) {
+          log.error(`Error creando lead: ${error.message}`);
+        }
       }
     }
   }
@@ -452,6 +897,22 @@ async function cleanDatabase(auth, db) {
     await doc.ref.delete();
   }
   log.success(`${leadsSnapshot.size} leads dummy eliminados`);
+
+  // Eliminar encuestas de usuarios dummy
+  log.step('Eliminando encuestas de usuarios dummy...');
+  const userSurveysSnapshot = await db.collection('userCategorySurveys').where('isDummy', '==', true).get();
+  for (const doc of userSurveysSnapshot.docs) {
+    await doc.ref.delete();
+  }
+  log.success(`${userSurveysSnapshot.size} encuestas de usuarios eliminadas`);
+
+  // Eliminar encuestas de proveedores dummy
+  log.step('Eliminando encuestas de proveedores dummy...');
+  const providerSurveysSnapshot = await db.collection('providerCategorySurveys').where('isDummy', '==', true).get();
+  for (const doc of providerSurveysSnapshot.docs) {
+    await doc.ref.delete();
+  }
+  log.success(`${providerSurveysSnapshot.size} encuestas de proveedores eliminadas`);
 
   // Eliminar usuarios dummy
   log.step('Eliminando usuarios dummy...');
@@ -491,13 +952,14 @@ async function main() {
   const createAll = args.includes('--all') || args.length === 0 || (args.length === 1 && args[0] === '--clean');
   const onlyProviders = args.includes('--providers');
   const onlyUsers = args.includes('--users');
+  const onlySurveys = args.includes('--surveys');
   const onlyLeads = args.includes('--leads');
   const cleanFirst = args.includes('--clean');
 
   if (showHelp) {
     console.log(`
 ${colors.cyan}═══════════════════════════════════════════════════${colors.reset}
-${colors.yellow}  Matri.AI - Seed Database${colors.reset}
+${colors.yellow}  Matri.AI - Seed Database (Sistema por Categoría)${colors.reset}
 ${colors.cyan}═══════════════════════════════════════════════════${colors.reset}
 
 ${colors.green}Uso:${colors.reset}
@@ -507,6 +969,7 @@ ${colors.green}Opciones:${colors.reset}
   --all          Crear todo (default)
   --providers    Solo crear proveedores
   --users        Solo crear usuarios
+  --surveys      Solo crear encuestas
   --leads        Solo crear leads
   --clean        Limpiar datos de prueba antes
   --help, -h     Mostrar esta ayuda
@@ -515,12 +978,19 @@ ${colors.green}Ejemplos:${colors.reset}
   node scripts/seed-database.mjs
   node scripts/seed-database.mjs --clean --all
   node scripts/seed-database.mjs --providers
+
+${colors.green}Sistema de Matchmaking por Categoría:${colors.reset}
+  Este script genera datos para las 8 categorías:
+  - Fotografía, Video, DJ/VJ, Banquetería
+  - Centro de Eventos, Decoración, Wedding Planner, Maquillaje
+
+  Cada usuario puede tener hasta 3 matches POR CATEGORÍA.
 `);
     process.exit(0);
   }
 
   console.log(`\n${colors.cyan}═══════════════════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.yellow}  Matri.AI - Seed Database${colors.reset}`);
+  console.log(`${colors.yellow}  Matri.AI - Seed Database (Sistema por Categoría)${colors.reset}`);
   console.log(`${colors.cyan}═══════════════════════════════════════════════════${colors.reset}\n`);
 
   // Cargar variables de entorno
@@ -550,6 +1020,8 @@ ${colors.green}Ejemplos:${colors.reset}
 
   let providers = [];
   let users = [];
+  let providerSurveys = [];
+  let userSurveys = [];
 
   // Crear proveedores
   if (createAll || onlyProviders) {
@@ -561,9 +1033,9 @@ ${colors.green}Ejemplos:${colors.reset}
     users = await createUsers(auth, db);
   }
 
-  // Crear leads
-  if (createAll || onlyLeads) {
-    // Si no tenemos los datos en memoria, cargarlos de Firestore
+  // Crear encuestas
+  if (createAll || onlySurveys) {
+    // Cargar datos si no están en memoria
     if (providers.length === 0) {
       const snapshot = await db.collection('providers').get();
       providers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
@@ -572,8 +1044,32 @@ ${colors.green}Ejemplos:${colors.reset}
       const snapshot = await db.collection('users').get();
       users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
     }
+
+    providerSurveys = await createProviderSurveys(db, providers);
+    userSurveys = await createUserSurveys(db, users);
+  }
+
+  // Crear leads
+  if (createAll || onlyLeads) {
+    // Cargar datos si no están en memoria
+    if (providers.length === 0) {
+      const snapshot = await db.collection('providers').get();
+      providers = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    }
+    if (users.length === 0) {
+      const snapshot = await db.collection('users').get();
+      users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    }
+    if (userSurveys.length === 0) {
+      const snapshot = await db.collection('userCategorySurveys').get();
+      userSurveys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    if (providerSurveys.length === 0) {
+      const snapshot = await db.collection('providerCategorySurveys').get();
+      providerSurveys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
     
-    await createLeads(db, users, providers);
+    await createLeads(db, users, providers, userSurveys, providerSurveys);
   }
 
   // Resumen final
@@ -581,16 +1077,23 @@ ${colors.green}Ejemplos:${colors.reset}
   console.log(`${colors.green}  ¡Base de datos poblada exitosamente!${colors.reset}`);
   console.log(`${colors.green}═══════════════════════════════════════════════════${colors.reset}\n`);
 
-  console.log(`  ${colors.cyan}Proveedores:${colors.reset}  ${providers.length}`);
-  console.log(`  ${colors.cyan}Usuarios:${colors.reset}     ${users.length}`);
-  console.log(`  ${colors.cyan}Contraseña:${colors.reset}   ${DEFAULT_PASSWORD}`);
-  console.log(`  ${colors.cyan}Emails:${colors.reset}       user1@test.matri.ai, provider1@test.matri.ai, etc.`);
+  console.log(`  ${colors.cyan}Proveedores:${colors.reset}          ${providers.length}`);
+  console.log(`  ${colors.cyan}Usuarios:${colors.reset}             ${users.length}`);
+  console.log(`  ${colors.cyan}Encuestas proveed.:${colors.reset}   ${providerSurveys.length}`);
+  console.log(`  ${colors.cyan}Encuestas usuarios:${colors.reset}   ${userSurveys.length}`);
+  console.log(`  ${colors.cyan}Contraseña:${colors.reset}           ${DEFAULT_PASSWORD}`);
+  console.log(`  ${colors.cyan}Emails:${colors.reset}               user1@test.matri.ai, provider1@test.matri.ai, etc.`);
   console.log();
   console.log(`  ${colors.yellow}⚠️  DATOS DUMMY - Para eliminar en producción:${colors.reset}`);
-  console.log(`  ${colors.cyan}isDummy:${colors.reset}      true`);
-  console.log(`  ${colors.cyan}dummyBatch:${colors.reset}   ${DUMMY_BATCH_ID}`);
+  console.log(`  ${colors.cyan}isDummy:${colors.reset}              true`);
+  console.log(`  ${colors.cyan}dummyBatch:${colors.reset}           ${DUMMY_BATCH_ID}`);
   console.log();
   console.log(`  ${colors.magenta}Para limpiar:${colors.reset} node scripts/seed-database.mjs --clean`);
+  console.log();
+  console.log(`  ${colors.blue}Sistema de Matchmaking por Categoría:${colors.reset}`);
+  console.log(`  - Cada usuario tiene encuestas por categoría`);
+  console.log(`  - Cada proveedor tiene encuestas por categoría`);
+  console.log(`  - Los leads se generan POR CATEGORÍA (máx. 3 por categoría)`);
   console.log();
 
   process.exit(0);
@@ -601,4 +1104,3 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

@@ -7,7 +7,7 @@ import styles from './Sidebar.module.css';
 
 // Definición de tipos para las secciones
 type UserSection = 'matches' | 'surveys' | 'profile';
-type ProviderSection = 'overview' | 'leads' | 'profile';
+type ProviderSection = 'overview' | 'leads' | 'surveys' | 'profile';
 
 // Props base del sidebar
 interface BaseSidebarProps {
@@ -39,11 +39,13 @@ interface ProviderSidebarProps extends BaseSidebarProps {
     categories?: string[];
     leadLimit?: number;
     leadsUsed?: number;
+    categorySurveyStatus?: Record<string, 'pending' | 'completed'>;
   } | null;
   activeSection: ProviderSection;
   onSectionChange: (section: ProviderSection) => void;
   pendingLeadsCount: number;
   categoryIcon?: React.ReactNode;
+  completedSurveysCount?: number;
 }
 
 type SidebarProps = UserSidebarProps | ProviderSidebarProps;
@@ -146,7 +148,7 @@ export default function Sidebar(props: SidebarProps) {
   }
 
   // Renderizado para proveedor
-  const { profile, activeSection, onSectionChange, pendingLeadsCount, categoryIcon } = props;
+  const { profile, activeSection, onSectionChange, pendingLeadsCount, categoryIcon, completedSurveysCount = 0 } = props;
   const leadsRemaining = (profile?.leadLimit || 10) - (profile?.leadsUsed || 0);
   const leadsUsedPercentage = ((profile?.leadsUsed || 0) / (profile?.leadLimit || 10)) * 100;
 
@@ -196,6 +198,19 @@ export default function Sidebar(props: SidebarProps) {
           <span>Mis Leads</span>
           {pendingLeadsCount > 0 && (
             <span className={styles.navBadge}>{pendingLeadsCount}</span>
+          )}
+        </button>
+
+        <button 
+          className={`${styles.navItem} ${activeSection === 'surveys' ? styles.navItemActive : ''}`}
+          onClick={() => onSectionChange('surveys')}
+        >
+          <FileText size={20} />
+          <span>Encuestas</span>
+          {profile?.categories && (
+            <span className={styles.navBadge}>
+              {completedSurveysCount}/{profile.categories.length}
+            </span>
           )}
         </button>
         

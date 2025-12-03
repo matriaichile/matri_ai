@@ -1,0 +1,348 @@
+/* ====================================
+   SURVEY STEP - ESTILO ELEGANTE
+   Negro y Dorado Premium - Matri.AI
+   Adaptado del WizardStep
+   ==================================== */
+
+.stepContainer {
+  width: 100%;
+  max-width: 700px;
+  max-height: calc(100vh - 2rem);
+  padding: 1rem 1.5rem;
+  transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.stepContainerHidden {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.stepContainerVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Encabezado - más compacto */
+.header {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #E8D090, #D4AF37);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (min-height: 800px) {
+  .title {
+    font-size: 1.8rem;
+  }
+}
+
+.subtitle {
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.85rem;
+  color: #CCCCCC;
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (min-height: 800px) {
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+/* Contenido - flexible */
+.content {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+  padding-right: 0.5rem;
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 2px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
+
+/* Barra inferior con navegación y progreso */
+.bottomBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  padding-top: 1rem;
+  margin-top: auto;
+}
+
+/* Contenedor principal centrado: Atrás - Progreso - Siguiente */
+.mainNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.leftNav {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 100px;
+}
+
+.rightNav {
+  display: flex;
+  justify-content: flex-start;
+  min-width: 100px;
+}
+
+/* Botón de atrás */
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.backButton:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.backButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.backButton svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 300ms ease;
+}
+
+.backButton:hover:not(:disabled) svg {
+  transform: translateX(-3px);
+}
+
+/* Botón de siguiente */
+.nextButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1.5rem;
+  background: linear-gradient(135deg, #D4AF37 0%, #B8941E 100%);
+  border: none;
+  border-radius: 50px;
+  color: #000000;
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 300ms ease;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  white-space: nowrap;
+}
+
+.nextButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+}
+
+.nextButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nextButton svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 300ms ease;
+}
+
+.nextButton:hover:not(:disabled) svg {
+  transform: translateX(3px);
+}
+
+.nextButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botón de submit (último paso) */
+.submitButton {
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%);
+  box-shadow: 0 8px 30px rgba(76, 175, 80, 0.4);
+}
+
+.submitButton:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+/* Spinner de carga */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Indicadores de progreso */
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.progressBar {
+  width: 200px;
+  height: 3px;
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: 2px;
+  transition: width 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+.progressText {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Responsive - móvil */
+@media (max-width: 640px) {
+  .stepContainer {
+    padding: 0.75rem 1rem;
+  }
+
+  .contentWrapper {
+    gap: 0.75rem;
+  }
+
+  .bottomBar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mainNav {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .leftNav,
+  .rightNav {
+    width: 100%;
+    justify-content: center;
+    min-width: auto;
+  }
+
+  .progressContainer {
+    order: -1;
+  }
+
+  .progressBar {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .backButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .nextButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem;
+  }
+}
+
+/* Pantallas más altas */
+@media (min-height: 900px) {
+  .stepContainer {
+    padding: 1.5rem;
+  }
+
+  .contentWrapper {
+    gap: 1.5rem;
+  }
+
+  .bottomBar {
+    padding-top: 1.5rem;
+  }
+}
+

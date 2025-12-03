@@ -1,0 +1,139 @@
+/* Container de carga */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  color: #a0a0a0;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #c9a227;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Container de error */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  color: #fff;
+}
+
+.errorContainer h2 {
+  font-size: 1.5rem;
+  color: #ff6b6b;
+}
+
+.backLink {
+  color: #c9a227;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.backLink:hover {
+  background: rgba(201, 162, 39, 0.1);
+}
+
+/* Botón de volver */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a0a0a0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.backButton:hover {
+  color: #c9a227;
+}
+
+/* Container de éxito */
+.successContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  gap: 1.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.successIcon {
+  color: #22c55e;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.successContainer h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.successContainer p {
+  font-size: 1rem;
+  color: #a0a0a0;
+  max-width: 400px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Mensaje de error */
+.errorMessage {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .successContainer {
+    padding: 2rem 1rem;
+  }
+
+  .successContainer h2 {
+    font-size: 1.5rem;
+  }
+}
+

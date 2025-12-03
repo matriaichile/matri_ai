@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Check,
   X,
@@ -23,14 +24,16 @@ import {
   Calendar,
   Heart,
   Search,
-  Mail
+  Mail,
+  ClipboardCheck
 } from 'lucide-react';
-import { useAuthStore, UserProfile } from '@/store/authStore';
+import { useAuthStore, UserProfile, CategoryId } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
+import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
 import styles from './page.module.css';
 
 // Interfaz para los leads/matches
@@ -85,81 +88,6 @@ const CATEGORY_IMAGES: Record<string, string> = {
   makeup: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400',
 };
 
-// Mini encuestas por categoría
-const MINI_SURVEYS: Record<string, { title: string; questions: string[] }> = {
-  photography: {
-    title: 'Fotografía',
-    questions: [
-      '¿Qué estilo fotográfico prefieres?',
-      '¿Cuántas horas de cobertura necesitas?',
-      '¿Necesitas sesión pre-boda?',
-      '¿Formato de entrega preferido?',
-    ],
-  },
-  video: {
-    title: 'Videografía',
-    questions: [
-      '¿Prefieres estilo documental o cinemático?',
-      '¿Necesitas segundo camarógrafo?',
-      '¿Qué duración de video final esperas?',
-      '¿Necesitas highlight para redes?',
-    ],
-  },
-  dj: {
-    title: 'DJ/VJ',
-    questions: [
-      '¿Qué géneros musicales prefieres?',
-      '¿Necesitas equipos de iluminación?',
-      '¿Cuántas horas de música?',
-      '¿Requieres animación?',
-    ],
-  },
-  catering: {
-    title: 'Banquetería',
-    questions: [
-      '¿Tipo de servicio preferido?',
-      '¿Hay restricciones alimentarias?',
-      '¿Incluir bebestibles?',
-      '¿Necesitas degustación previa?',
-    ],
-  },
-  venue: {
-    title: 'Centro de Eventos',
-    questions: [
-      '¿Interior o exterior?',
-      '¿Capacidad mínima requerida?',
-      '¿Necesitas exclusividad del lugar?',
-      '¿Requieres estacionamiento?',
-    ],
-  },
-  decoration: {
-    title: 'Decoración',
-    questions: [
-      '¿Qué estilo de decoración buscas?',
-      '¿Tipo de flores preferidas?',
-      '¿Incluir ramo de novia?',
-      '¿Decoración de mesas incluida?',
-    ],
-  },
-  wedding_planner: {
-    title: 'Wedding Planner',
-    questions: [
-      '¿Coordinación total o parcial?',
-      '¿Necesitas ayuda con proveedores?',
-      '¿Coordinación el día del evento?',
-      '¿Gestión de timeline?',
-    ],
-  },
-  makeup: {
-    title: 'Maquillaje & Peinado',
-    questions: [
-      '¿Prueba de maquillaje incluida?',
-      '¿Servicio para cortejo?',
-      '¿Estilo natural o dramático?',
-      '¿Necesitas retoque durante el evento?',
-    ],
-  },
-};
 
 /**
  * Dashboard principal del usuario (novios).
@@ -172,8 +100,6 @@ export default function UserDashboardPage() {
   const [matches, setMatches] = useState<LeadMatch[]>([]);
   const [providers, setProviders] = useState<Record<string, Provider>>({});
   const [loadingMatches, setLoadingMatches] = useState(true);
-  const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null);
-  const [completedSurveys, setCompletedSurveys] = useState<string[]>([]);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -259,11 +185,6 @@ export default function UserDashboardPage() {
     ));
   };
 
-  const handleCompleteSurvey = (categoryId: string) => {
-    setCompletedSurveys(prev => [...prev, categoryId]);
-    setSelectedSurvey(null);
-  };
-
   // Obtener labels
   const getBudgetLabel = (id: string) => BUDGET_RANGES.find((b) => b.id === id)?.label || id;
   const getGuestLabel = (id: string) => GUEST_COUNTS.find((g) => g.id === id)?.label || id;
@@ -286,6 +207,11 @@ export default function UserDashboardPage() {
   const profile = userProfile as UserProfile | null;
   const pendingMatches = matches.filter(m => m.status === 'pending');
   const approvedMatches = matches.filter(m => m.status === 'approved');
+  
+  // Calcular encuestas completadas desde el perfil
+  const completedSurveysCount = profile?.categorySurveyStatus 
+    ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed').length 
+    : 0;
 
   // Configuración del header según la sección activa
   const headerConfig = {
@@ -304,7 +230,7 @@ export default function UserDashboardPage() {
           onSectionChange={setActiveSection}
           onLogout={handleLogout}
           pendingMatchesCount={pendingMatches.length}
-          completedSurveysCount={completedSurveys.length}
+          completedSurveysCount={completedSurveysCount}
           matchesCount={matches.length}
           approvedCount={approvedMatches.length}
         />
@@ -420,88 +346,74 @@ export default function UserDashboardPage() {
         {/* Sección de Mini Encuestas */}
         {activeSection === 'surveys' && (
           <div className={styles.surveysSection}>
-            {selectedSurvey ? (
-              <div className={styles.surveyDetail}>
-                <button 
-                  className={styles.backButton}
-                  onClick={() => setSelectedSurvey(null)}
-                >
-                  <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
-                  <span>Volver</span>
-                </button>
-
-                <div className={styles.surveyCard}>
-                  <div className={styles.surveyCardHeader}>
-                    <div className={styles.surveyIcon}>
-                      {CATEGORY_ICONS[selectedSurvey]}
-                    </div>
-                    <h2>{MINI_SURVEYS[selectedSurvey]?.title}</h2>
-                  </div>
-
-                  <div className={styles.surveyQuestions}>
-                    {MINI_SURVEYS[selectedSurvey]?.questions.map((question, index) => (
-                      <div key={index} className={styles.surveyQuestion}>
-                        <label>{question}</label>
-                        <input 
-                          type="text" 
-                          placeholder="Tu respuesta..."
-                          className={styles.surveyInput}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <button 
-                    className={styles.primaryButton}
-                    onClick={() => handleCompleteSurvey(selectedSurvey)}
+            <div className={styles.surveysGrid}>
+              {profile?.priorityCategories?.map((category) => {
+                const categoryId = category as CategoryId;
+                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                const isCompleted = surveyStatus === 'completed';
+                const categoryInfo = getCategoryInfo(categoryId);
+                const surveyConfig = CATEGORY_SURVEYS[categoryId];
+                const questionCount = surveyConfig?.userQuestions.length || 0;
+                
+                // Contar matches de esta categoría
+                const categoryMatches = matches.filter(m => m.category === categoryId);
+                
+                return (
+                  <div 
+                    key={category} 
+                    className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''}`}
                   >
-                    <Check size={18} />
-                    <span>Guardar preferencias</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.surveysGrid}>
-                {profile?.priorityCategories?.map((category) => {
-                  const isCompleted = completedSurveys.includes(category);
-                  const survey = MINI_SURVEYS[category];
-                  
-                  return (
-                    <div 
-                      key={category} 
-                      className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''}`}
-                      onClick={() => !isCompleted && setSelectedSurvey(category)}
-                    >
-                      <div className={styles.surveyItemIcon}>
-                        {CATEGORY_ICONS[category]}
-                      </div>
-                      <div className={styles.surveyItemInfo}>
-                        <h3>{survey?.title || getCategoryLabel(category)}</h3>
-                        <p>{survey?.questions.length || 4} preguntas</p>
-                      </div>
-                      <div className={styles.surveyItemStatus}>
-                        {isCompleted ? (
+                    <div className={styles.surveyItemIcon}>
+                      {CATEGORY_ICONS[category]}
+                    </div>
+                    <div className={styles.surveyItemInfo}>
+                      <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                      <p>{questionCount} preguntas</p>
+                      {isCompleted && categoryMatches.length > 0 && (
+                        <span className={styles.matchesBadge}>
+                          <Star size={12} />
+                          <span>{categoryMatches.length} matches</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.surveyItemActions}>
+                      {isCompleted ? (
+                        <>
                           <span className={styles.completedBadge}>
                             <Check size={14} />
                             <span>Completado</span>
                           </span>
-                        ) : (
-                          <ChevronRight size={20} />
-                        )}
-                      </div>
+                          <Link 
+                            href={`/dashboard/category/${categoryId}/matches`}
+                            className={styles.viewMatchesLink}
+                          >
+                            <span>Ver matches</span>
+                            <ChevronRight size={16} />
+                          </Link>
+                        </>
+                      ) : (
+                        <Link 
+                          href={`/dashboard/category/${categoryId}/survey`}
+                          className={styles.startSurveyLink}
+                        >
+                          <ClipboardCheck size={16} />
+                          <span>Completar encuesta</span>
+                          <ChevronRight size={16} />
+                        </Link>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
 
-                {(!profile?.priorityCategories || profile.priorityCategories.length === 0) && (
-                  <EmptyState
-                    icon={<FileText size={48} />}
-                    title="No hay categorías seleccionadas"
-                    description="Actualiza tu perfil para seleccionar las categorías de proveedores que necesitas"
-                  />
-                )}
-              </div>
-            )}
+              {(!profile?.priorityCategories || profile.priorityCategories.length === 0) && (
+                <EmptyState
+                  icon={<FileText size={48} />}
+                  title="No hay categorías seleccionadas"
+                  description="Actualiza tu perfil para seleccionar las categorías de proveedores que necesitas"
+                />
+              )}
+            </div>
           </div>
         )}
 

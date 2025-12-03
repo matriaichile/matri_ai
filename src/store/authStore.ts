@@ -3,6 +3,34 @@ import { persist } from 'zustand/middleware';
 import { User as FirebaseUser } from 'firebase/auth';
 
 // ============================================
+// TIPOS PARA CATEGORÍAS
+// ============================================
+
+// Las 8 categorías del sistema
+export type CategoryId = 
+  | 'photography' 
+  | 'video' 
+  | 'dj' 
+  | 'catering' 
+  | 'venue' 
+  | 'decoration' 
+  | 'wedding_planner' 
+  | 'makeup';
+
+// Estado de encuesta por categoría
+export type CategorySurveyStatus = 'not_started' | 'completed' | 'matches_generated';
+
+// Mapa de estado de encuestas por categoría
+export type CategorySurveyStatusMap = {
+  [key in CategoryId]?: CategorySurveyStatus;
+};
+
+// Mapa de límites/uso de leads por categoría (para proveedores)
+export type CategoryLeadLimitsMap = {
+  [key in CategoryId]?: number;
+};
+
+// ============================================
 // TIPOS PARA USUARIOS
 // ============================================
 
@@ -40,6 +68,8 @@ export interface UserProfile {
   priorityCategories: string[];
   involvementLevel: string;
   expectations: string;
+  // Estado de encuestas por categoría - NUEVO
+  categorySurveyStatus: CategorySurveyStatusMap;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,7 +81,7 @@ export interface ProviderProfile {
   email: string;
   providerName: string;
   phone: string;
-  categories: string[];
+  categories: CategoryId[]; // Categorías que ofrece
   serviceStyle: string;
   priceRange: string;
   workRegion: string;
@@ -63,9 +93,13 @@ export interface ProviderProfile {
   tiktok: string;
   portfolioImages: string[];
   status: ProviderStatus;
-  // Sistema de leads - cuántos leads puede recibir el proveedor
-  leadLimit: number; // Límite máximo de leads asignados (por defecto 10)
-  leadsUsed: number; // Cantidad de leads ya consumidos/asignados
+  // Sistema de leads POR CATEGORÍA - NUEVO
+  categoryLeadLimits: CategoryLeadLimitsMap; // Límite máximo de leads por categoría
+  categoryLeadsUsed: CategoryLeadLimitsMap; // Leads consumidos por categoría
+  categorySurveyStatus: CategorySurveyStatusMap; // Estado de encuestas por categoría
+  // Campos legacy para compatibilidad
+  leadLimit: number;
+  leadsUsed: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -109,6 +143,10 @@ interface AuthState {
   isUser: () => boolean;
   isProvider: () => boolean;
   isAdmin: () => boolean;
+  
+  // Helpers para categorías - NUEVO
+  getCategorySurveyStatus: (category: CategoryId) => CategorySurveyStatus;
+  getCategoryLeadsRemaining: (category: CategoryId) => number;
 }
 
 // ============================================
@@ -166,6 +204,34 @@ export const useAuthStore = create<AuthState>()(
         const { userType } = get();
         return userType === 'admin';
       },
+      
+      // Obtener estado de encuesta para una categoría específica
+      getCategorySurveyStatus: (category: CategoryId): CategorySurveyStatus => {
+        const { userProfile } = get();
+        if (!userProfile) return 'not_started';
+        
+        if (userProfile.type === 'user') {
+          return (userProfile as UserProfile).categorySurveyStatus?.[category] || 'not_started';
+        }
+        
+        if (userProfile.type === 'provider') {
+          return (userProfile as ProviderProfile).categorySurveyStatus?.[category] || 'not_started';
+        }
+        
+        return 'not_started';
+      },
+      
+      // Obtener leads restantes para una categoría (solo proveedores)
+      getCategoryLeadsRemaining: (category: CategoryId): number => {
+        const { userProfile } = get();
+        if (!userProfile || userProfile.type !== 'provider') return 0;
+        
+        const provider = userProfile as ProviderProfile;
+        const limit = provider.categoryLeadLimits?.[category] || 10;
+        const used = provider.categoryLeadsUsed?.[category] || 0;
+        
+        return Math.max(0, limit - used);
+      },
     }),
     {
       name: 'matri-auth-storage',
@@ -176,3 +242,29 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// ============================================
+// CONSTANTES DE CATEGORÍAS
+// ============================================
+
+export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; icon: string }> = {
+  photography: { id: 'photography', name: 'Fotografía', icon: 'camera' },
+  video: { id: 'video', name: 'Videografía', icon: 'video' },
+  dj: { id: 'dj', name: 'DJ/VJ', icon: 'music' },
+  catering: { id: 'catering', name: 'Banquetería', icon: 'utensils' },
+  venue: { id: 'venue', name: 'Centro de Eventos', icon: 'building' },
+  decoration: { id: 'decoration', name: 'Decoración', icon: 'flower' },
+  wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },
+  makeup: { id: 'makeup', name: 'Maquillaje & Peinado', icon: 'sparkles' },
+};
+
+export const ALL_CATEGORIES: CategoryId[] = [
+  'photography',
+  'video',
+  'dj',
+  'catering',
+  'venue',
+  'decoration',
+  'wedding_planner',
+  'makeup',
+];

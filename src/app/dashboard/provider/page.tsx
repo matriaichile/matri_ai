@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   User, 
   Clock, 
@@ -30,14 +31,18 @@ import {
   Palette,
   Instagram,
   Globe,
-  AlertCircle
+  AlertCircle,
+  ChevronRight,
+  Check,
+  FileText
 } from 'lucide-react';
-import { useAuthStore, ProviderProfile } from '@/store/authStore';
+import { useAuthStore, ProviderProfile, CategoryId } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { PROVIDER_CATEGORIES, REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
+import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
 import styles from './page.module.css';
 
 // Interfaz para los leads
@@ -88,7 +93,7 @@ const BUDGET_LABELS: Record<string, string> = {
 export default function ProviderDashboardPage() {
   const router = useRouter();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser } = useAuthStore();
-  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'profile'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'profile'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -165,10 +170,16 @@ export default function ProviderDashboardPage() {
   const approvedLeads = leads.filter(l => l.status === 'approved').length;
   const matchRate = totalLeads > 0 ? Math.round((approvedLeads / totalLeads) * 100) : 0;
 
+  // Calcular encuestas completadas por categoría
+  const completedSurveysCount = profile?.categorySurveyStatus 
+    ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed').length 
+    : 0;
+
   // Configuración del header según la sección activa
   const headerConfig = {
     overview: { title: 'Resumen', subtitle: 'Vista general de tu rendimiento' },
     leads: { title: 'Mis Leads', subtitle: 'Parejas interesadas en tus servicios' },
+    surveys: { title: 'Encuestas por Categoría', subtitle: 'Completa las encuestas para recibir mejores matches' },
     profile: { title: 'Mi Perfil', subtitle: 'Información de tu negocio' },
   };
 
@@ -183,6 +194,7 @@ export default function ProviderDashboardPage() {
           onLogout={handleLogout}
           pendingLeadsCount={pendingLeads}
           categoryIcon={profile?.categories?.[0] ? CATEGORY_ICONS[profile.categories[0]] : undefined}
+          completedSurveysCount={completedSurveysCount}
         />
       }
     >
@@ -414,6 +426,87 @@ export default function ProviderDashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Sección Encuestas por Categoría */}
+        {activeSection === 'surveys' && (
+          <div className={styles.surveysSection}>
+            <div className={styles.surveysIntro}>
+              <p>
+                Completa las encuestas de cada categoría que ofreces para recibir leads más relevantes. 
+                Cuanto más precisa sea tu información, mejores serán tus matches.
+              </p>
+            </div>
+            
+            <div className={styles.surveysGrid}>
+              {profile?.categories?.map((category) => {
+                const categoryId = category as CategoryId;
+                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                const isCompleted = surveyStatus === 'completed';
+                const categoryInfo = getCategoryInfo(categoryId);
+                const surveyConfig = CATEGORY_SURVEYS[categoryId];
+                const questionCount = surveyConfig?.providerQuestions.length || 0;
+                
+                // Contar leads de esta categoría
+                const categoryLeads = leads.filter(l => l.category === categoryId);
+                
+                return (
+                  <div 
+                    key={category} 
+                    className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''}`}
+                  >
+                    <div className={styles.surveyItemIcon}>
+                      {CATEGORY_ICONS[category]}
+                    </div>
+                    <div className={styles.surveyItemInfo}>
+                      <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
+                      <p>{questionCount} preguntas</p>
+                      {isCompleted && categoryLeads.length > 0 && (
+                        <span className={styles.leadsBadge}>
+                          <Users size={12} />
+                          <span>{categoryLeads.length} leads</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.surveyItemActions}>
+                      {isCompleted ? (
+                        <>
+                          <span className={styles.completedBadge}>
+                            <Check size={14} />
+                            <span>Completado</span>
+                          </span>
+                          <Link 
+                            href={`/dashboard/provider/category/${categoryId}/survey`}
+                            className={styles.editSurveyLink}
+                          >
+                            <Edit3 size={14} />
+                            <span>Editar</span>
+                          </Link>
+                        </>
+                      ) : (
+                        <Link 
+                          href={`/dashboard/provider/category/${categoryId}/survey`}
+                          className={styles.startSurveyLink}
+                        >
+                          <ClipboardList size={16} />
+                          <span>Completar encuesta</span>
+                          <ChevronRight size={16} />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(!profile?.categories || profile.categories.length === 0) && (
+                <EmptyState
+                  icon={<FileText size={48} />}
+                  title="No hay categorías seleccionadas"
+                  description="Actualiza tu perfil para seleccionar las categorías de servicios que ofreces"
+                />
+              )}
+            </div>
           </div>
         )}
 

@@ -53,9 +53,15 @@ service cloud.firestore {
     }
     
     // Verificar que el proveedor no modifica sus propios campos de leads
-    // Solo admin puede modificar leadLimit y leadsUsed
+    // Solo admin puede modificar leadLimit, leadsUsed, categoryLeadLimits, categoryLeadsUsed y status
     function providerCannotModifyLeadFields() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['leadLimit', 'leadsUsed', 'status']);
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'leadLimit', 
+        'leadsUsed', 
+        'categoryLeadLimits', 
+        'categoryLeadsUsed', 
+        'status'
+      ]);
     }
 
     // ======== REGLAS PARA CADA COLECCIÓN ========
@@ -81,11 +87,10 @@ service cloud.firestore {
       allow read: if true;
       
       // Creación: Usuario autenticado puede crear su propio perfil de proveedor
-      // El perfil debe incluir leadLimit y leadsUsed con valores válidos
       allow create: if isAuthenticated() && isOwner(providerId);
       
       // Actualización: 
-      // - El propio proveedor puede actualizar EXCEPTO leadLimit, leadsUsed y status
+      // - El propio proveedor puede actualizar EXCEPTO campos de leads y status
       // - Admins pueden actualizar cualquier campo
       allow update: if isAuthenticated() && (
         (isOwner(providerId) && providerCannotModifyLeadFields()) || 
@@ -96,7 +101,7 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
-    // LEADS/MATCHES
+    // LEADS/MATCHES (por categoría)
     match /leads/{leadId} {
       // Lectura: El usuario, el proveedor involucrado, o admins pueden leer
       allow read: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
@@ -110,6 +115,48 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
       
       // Eliminación: Solo admins pueden eliminar leads
+      allow delete: if hasAdminAccess();
+    }
+
+    // ENCUESTAS DE USUARIOS POR CATEGORÍA
+    match /userCategorySurveys/{surveyId} {
+      // Lectura: El propio usuario o admins pueden leer
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        hasAdminAccess()
+      );
+      
+      // Creación: Usuario autenticado puede crear su propia encuesta
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Actualización: El propio usuario o admins pueden actualizar
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        hasAdminAccess()
+      );
+      
+      // Eliminación: Solo admins pueden eliminar
+      allow delete: if hasAdminAccess();
+    }
+
+    // ENCUESTAS DE PROVEEDORES POR CATEGORÍA
+    match /providerCategorySurveys/{surveyId} {
+      // Lectura pública: Necesario para el matchmaking
+      // Cualquiera autenticado puede leer las encuestas de proveedores
+      allow read: if isAuthenticated();
+      
+      // Creación: Proveedor autenticado puede crear su propia encuesta
+      allow create: if isAuthenticated() && 
+        request.resource.data.providerId == request.auth.uid;
+      
+      // Actualización: El propio proveedor o admins pueden actualizar
+      allow update: if isAuthenticated() && (
+        resource.data.providerId == request.auth.uid || 
+        hasAdminAccess()
+      );
+      
+      // Eliminación: Solo admins pueden eliminar
       allow delete: if hasAdminAccess();
     }
 

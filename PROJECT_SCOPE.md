@@ -5,9 +5,9 @@
 1. [Introducción](#1-introducción)
 2. [Landing Page](#2-landing-page)
 3. [Flujos de Registro (Wizard)](#3-flujos-de-registro-wizard)
-4. [Dashboards](#4-dashboards)
-5. [Mini Cuestionarios por Categoría](#5-mini-cuestionarios-por-categoría)
-6. [Sistema de Matchmaking](#6-sistema-de-matchmaking)
+4. [Sistema de Matchmaking por Categoría](#4-sistema-de-matchmaking-por-categoría)
+5. [Dashboards](#5-dashboards)
+6. [Mini Cuestionarios por Categoría](#6-mini-cuestionarios-por-categoría)
 7. [Panel de Administración](#7-panel-de-administración)
 8. [Arquitectura Técnica](#8-arquitectura-técnica)
 9. [Modelo de Datos](#9-modelo-de-datos)
@@ -23,7 +23,7 @@
 
 Desarrollar una plataforma funcional que permita:
 - Registro de usuarios (novios) y proveedores
-- Generación de matches basados en criterios definidos
+- **Generación de matches POR CATEGORÍA** basados en criterios específicos de cada servicio
 - Gestión de leads por parte de administradores
 - Dashboard diferenciados por tipo de usuario
 
@@ -76,6 +76,8 @@ El registro se realiza mediante un **wizard dinámico**, con una pregunta por pa
 
 ### 3.1 Wizard para Usuarios (Novios)
 
+Este wizard recopila información **GENERAL** del evento. **NO genera matchmaking inmediatamente**.
+
 | Paso | Campo | Tipo | Opciones |
 |------|-------|------|----------|
 | 1 | Nombre de la pareja | Texto | - |
@@ -90,11 +92,14 @@ El registro se realiza mediante un **wizard dinámico**, con una pregunta por pa
 | 6 | Estilo del evento | Select | Clásico, Rústico, Moderno, etc. |
 | 7 | Nivel de avance | Select | Nada, Poco, Mitad, Mucho, Casi listo |
 | 7.1 | Items ya listos | Multi-select | DJ, Foto, Video, Lugar, Banquetería |
-| 8 | Categorías prioritarias | Multi-select | Lista de categorías |
+| 8 | Categorías prioritarias | Multi-select | Lista de 8 categorías |
 | 9 | Nivel de vinculación | Select | 100%, 80%, 60%, 40%, 20%, 0% |
 | 10 | Expectativas | Textarea | Texto libre para IA |
 
-**Al finalizar:** Se genera el User Dashboard automáticamente.
+**Al finalizar:** 
+- Se crea el perfil del usuario
+- Se genera el User Dashboard con las 8 categorías disponibles
+- **NO se genera matchmaking todavía** - el usuario debe completar las mini-encuestas por categoría
 
 ### 3.2 Wizard para Proveedores
 
@@ -117,178 +122,254 @@ El registro se realiza mediante un **wizard dinámico**, con una pregunta por pa
 
 **Al finalizar:** 
 - Se crea el Provider Dashboard
+- **El proveedor debe completar encuestas detalladas POR CADA CATEGORÍA que ofrece**
 - El administrador debe aprobar o rechazar la cuenta
 
 ---
 
-## 4. Dashboards
+## 4. Sistema de Matchmaking por Categoría
 
-### 4.1 Dashboard del Usuario
+### 4.1 Concepto Fundamental ⚠️ IMPORTANTE
 
-#### Componentes:
-- Resumen de información del perfil
-- Botón "Buscar proveedores"
-- Lista de categorías disponibles
-- Matches recomendados con tarjetas visuales
+El matchmaking **NO es global** después del wizard inicial. El sistema funciona así:
 
-#### Acciones sobre matches:
-- **Aprobar**: Genera lead confirmado
-- **Rechazar**: Descarta el match
-- **Ver más**: Detalles del proveedor
+1. **Usuario completa wizard inicial** → Se crea perfil con información general
+2. **Usuario ve dashboard** → Aparecen las 8 categorías disponibles
+3. **Usuario selecciona categoría** → Completa mini-encuesta específica de esa categoría
+4. **Al terminar mini-encuesta** → Se genera matchmaking SOLO para esa categoría
+5. **Se muestran 3 proveedores** → Los mejores matches para esa categoría específica
 
-### 4.2 Dashboard del Proveedor
+### 4.2 Las 8 Categorías del Sistema
 
-#### Componentes:
-- Banner de estado (si está pendiente de aprobación)
-- Estadísticas:
-  - Leads totales
-  - Leads aprobados
-  - Tasa de match
-- Perfil editable
-- Lista de leads con información:
-  - Nombre del usuario
-  - Fecha del evento
-  - Presupuesto
-  - Email y teléfono
-  - Estado del lead
-  - Match score
+| ID | Categoría | Descripción |
+|----|-----------|-------------|
+| `photography` | Fotografía | Servicio de fotografía para el evento |
+| `video` | Videografía | Grabación y edición de video |
+| `dj` | DJ/VJ | Música, iluminación y animación |
+| `catering` | Banquetería | Servicio de comida y bebidas |
+| `venue` | Centro de Eventos | Lugar para la celebración |
+| `decoration` | Decoración | Decoración floral y ambientación |
+| `wedding_planner` | Wedding Planner | Coordinación y planificación |
+| `makeup` | Maquillaje & Peinado | Servicios de belleza |
 
-#### Campos editables:
-- Precios
-- Estilo
-- Disponibilidad
-- Descripción
-- Fotos
+### 4.3 Flujo de Matchmaking por Categoría
 
----
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    USUARIO COMPLETA WIZARD                       │
+│                    (Información general)                         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      DASHBOARD USUARIO                           │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐               │
+│  │ 📷      │ │ 🎬      │ │ 🎵      │ │ 🍽️      │               │
+│  │ Foto    │ │ Video   │ │ DJ/VJ   │ │ Banquet │               │
+│  │ Cotizar │ │ Cotizar │ │ Cotizar │ │ Cotizar │               │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘               │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐               │
+│  │ 🏛️      │ │ 💐      │ │ 📋      │ │ 💄      │               │
+│  │ Venue   │ │ Decor   │ │ Planner │ │ Makeup  │               │
+│  │ Cotizar │ │ Cotizar │ │ Cotizar │ │ Cotizar │               │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    Usuario selecciona "Fotografía"
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              MINI-ENCUESTA DE FOTOGRAFÍA                         │
+│  • ¿Qué estilo fotográfico prefieres?                           │
+│  • ¿Cuántas horas de cobertura?                                 │
+│  • ¿Necesitas sesión pre-boda?                                  │
+│  • ¿Formato de entrega preferido?                               │
+│  • ... (10-15 preguntas específicas)                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    Usuario completa encuesta
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              MATCHMAKING DE FOTOGRAFÍA                           │
+│  Se generan 3 matches con fotógrafos:                           │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ 🥇 Fotógrafo A - 95% match                              │   │
+│  │ 🥈 Fotógrafo B - 88% match                              │   │
+│  │ 🥉 Fotógrafo C - 82% match                              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-## 5. Mini Cuestionarios por Categoría
+### 4.4 Estructura de Datos del Matchmaking
 
-Cada categoría tiene su propio cuestionario para refinar preferencias.
+Cada categoría tiene su propia colección de respuestas y matches:
 
-### 5.1 Fotografía
+```typescript
+// Respuestas de encuesta del usuario por categoría
+interface UserCategorySurvey {
+  id: string;
+  userId: string;
+  category: string; // 'photography', 'video', etc.
+  responses: Record<string, any>; // Respuestas específicas de la categoría
+  completedAt: Timestamp;
+  matchesGenerated: boolean;
+}
 
-| Sección | Campos |
-|---------|--------|
-| Disponibilidad | Calendario editable |
-| Ubicación | Región principal, costos traslado |
-| Experiencia | Años, estilo fotográfico |
-| Descripción | Diferenciador, frase de estilo |
-| Equipo | Asistentes |
-| Cobertura | Regiones, recargos |
-| Duración | Horas, full day |
-| Entregables | Cantidad fotos, tiempo, formatos |
-| Backup | Disco, Nube, Ambos |
-| Paquetes | Básico, Intermedio, Full |
-| Extras | Pre/post boda, descuentos |
+// Respuestas de encuesta del proveedor por categoría
+interface ProviderCategorySurvey {
+  id: string;
+  providerId: string;
+  category: string;
+  responses: Record<string, any>; // Respuestas específicas de la categoría
+  completedAt: Timestamp;
+}
 
-### 5.2 Videografía
+// Lead/Match generado POR CATEGORÍA
+interface CategoryLead {
+  id: string;
+  userId: string;
+  providerId: string;
+  category: string; // Categoría específica del match
+  matchScore: number;
+  status: 'pending' | 'approved' | 'rejected' | 'contacted';
+  userSurveyId: string; // Referencia a la encuesta del usuario
+  providerSurveyId: string; // Referencia a la encuesta del proveedor
+  matchCriteria: { // Desglose del score
+    styleMatch: number;
+    budgetMatch: number;
+    locationMatch: number;
+    availabilityMatch: number;
+    specificCriteriaMatch: number;
+  };
+  createdAt: Timestamp;
+}
+```
 
-Similar a fotografía con variaciones:
-- Estilos: Documental, Cinemático, Narrativo
-- Tipos: Resumen, Highlight, Larga duración, Reel
-- Segundo camarógrafo opcional
+### 4.5 Límite de Leads por Categoría
 
-### 5.3 Banquetería
-
-- Tipo de evento
-- Capacidad (mín-max)
-- Presupuesto por persona
-- Tipo de comida
-- Opciones especiales (vegano, celiaco)
-- Degustación previa
-- Bebestibles
-- Tiempos de servicio
-- Personal y montaje
-- Menú/dossier adjunto
-
-### 5.4 Centros de Eventos
-
-- Espacios disponibles
-- Pista de baile
-- Iluminación y mobiliario
-- Sonido
-- Servicios adicionales
-- Horarios y exclusividad
-- Cocina/espacio de apoyo
-- Restricciones
-- Estilo del lugar
-
-### 5.5 DJ/VJ
-
-| Sección | Campos |
-|---------|--------|
-| Especialidad | DJ matrimonios, corporativo, fiestas, etc. |
-| Estilo musical | 3 palabras, géneros, solicitudes |
-| Portafolio | Links, Instagram |
-| Sonido | Parlantes, subwoofers, mixer, micrófonos |
-| Iluminación | Cabezas móviles, láser, humo, LED |
-| Visuales | VJ, pantallas LED, proyector |
-| Logística | Horas, hora máxima, hora extra |
-| Requerimientos | Electricidad, escenario, montaje |
-
----
-
-## 6. Sistema de Matchmaking y Leads
-
-### 6.1 Concepto del Sistema de Leads
-
-El sistema de leads funciona de la siguiente manera:
-
-1. **Usuarios (Novios)** buscan proveedores para su boda
-2. Cuando un usuario busca proveedores, el sistema genera **3 matches** con los proveedores más compatibles
-3. Cada match generado **consume 1 lead** del límite del proveedor
-4. Los proveedores tienen un **límite de leads** que pueden recibir (por defecto: 10)
-5. Cuando un proveedor alcanza su límite, no aparece más en las recomendaciones
-
-### 6.2 Criterios de Match
-
-El sistema genera 3 proveedores recomendados basándose en:
-
-1. **Fechas** - Disponibilidad del proveedor vs fecha del evento
-2. **Presupuesto** - Rango de precios compatible
-3. **Ubicación** - Región del evento vs zona de trabajo
-4. **Preferencias específicas** - Según categoría
-5. **Tipo de evento** - Ceremonia + Cóctel + Cena + Fiesta
-6. **Estilo** - Coincidencia de estilos
-7. **Disponibilidad de leads** - El proveedor debe tener leads disponibles
-
-### 6.3 Match Score
-
-- Siempre debe haber un porcentaje de probabilidad de match
-- **NUNCA** debe aparecer que NO hay match
-- Mínimo 3 opciones si existen
-
-### 6.4 Sistema de Límite de Leads
+Cada proveedor tiene un límite de leads **POR CATEGORÍA**:
 
 | Campo | Descripción |
 |-------|-------------|
-| `leadLimit` | Número máximo de leads que puede recibir el proveedor (default: 10) |
-| `leadsUsed` | Cantidad de leads ya consumidos |
-| `leadsRemaining` | Calculado: `leadLimit - leadsUsed` |
+| `categoryLeadLimits` | Objeto con límite por categoría |
+| `categoryLeadsUsed` | Objeto con leads consumidos por categoría |
 
-#### Reglas del sistema:
-- Cuando se crea un proveedor: `leadLimit = 10`, `leadsUsed = 0`
-- Cuando se genera un match: `leadsUsed += 1`
-- Cuando se elimina un lead: `leadsUsed -= 1`
-- Solo admins pueden modificar `leadLimit`
-- El proveedor NO puede modificar estos campos
+```typescript
+// Ejemplo en documento de proveedor
+{
+  categories: ['photography', 'video'],
+  categoryLeadLimits: {
+    photography: 10,
+    video: 10
+  },
+  categoryLeadsUsed: {
+    photography: 3,
+    video: 1
+  }
+}
+```
 
-### 6.5 Gestión de Leads (Admin)
+---
 
-Desde el panel de administración se puede:
+## 5. Dashboards
 
-| Acción | Descripción |
-|--------|-------------|
-| Ver leads de proveedor | Lista de todos los usuarios que son leads del proveedor |
-| Ajustar límite | Aumentar o disminuir el límite de leads de un proveedor |
-| Asignar leads manualmente | Vincular usuarios específicos como leads de un proveedor |
-| Eliminar leads | Remover un lead y liberar el cupo del proveedor |
+### 5.1 Dashboard del Usuario
 
-### 6.6 Notificaciones
+#### Vista Principal - Categorías
 
-- Email al proveedor cuando recibe un lead
-- Notificación en dashboard (deseable ambas)
+Al entrar al dashboard, el usuario ve las 8 categorías con su estado:
+
+| Estado | Visual | Descripción |
+|--------|--------|-------------|
+| `not_started` | Gris | No ha completado la encuesta |
+| `survey_completed` | Amarillo | Encuesta completada, generando matches |
+| `matches_ready` | Verde | Tiene matches disponibles para revisar |
+| `all_decided` | Azul | Ya aprobó/rechazó todos los matches |
+
+#### Componentes:
+- Grid de 8 categorías con estado visual
+- Contador de matches pendientes por categoría
+- Acceso a mini-encuesta de cada categoría
+- Vista de matches por categoría
+
+#### Acciones sobre matches:
+- **Aprobar**: Genera lead confirmado (proveedor puede contactar)
+- **Rechazar**: Descarta el match
+- **Ver más**: Detalles del proveedor
+
+### 5.2 Dashboard del Proveedor
+
+#### Vista Principal
+
+- Banner de estado (si está pendiente de aprobación)
+- **Encuestas pendientes por categoría** (si ofrece múltiples servicios)
+- Estadísticas por categoría:
+  - Leads totales por categoría
+  - Leads aprobados por categoría
+  - Tasa de match por categoría
+
+#### Lista de Leads (por categoría)
+
+| Campo | Descripción |
+|-------|-------------|
+| Nombre del usuario | Pareja que busca el servicio |
+| Fecha del evento | Cuándo es la boda |
+| Presupuesto | Rango de presupuesto |
+| Email y teléfono | Datos de contacto |
+| Estado del lead | pending/approved/contacted |
+| Match score | Porcentaje de coincidencia |
+| **Categoría** | Para qué servicio es el lead |
+
+---
+
+## 6. Mini Cuestionarios por Categoría
+
+> ⚠️ **IMPORTANTE**: Existe un documento separado `CATEGORY_SURVEYS.md` con el detalle completo de todas las preguntas y respuestas para cada categoría, tanto para usuarios como para proveedores.
+
+### 6.1 Principio de Diseño
+
+Las encuestas de usuarios y proveedores **apuntan a los mismos criterios** pero están formuladas de manera diferente:
+
+| Usuario pregunta | Proveedor responde |
+|------------------|-------------------|
+| "¿Qué estilo prefieres?" (selecciona 1) | "¿Qué estilos ofreces?" (selecciona varios) |
+| "¿Cuánto quieres gastar?" (rango) | "¿Cuál es tu rango de precios?" (rango) |
+| "¿Qué géneros musicales te gustan?" (varios) | "¿Qué géneros musicales tocas?" (varios) |
+
+### 6.2 Categorías y sus Encuestas
+
+| Categoría | # Preguntas Usuario | # Preguntas Proveedor |
+|-----------|--------------------|-----------------------|
+| Fotografía | 12 | 15 |
+| Videografía | 12 | 15 |
+| DJ/VJ | 14 | 18 |
+| Banquetería | 15 | 20 |
+| Centro de Eventos | 12 | 18 |
+| Decoración | 10 | 14 |
+| Wedding Planner | 10 | 12 |
+| Maquillaje & Peinado | 8 | 12 |
+
+### 6.3 Criterios de Match por Categoría
+
+Cada categoría tiene criterios específicos para calcular el match score:
+
+#### Fotografía
+- Estilo fotográfico (30%)
+- Presupuesto (25%)
+- Horas de cobertura (15%)
+- Ubicación (15%)
+- Entregables (15%)
+
+#### DJ/VJ
+- Géneros musicales (25%)
+- Equipamiento (20%)
+- Presupuesto (20%)
+- Estilo de animación (15%)
+- Ubicación (10%)
+- Disponibilidad (10%)
+
+*(Ver documento completo en CATEGORY_SURVEYS.md)*
 
 ---
 
@@ -310,16 +391,17 @@ Desde el panel de administración se puede:
 | Editar perfiles | Modificar datos de usuarios/proveedores |
 | Desactivar cuentas | Cambiar estado a `closed` |
 | Aprobar proveedores | Cambiar de `pending` a `active` |
-| Ver leads | Lista completa de matches generados |
+| Ver leads **por categoría** | Lista de matches filtrable por categoría |
 | Asignar leads | Vincular usuarios a proveedores manualmente |
-| Gestionar leads | Ajustar cantidad de leads por proveedor |
+| Gestionar límites | Ajustar límite de leads por categoría por proveedor |
 
 ### 7.3 Estadísticas del Dashboard Admin
 
 - Total de usuarios
-- Total de proveedores
+- Total de proveedores (por categoría)
 - Proveedores pendientes/activos/cerrados
-- Total de leads
+- **Total de leads por categoría**
+- **Encuestas completadas por categoría**
 - Leads aprobados/rechazados/pendientes
 
 ---
@@ -350,6 +432,10 @@ src/
 │   ├── api/
 │   │   └── admin/       # API routes admin
 │   ├── dashboard/       # Dashboard usuarios
+│   │   ├── category/    # Vista de categoría específica
+│   │   │   └── [categoryId]/
+│   │   │       ├── survey/    # Mini-encuesta
+│   │   │       └── matches/   # Matches de la categoría
 │   │   └── provider/    # Dashboard proveedores
 │   ├── login/           # Login general
 │   ├── register/
@@ -359,17 +445,21 @@ src/
 ├── components/
 │   ├── landing/         # Componentes landing
 │   ├── wizard/          # Componentes wizard
+│   ├── surveys/         # Componentes de encuestas por categoría
 │   └── providers/       # Context providers
 ├── lib/
 │   └── firebase/
 │       ├── config.ts    # Config cliente
 │       ├── auth.ts      # Funciones auth
 │       ├── firestore.ts # Funciones Firestore
+│       ├── surveys.ts   # Funciones de encuestas por categoría
+│       ├── matchmaking.ts # Lógica de matchmaking
 │       ├── admin-config.ts    # Config admin SDK
 │       └── admin-firestore.ts # Funciones admin
 └── store/
     ├── authStore.ts     # Estado autenticación
     ├── wizardStore.ts   # Estado wizard
+    ├── surveyStore.ts   # Estado encuestas por categoría
     └── adminStore.ts    # Estado admin
 ```
 
@@ -398,6 +488,17 @@ src/
   priorityCategories: string[];
   involvementLevel: string;
   expectations: string;
+  // Estado de encuestas por categoría
+  categorySurveyStatus: {
+    photography: 'not_started' | 'completed' | 'matches_generated';
+    video: 'not_started' | 'completed' | 'matches_generated';
+    dj: 'not_started' | 'completed' | 'matches_generated';
+    catering: 'not_started' | 'completed' | 'matches_generated';
+    venue: 'not_started' | 'completed' | 'matches_generated';
+    decoration: 'not_started' | 'completed' | 'matches_generated';
+    wedding_planner: 'not_started' | 'completed' | 'matches_generated';
+    makeup: 'not_started' | 'completed' | 'matches_generated';
+  };
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -410,7 +511,7 @@ src/
   email: string;
   providerName: string;
   phone: string;
-  categories: string[];
+  categories: string[]; // Categorías que ofrece
   serviceStyle: string;
   priceRange: string;
   workRegion: string;
@@ -422,23 +523,71 @@ src/
   tiktok: string;
   portfolioImages: string[];
   status: 'pending' | 'active' | 'closed';
-  // Sistema de leads
-  leadLimit: number;    // Límite máximo de leads (default: 10)
-  leadsUsed: number;    // Cantidad de leads consumidos (default: 0)
+  // Sistema de leads POR CATEGORÍA
+  categoryLeadLimits: {
+    [categoryId: string]: number; // Límite por categoría (default: 10)
+  };
+  categoryLeadsUsed: {
+    [categoryId: string]: number; // Leads consumidos por categoría
+  };
+  // Estado de encuestas por categoría
+  categorySurveyStatus: {
+    [categoryId: string]: 'not_started' | 'completed';
+  };
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 ```
 
-#### `leads`
+#### `userCategorySurveys` (Respuestas de usuarios)
+```typescript
+{
+  id: string;
+  userId: string;
+  category: string;
+  responses: {
+    // Respuestas específicas según la categoría
+    // Ver CATEGORY_SURVEYS.md para estructura completa
+    [questionId: string]: string | string[] | number | boolean;
+  };
+  completedAt: Timestamp;
+  matchesGenerated: boolean;
+}
+```
+
+#### `providerCategorySurveys` (Respuestas de proveedores)
+```typescript
+{
+  id: string;
+  providerId: string;
+  category: string;
+  responses: {
+    // Respuestas específicas según la categoría
+    // Ver CATEGORY_SURVEYS.md para estructura completa
+    [questionId: string]: string | string[] | number | boolean;
+  };
+  completedAt: Timestamp;
+}
+```
+
+#### `leads` (Matches por categoría)
 ```typescript
 {
   id: string;
   userId: string;
   providerId: string;
-  category: string;
+  category: string; // Categoría específica del match
   matchScore: number;
   status: 'pending' | 'approved' | 'rejected' | 'contacted';
+  userSurveyId: string; // Referencia a userCategorySurveys
+  providerSurveyId: string; // Referencia a providerCategorySurveys
+  matchCriteria: {
+    styleMatch: number;
+    budgetMatch: number;
+    locationMatch: number;
+    availabilityMatch: number;
+    specificCriteriaMatch: number;
+  };
   userInfo: {
     coupleNames: string;
     eventDate: string;
@@ -482,6 +631,8 @@ Las reglas de Firestore implementan:
 - **Usuarios**: Solo pueden leer/escribir su propio perfil
 - **Proveedores**: Lectura pública, escritura solo propietario o admin
 - **Leads**: Acceso para usuario, proveedor involucrado, o admin
+- **UserCategorySurveys**: Solo el usuario propietario o admin
+- **ProviderCategorySurveys**: Lectura pública (para matchmaking), escritura solo propietario
 - **Admins**: Solo super_admin puede gestionar
 
 ### 10.2 Custom Claims
@@ -510,6 +661,8 @@ Los administradores se identifican mediante Firebase Custom Claims:
 | leads:write | ✓ | ✓ | ✗ |
 | leads:assign | ✓ | ✓ | ✗ |
 | leads:delete | ✓ | ✗ | ✗ |
+| surveys:read | ✓ | ✓ | ✓ |
+| surveys:manage | ✓ | ✓ | ✗ |
 | admins:manage | ✓ | ✗ | ✗ |
 | stats:read | ✓ | ✓ | ✓ |
 
@@ -560,6 +713,16 @@ node scripts/create-admin.mjs moderador@matri.ai
 
 ---
 
+## Documentación Adicional
+
+| Documento | Descripción |
+|-----------|-------------|
+| `CATEGORY_SURVEYS.md` | Detalle completo de todas las preguntas y respuestas por categoría |
+| `DEPLOY.md` | Instrucciones de despliegue |
+| `README.md` | Guía de inicio rápido |
+
+---
+
 ## Próximos Pasos (Post-MVP)
 
 1. **Integración con IA** para matchmaking más preciso
@@ -573,5 +736,5 @@ node scripts/create-admin.mjs moderador@matri.ai
 ---
 
 *Documento actualizado: Diciembre 2025*
-*Versión: MVP 1.0*
+*Versión: MVP 1.1 - Sistema de Matchmaking por Categoría*
 
