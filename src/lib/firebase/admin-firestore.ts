@@ -500,7 +500,7 @@ export const adminUpdateProvider = async (
 export const assignLeadsToProvider = async (
   providerId: string,
   userIds: string[],
-  category: string
+  category: CategoryId
 ): Promise<Lead[]> => {
   try {
     const batch = writeBatch(db);
