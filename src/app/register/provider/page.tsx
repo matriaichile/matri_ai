@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation';
 import { WizardContainer, WizardStep, SelectionGrid, WizardInput, CustomDropdown } from '@/components/wizard';
 import { useWizardStore, PROVIDER_CATEGORIES, SERVICE_STYLES, PRICE_RANGES_PROVIDER, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
-import { Eye, EyeOff } from 'lucide-react';
+import { registerProvider, getAuthErrorMessage } from '@/lib/firebase/auth';
+import { useAuthStore } from '@/store/authStore';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
 
 /**
  * Wizard de registro para proveedores.
  * Flujo paso a paso con animaciones elegantes.
+ * Al finalizar, crea la cuenta en Firebase y redirige al dashboard.
  */
 export default function ProviderRegisterPage() {
   const router = useRouter();
@@ -27,8 +30,10 @@ export default function ProviderRegisterPage() {
     resetWizard,
   } = useWizardStore();
 
+  const { error: authError, setError } = useAuthStore();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   // Inicializar el wizard como tipo proveedor
   useEffect(() => {
@@ -70,18 +75,26 @@ export default function ProviderRegisterPage() {
     updateProviderData({ categories: newCategories });
   };
 
-  // Manejar finalización del wizard
+  // Manejar finalización del wizard - CREAR CUENTA EN FIREBASE
   const handleComplete = async () => {
     playSuccessSound();
     setIsTransitioning(true);
+    setRegistrationError(null);
+    setError(null);
     
-    // Aquí se enviaría la data al backend
-    console.log('Provider wizard completed:', providerData);
-    
-    // Simular guardado y redirigir
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+    try {
+      // Registrar proveedor en Firebase Auth y crear perfil en Firestore
+      await registerProvider(providerData);
+      
+      // Redirigir al dashboard del proveedor
+      setTimeout(() => {
+        router.push('/dashboard/provider');
+      }, 2000);
+    } catch (error) {
+      console.error('Error al registrar proveedor:', error);
+      setIsTransitioning(false);
+      setRegistrationError(getAuthErrorMessage(error));
+    }
   };
 
   // Validaciones por paso
@@ -96,6 +109,8 @@ export default function ProviderRegisterPage() {
   const isStep4Valid = providerData.priceRange.length > 0 && providerData.workRegion.length > 0;
   const isStep5Valid = providerData.description.trim().length >= 20;
   const isStep6Valid = true; // Redes sociales son opcionales
+
+  const displayError = registrationError || authError;
 
   return (
     <main className={styles.main}>
@@ -338,6 +353,14 @@ export default function ProviderRegisterPage() {
           onSkip={handleComplete}
         >
           <div className={styles.formGrid}>
+            {/* Mostrar error si existe */}
+            {displayError && (
+              <div className={styles.errorMessage}>
+                <AlertCircle size={20} />
+                <span>{displayError}</span>
+              </div>
+            )}
+            
             <WizardInput
               label="Sitio web"
               type="url"

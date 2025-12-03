@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation';
 import { WizardContainer, WizardStep, SelectionGrid, WizardInput, DatePicker, CustomDropdown } from '@/components/wizard';
 import { useWizardStore, CEREMONY_TYPES, EVENT_STYLES, PLANNING_PROGRESS, COMPLETED_ITEMS, PRIORITY_CATEGORIES, INVOLVEMENT_LEVELS, BUDGET_RANGES, GUEST_COUNTS, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
-import { Eye, EyeOff } from 'lucide-react';
+import { registerUser, getAuthErrorMessage } from '@/lib/firebase/auth';
+import { useAuthStore } from '@/store/authStore';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
 
 /**
  * Wizard de registro para usuarios (novios).
  * Flujo paso a paso con animaciones elegantes.
+ * Al finalizar, crea la cuenta en Firebase y redirige al dashboard.
  */
 export default function UserRegisterPage() {
   const router = useRouter();
@@ -21,15 +24,16 @@ export default function UserRegisterPage() {
     showWelcome,
     setWizardType,
     setShowWelcome,
-    setCurrentStep,
     nextStep,
     prevStep,
     updateUserData,
     resetWizard,
   } = useWizardStore();
 
+  const { error: authError, setError } = useAuthStore();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   // Inicializar el wizard como tipo usuario
   useEffect(() => {
@@ -71,18 +75,26 @@ export default function UserRegisterPage() {
     updateUserData({ [field]: newValues });
   };
 
-  // Manejar finalización del wizard
+  // Manejar finalización del wizard - CREAR CUENTA EN FIREBASE
   const handleComplete = async () => {
     playSuccessSound();
     setIsTransitioning(true);
+    setRegistrationError(null);
+    setError(null);
     
-    // Aquí se enviaría la data al backend
-    console.log('User wizard completed:', userData);
-    
-    // Simular guardado y redirigir
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+    try {
+      // Registrar usuario en Firebase Auth y crear perfil en Firestore
+      await registerUser(userData);
+      
+      // Redirigir a la pantalla de carga de matches
+      setTimeout(() => {
+        router.push('/dashboard/loading-matches');
+      }, 1500);
+    } catch (error) {
+      console.error('Error al registrar usuario:', error);
+      setIsTransitioning(false);
+      setRegistrationError(getAuthErrorMessage(error));
+    }
   };
 
   // Validaciones por paso (ahora son 10 pasos)
@@ -96,6 +108,8 @@ export default function UserRegisterPage() {
   const isStep8Valid = userData.priorityCategories.length > 0;
   const isStep9Valid = userData.involvementLevel.length > 0;
   const isStep10Valid = true; // Expectativas son opcionales
+
+  const displayError = registrationError || authError;
 
   return (
     <main className={styles.main}>
@@ -406,6 +420,14 @@ export default function UserRegisterPage() {
           onSkip={handleComplete}
         >
           <div className={styles.textareaSection}>
+            {/* Mostrar error si existe */}
+            {displayError && (
+              <div className={styles.errorMessage}>
+                <AlertCircle size={20} />
+                <span>{displayError}</span>
+              </div>
+            )}
+            
             <div className={styles.expectationsHeader}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={styles.expectationsIcon}>
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
@@ -439,6 +461,7 @@ export default function UserRegisterPage() {
             </div>
             <h2 className={styles.completionTitle}>¡Perfecto!</h2>
             <p className={styles.completionText}>Tu perfil ha sido creado exitosamente</p>
+            <p className={styles.completionSubtext}>Buscando proveedores perfectos para ti...</p>
           </div>
         </div>
       )}
