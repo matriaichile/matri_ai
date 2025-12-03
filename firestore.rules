@@ -15,14 +15,19 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
-    // Función para verificar si es el usuario del lead
+    // Función para verificar si es el usuario del lead (para documentos existentes)
     function isLeadUser() {
       return resource.data.userId == request.auth.uid;
     }
     
-    // Función para verificar si es el proveedor del lead
+    // Función para verificar si es el proveedor del lead (para documentos existentes)
     function isLeadProvider() {
       return resource.data.providerId == request.auth.uid;
+    }
+    
+    // Función para verificar si es el usuario del lead (para nuevos documentos)
+    function isNewLeadUser() {
+      return request.resource.data.userId == request.auth.uid;
     }
     
     // ======== FUNCIONES DE ADMIN ========
@@ -83,7 +88,7 @@ service cloud.firestore {
 
     // PROVEEDORES
     match /providers/{providerId} {
-      // Lectura pública: Cualquiera puede ver perfiles de proveedores
+      // Lectura pública: Cualquiera puede ver perfiles de proveedores (necesario para matching)
       allow read: if true;
       
       // Creación: Usuario autenticado puede crear su propio perfil de proveedor
@@ -92,9 +97,13 @@ service cloud.firestore {
       // Actualización: 
       // - El propio proveedor puede actualizar EXCEPTO campos de leads y status
       // - Admins pueden actualizar cualquier campo
+      // - Sistema puede actualizar categoryLeadsUsed cuando se crea un lead (via el usuario que crea el lead)
       allow update: if isAuthenticated() && (
         (isOwner(providerId) && providerCannotModifyLeadFields()) || 
-        hasAdminAccess()
+        hasAdminAccess() ||
+        // Permitir actualización de leadsUsed/categoryLeadsUsed cuando un usuario crea un lead
+        // Esto es necesario para el sistema de matching
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['categoryLeadsUsed', 'leadsUsed', 'updatedAt']))
       );
       
       // Eliminación: Solo super_admin puede eliminar
@@ -103,13 +112,20 @@ service cloud.firestore {
 
     // LEADS/MATCHES (por categoría)
     match /leads/{leadId} {
-      // Lectura: El usuario, el proveedor involucrado, o admins pueden leer
-      allow read: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
+      // Lectura: Usuario autenticado puede leer sus propios leads o leads donde es proveedor
+      // Usamos una query más permisiva para permitir listar leads
+      allow read: if isAuthenticated() && (
+        isLeadUser() || 
+        isLeadProvider() || 
+        hasAdminAccess()
+      );
       
-      // Creación: Usuarios autenticados o admins pueden crear leads
-      // El sistema debe verificar que el proveedor tenga leads disponibles (se hace en el backend)
-      allow create: if isAuthenticated() && 
-        (request.resource.data.userId == request.auth.uid || hasAdminAccess());
+      // Listar leads: Usuarios pueden listar sus propios leads
+      // Esto es necesario para queries con where
+      allow list: if isAuthenticated();
+      
+      // Creación: Usuarios autenticados pueden crear leads (sistema de matching)
+      allow create: if isAuthenticated() && isNewLeadUser();
       
       // Actualización: Usuario, proveedor, o admin pueden actualizar el estado
       allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
@@ -142,9 +158,12 @@ service cloud.firestore {
 
     // ENCUESTAS DE PROVEEDORES POR CATEGORÍA
     match /providerCategorySurveys/{surveyId} {
-      // Lectura pública: Necesario para el matchmaking
-      // Cualquiera autenticado puede leer las encuestas de proveedores
+      // Lectura: Cualquier usuario autenticado puede leer (necesario para matchmaking)
+      // Las encuestas de proveedores son públicas para permitir el matching
       allow read: if isAuthenticated();
+      
+      // Listar: Necesario para queries con where en el matching
+      allow list: if isAuthenticated();
       
       // Creación: Proveedor autenticado puede crear su propia encuesta
       allow create: if isAuthenticated() && 

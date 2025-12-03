@@ -1001,73 +1001,126 @@ export const generateMatchesForUserSurvey = async (
   maxMatches: number = 5
 ): Promise<Lead[]> => {
   try {
-    // 1. Obtener la encuesta del usuario
+    // 1. Obtener la encuesta del usuario (mini-encuesta de categoría)
     const userSurvey = await getUserCategorySurvey(userId, category);
     if (!userSurvey) {
       console.warn('No se encontró encuesta del usuario para generar matches');
       return [];
     }
 
-    // 2. Obtener proveedores disponibles
-    const providers = await getAvailableProvidersForCategory(category, region, maxMatches * 2);
-    if (providers.length === 0) {
-      console.log('No hay proveedores disponibles para esta categoría');
-      return [];
-    }
-
-    // 3. Obtener encuestas de los proveedores
-    const providerSurveys: Array<{
-      provider: ProviderProfile;
-      survey: ProviderCategorySurvey;
-    }> = [];
-
-    for (const provider of providers) {
-      const survey = await getProviderCategorySurvey(provider.id, category);
-      if (survey) {
-        providerSurveys.push({ provider, survey });
-      }
-    }
-
-    if (providerSurveys.length === 0) {
-      console.log('No hay proveedores con encuestas completadas');
-      return [];
-    }
-
-    // 4. Importar el servicio de matching dinámicamente para evitar dependencias circulares
-    const { calculateMatchScore } = await import('@/lib/matching/matchingService');
-
-    // 5. Calcular scores y crear leads
-    const matchResults: Array<{
-      provider: ProviderProfile;
-      score: number;
-    }> = [];
-
-    for (const { provider, survey } of providerSurveys) {
-      const { score } = calculateMatchScore(
-        userSurvey.responses,
-        survey.responses,
-        category
-      );
-      matchResults.push({ provider, score });
-    }
-
-    // 6. Ordenar por score y tomar los mejores
-    matchResults.sort((a, b) => b.score - a.score);
-    const topMatches = matchResults.slice(0, maxMatches);
-
-    // 7. Obtener perfil del usuario para crear leads
+    // 2. Obtener el perfil completo del usuario (datos del wizard)
     const userProfile = await getUserProfile(userId);
     if (!userProfile) {
       throw new Error('No se pudo obtener el perfil del usuario');
     }
 
-    // 8. Crear leads para cada match
+    // 3. Obtener proveedores disponibles
+    const providers = await getAvailableProvidersForCategory(category, region, maxMatches * 3);
+    
+    // Si no hay proveedores con encuesta completada, buscar todos los activos de la categoría
+    if (providers.length === 0) {
+      console.log('No hay proveedores con encuestas completadas, buscando todos los activos...');
+      // Intentar obtener proveedores sin filtro de encuesta
+      const allProvidersQuery = query(
+        collection(db, COLLECTIONS.PROVIDERS),
+        where('categories', 'array-contains', category),
+        where('status', '==', 'active'),
+        limit(maxMatches * 3)
+      );
+      const snapshot = await getDocs(allProvidersQuery);
+      
+      if (snapshot.empty) {
+        console.log('No hay proveedores activos para esta categoría');
+        return [];
+      }
+      
+      // Usar estos proveedores aunque no tengan encuesta
+      const fallbackProviders = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ProviderProfile[];
+      
+      // Generar matches solo con datos del wizard
+      return await generateMatchesWithWizardOnly(
+        userId,
+        userProfile as UserProfile,
+        fallbackProviders,
+        category,
+        maxMatches
+      );
+    }
+
+    // 4. Obtener encuestas de los proveedores
+    const providerSurveys: Array<{
+      provider: ProviderProfile;
+      survey: ProviderCategorySurvey | null;
+    }> = [];
+
+    for (const provider of providers) {
+      const survey = await getProviderCategorySurvey(provider.id, category);
+      // Incluir proveedores aunque no tengan encuesta (usaremos solo wizard data)
+      providerSurveys.push({ provider, survey });
+    }
+
+    // 5. Importar el servicio de matching
+    const { calculateCombinedMatchScore } = await import('@/lib/matching/matchingService');
+
+    // 6. Preparar datos del wizard del usuario
+    const userWizardProfile = {
+      budget: (userProfile as UserProfile).budget || '',
+      guestCount: (userProfile as UserProfile).guestCount || '',
+      region: (userProfile as UserProfile).region || region,
+      eventStyle: (userProfile as UserProfile).eventStyle || '',
+      ceremonyTypes: (userProfile as UserProfile).ceremonyTypes || [],
+      priorityCategories: (userProfile as UserProfile).priorityCategories || [],
+      involvementLevel: (userProfile as UserProfile).involvementLevel || '',
+    };
+
+    // 7. Calcular scores combinados (wizard + mini-encuesta)
+    const matchResults: Array<{
+      provider: ProviderProfile;
+      score: number;
+      surveyScore: number;
+      wizardScore: number;
+    }> = [];
+
+    for (const { provider, survey } of providerSurveys) {
+      // Preparar datos del wizard del proveedor
+      const providerWizardProfile = {
+        serviceStyle: provider.serviceStyle || '',
+        priceRange: provider.priceRange || '',
+        workRegion: provider.workRegion || '',
+        acceptsOutsideZone: provider.acceptsOutsideZone || false,
+        categories: provider.categories || [],
+      };
+
+      // Calcular score combinado
+      const result = calculateCombinedMatchScore(
+        userSurvey.responses,
+        survey?.responses || {},
+        userWizardProfile,
+        providerWizardProfile,
+        category
+      );
+
+      matchResults.push({
+        provider,
+        score: result.score,
+        surveyScore: result.surveyScore,
+        wizardScore: result.wizardScore,
+      });
+    }
+
+    // 8. Ordenar por score y tomar los mejores
+    matchResults.sort((a, b) => b.score - a.score);
+    const topMatches = matchResults.slice(0, maxMatches);
+
+    // 9. Crear leads para cada match
     const createdLeads: Lead[] = [];
 
     for (const { provider, score } of topMatches) {
-      // Solo crear lead si el score es suficiente (> 40%)
-      if (score < 40) continue;
-
+      // Siempre crear leads para los mejores matches
+      // Mostramos al menos los 3 mejores aunque el score sea bajo
       const lead = await createCategoryLead(
         userId,
         provider.id,
@@ -1091,12 +1144,97 @@ export const generateMatchesForUserSurvey = async (
       createdLeads.push(lead);
     }
 
-    // 9. Marcar la encuesta como con matches generados
+    // 10. Marcar la encuesta como con matches generados
     await markUserSurveyMatchesGenerated(userId, category);
 
+    console.log(`✓ Generados ${createdLeads.length} matches para ${category}`);
     return createdLeads;
   } catch (error) {
     console.error('Error al generar matches:', error);
     throw error;
   }
 };
+
+/**
+ * Genera matches usando solo datos del wizard cuando no hay encuestas de proveedores
+ * Esto asegura que siempre mostremos opciones al usuario
+ */
+async function generateMatchesWithWizardOnly(
+  userId: string,
+  userProfile: UserProfile,
+  providers: ProviderProfile[],
+  category: CategoryId,
+  maxMatches: number
+): Promise<Lead[]> {
+  const { calculateWizardMatchScore } = await import('@/lib/matching/matchingService');
+
+  const userWizardProfile = {
+    budget: userProfile.budget || '',
+    guestCount: userProfile.guestCount || '',
+    region: userProfile.region || '',
+    eventStyle: userProfile.eventStyle || '',
+    ceremonyTypes: userProfile.ceremonyTypes || [],
+    priorityCategories: userProfile.priorityCategories || [],
+    involvementLevel: userProfile.involvementLevel || '',
+  };
+
+  const matchResults: Array<{
+    provider: ProviderProfile;
+    score: number;
+  }> = [];
+
+  for (const provider of providers) {
+    const providerWizardProfile = {
+      serviceStyle: provider.serviceStyle || '',
+      priceRange: provider.priceRange || '',
+      workRegion: provider.workRegion || '',
+      acceptsOutsideZone: provider.acceptsOutsideZone || false,
+      categories: provider.categories || [],
+    };
+
+    const { score } = calculateWizardMatchScore(
+      userWizardProfile,
+      providerWizardProfile,
+      category
+    );
+
+    matchResults.push({ provider, score });
+  }
+
+  // Ordenar y tomar los mejores
+  matchResults.sort((a, b) => b.score - a.score);
+  const topMatches = matchResults.slice(0, maxMatches);
+
+  // Crear leads
+  const createdLeads: Lead[] = [];
+
+  for (const { provider, score } of topMatches) {
+    const lead = await createCategoryLead(
+      userId,
+      provider.id,
+      category,
+      score,
+      {
+        coupleNames: userProfile.coupleNames || 'Pareja',
+        eventDate: userProfile.eventDate || 'Por definir',
+        budget: userProfile.budget || '',
+        region: userProfile.region || '',
+        email: userProfile.email,
+        phone: userProfile.phone || '',
+      },
+      {
+        providerName: provider.providerName,
+        categories: provider.categories || [],
+        priceRange: provider.priceRange || '',
+      }
+    );
+
+    createdLeads.push(lead);
+  }
+
+  // Marcar encuesta
+  await markUserSurveyMatchesGenerated(userId, category);
+
+  console.log(`✓ Generados ${createdLeads.length} matches (solo wizard) para ${category}`);
+  return createdLeads;
+}

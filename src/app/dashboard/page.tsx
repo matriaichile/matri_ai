@@ -208,9 +208,9 @@ export default function UserDashboardPage() {
   const pendingMatches = matches.filter(m => m.status === 'pending');
   const approvedMatches = matches.filter(m => m.status === 'approved');
   
-  // Calcular encuestas completadas desde el perfil
+  // Calcular encuestas completadas desde el perfil (incluye 'completed' y 'matches_generated')
   const completedSurveysCount = profile?.categorySurveyStatus 
-    ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed').length 
+    ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed' || status === 'matches_generated').length 
     : 0;
 
   // Configuración del header según la sección activa
@@ -350,7 +350,9 @@ export default function UserDashboardPage() {
               {profile?.priorityCategories?.map((category) => {
                 const categoryId = category as CategoryId;
                 const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
-                const isCompleted = surveyStatus === 'completed';
+                // Considerar completado tanto 'completed' como 'matches_generated'
+                const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+                const hasMatchesGenerated = surveyStatus === 'matches_generated';
                 const categoryInfo = getCategoryInfo(categoryId);
                 const surveyConfig = CATEGORY_SURVEYS[categoryId];
                 const questionCount = surveyConfig?.userQuestions.length || 0;
@@ -383,13 +385,23 @@ export default function UserDashboardPage() {
                             <Check size={14} />
                             <span>Completado</span>
                           </span>
-                          <Link 
-                            href={`/dashboard/category/${categoryId}/matches`}
-                            className={styles.viewMatchesLink}
-                          >
-                            <span>Ver matches</span>
-                            <ChevronRight size={16} />
-                          </Link>
+                          {categoryMatches.length > 0 ? (
+                            <Link 
+                              href={`/dashboard/category/${categoryId}/matches`}
+                              className={styles.viewMatchesLink}
+                            >
+                              <span>Ver matches</span>
+                              <ChevronRight size={16} />
+                            </Link>
+                          ) : (
+                            <Link 
+                              href={`/dashboard/category/${categoryId}/survey`}
+                              className={styles.retryLink}
+                            >
+                              <span>Volver a cotizar</span>
+                              <ChevronRight size={16} />
+                            </Link>
+                          )}
                         </>
                       ) : (
                         <Link 

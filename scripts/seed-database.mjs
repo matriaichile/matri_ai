@@ -22,6 +22,9 @@
  *   3. Encuestas de usuarios por categoría (userCategorySurveys)
  *   4. Encuestas de proveedores por categoría (providerCategorySurveys)
  *   5. Leads/Matches por categoría específica
+ * 
+ * PARA LIMPIAR Y POBLAR DE NUEVO:
+ *   node scripts/seed-database.mjs --clean --all
  */
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
@@ -39,7 +42,7 @@ const projectRoot = resolve(__dirname, '..');
 // ============================================
 
 const DEFAULT_PASSWORD = '123123';
-const NUM_PROVIDERS = 15;
+const NUM_PROVIDERS = 24; // Debe ser >= PROVIDER_TEMPLATES.length para cubrir todas las categorías (3 por categoría)
 const NUM_USERS = 12;
 const LEADS_PER_CATEGORY = 3; // 3 matches por categoría por usuario
 
@@ -68,33 +71,38 @@ const CATEGORY_IDS = Object.keys(CATEGORIES);
 // ============================================
 
 const PROVIDER_TEMPLATES = [
-  // Fotografía
+  // Fotografía (3)
   { name: 'Fotografía Elegante', categories: ['photography'], style: 'artistic', price: 'premium' },
   { name: 'Momentos Studio', categories: ['photography', 'video'], style: 'documentary', price: 'mid' },
   { name: 'Captura Perfecta', categories: ['photography'], style: 'classic', price: 'mid' },
-  // Video
+  // Video (3)
   { name: 'Cinema Wedding Films', categories: ['video'], style: 'cinematic', price: 'premium' },
   { name: 'Recuerdos en Video', categories: ['video'], style: 'documentary', price: 'budget' },
-  // DJ
+  { name: 'Filmarte Bodas', categories: ['video'], style: 'artistic', price: 'mid' },
+  // DJ (3)
   { name: 'DJ Master Events', categories: ['dj'], style: 'modern', price: 'mid' },
   { name: 'Ritmo & Fiesta DJs', categories: ['dj'], style: 'traditional', price: 'budget' },
   { name: 'Sound Premium', categories: ['dj'], style: 'modern', price: 'premium' },
-  // Banquetería
+  // Banquetería (3)
   { name: 'Banquetería Gourmet', categories: ['catering'], style: 'traditional', price: 'premium' },
   { name: 'Sabores del Sur', categories: ['catering'], style: 'modern', price: 'mid' },
-  // Venues
+  { name: 'Chef Eventos', categories: ['catering'], style: 'modern', price: 'budget' },
+  // Venues (3)
   { name: 'Hacienda Los Robles', categories: ['venue'], style: 'traditional', price: 'luxury' },
   { name: 'Espacio Urbano Loft', categories: ['venue'], style: 'modern', price: 'premium' },
   { name: 'Jardín Secreto', categories: ['venue'], style: 'artistic', price: 'mid' },
-  // Decoración
+  // Decoración (3)
   { name: 'Flores & Sueños', categories: ['decoration'], style: 'artistic', price: 'mid' },
   { name: 'Deco Elegance', categories: ['decoration'], style: 'classic', price: 'premium' },
-  // Wedding Planner
+  { name: 'Ambientes Mágicos', categories: ['decoration'], style: 'modern', price: 'budget' },
+  // Wedding Planner (3)
   { name: 'Wedding Dreams Planner', categories: ['wedding_planner'], style: 'modern', price: 'luxury' },
   { name: 'Tu Boda Perfecta', categories: ['wedding_planner'], style: 'traditional', price: 'mid' },
-  // Maquillaje
+  { name: 'Organiza Tu Día', categories: ['wedding_planner'], style: 'modern', price: 'budget' },
+  // Maquillaje (3)
   { name: 'Belleza Nupcial', categories: ['makeup'], style: 'editorial', price: 'premium' },
   { name: 'Glam Studio', categories: ['makeup'], style: 'glamorous', price: 'mid' },
+  { name: 'Natural Beauty', categories: ['makeup'], style: 'natural', price: 'budget' },
 ];
 
 const PROVIDER_DESCRIPTIONS = [
@@ -230,50 +238,131 @@ const USER_SURVEY_RESPONSES = {
 };
 
 // Respuestas posibles para proveedores por categoría
+// IMPORTANTE: Estas respuestas deben coincidir con los IDs de las preguntas en src/lib/surveys/
 const PROVIDER_SURVEY_RESPONSES = {
   photography: {
-    photo_p_styles: [['documentary', 'artistic'], ['classic', 'editorial'], ['candid', 'documentary'], ['cinematic', 'artistic']],
+    // Estilos que ofrece (multiple) - debe coincidir con photo_u_style opciones
+    photo_p_styles: [
+      ['documentary', 'artistic', 'candid'], 
+      ['classic', 'editorial', 'cinematic'], 
+      ['candid', 'documentary', 'artistic'], 
+      ['cinematic', 'artistic', 'editorial'],
+      ['documentary', 'classic', 'candid'],
+      ['artistic', 'classic', 'editorial']
+    ],
     photo_p_hours_min: [4, 6, 8],
     photo_p_hours_max: [8, 10, 12, 24],
-    photo_p_price_min: [300000, 500000, 800000, 1200000],
-    photo_p_price_max: [800000, 1200000, 1800000, 3000000],
-    photo_p_preboda: [true, false],
-    photo_p_postboda: [true, false],
-    photo_p_second_shooter: ['no', 'extra_cost', 'included', 'always'],
+    // Precios en rangos que coincidan con las opciones del usuario
+    photo_p_price_min: [300000, 450000, 700000, 1000000, 1500000],
+    photo_p_price_max: [700000, 1000000, 1500000, 2200000, 3500000],
+    photo_p_preboda: [true, true, true, false], // Mayoría ofrece
+    photo_p_postboda: [true, true, false, false],
+    photo_p_second_shooter: ['extra_cost', 'included', 'always', 'no'],
     photo_p_delivery_time: ['2_weeks', '1_month', '2_months', '3_months'],
-    photo_p_delivery_formats: [['digital_hd', 'online_gallery'], ['digital_hd', 'printed_album', 'usb_box'], ['digital_hd', 'digital_raw']],
-    photo_p_photo_count_min: [150, 200, 300, 400],
-    photo_p_photo_count_max: [400, 600, 800, 1000],
-    photo_p_retouching_levels: [['natural'], ['natural', 'moderate'], ['moderate', 'editorial'], ['natural', 'moderate', 'editorial']],
-    photo_p_travel: [true, false],
-    photo_p_experience_years: [2, 5, 8, 10, 15],
+    photo_p_delivery_formats: [
+      ['digital_hd', 'online_gallery'], 
+      ['digital_hd', 'printed_album', 'usb_box', 'online_gallery'], 
+      ['digital_hd', 'digital_raw', 'online_gallery'],
+      ['digital_hd', 'printed_album', 'online_gallery']
+    ],
+    photo_p_photo_count_min: [150, 200, 300, 400, 500],
+    photo_p_photo_count_max: [400, 600, 800, 1000, 1500],
+    photo_p_retouching_levels: [
+      ['natural', 'moderate'], 
+      ['natural', 'moderate', 'editorial'], 
+      ['moderate', 'editorial'], 
+      ['natural', 'moderate', 'editorial']
+    ],
+    photo_p_travel: [true, true, true, false],
+    photo_p_experience_years: [3, 5, 7, 10, 12, 15],
   },
   video: {
-    video_p_styles: [['documentary', 'cinematic'], ['narrative', 'artistic'], ['traditional', 'documentary'], ['cinematic']],
-    video_p_durations: [['highlight_3', 'highlight_10'], ['highlight_10', 'medium_20'], ['medium_20', 'full_45'], ['highlight_3', 'highlight_10', 'medium_20']],
-    video_p_price_min: [400000, 600000, 1000000, 1500000],
-    video_p_price_max: [1000000, 1500000, 2500000, 4000000],
-    video_p_hours_min: [4, 6, 8],
+    // Estilos de video (multiple) - debe coincidir con video_u_style opciones
+    video_p_styles: [
+      ['documentary', 'cinematic', 'narrative'], 
+      ['narrative', 'artistic', 'cinematic'], 
+      ['traditional', 'documentary', 'cinematic'], 
+      ['cinematic', 'artistic', 'documentary'],
+      ['documentary', 'traditional', 'narrative']
+    ],
+    // Duraciones (multiple) - debe coincidir con video_u_duration opciones
+    video_p_durations: [
+      ['highlight_3', 'highlight_10', 'medium_20'], 
+      ['highlight_10', 'medium_20', 'full_45'], 
+      ['medium_20', 'full_45', 'full_extended'], 
+      ['highlight_3', 'highlight_10', 'medium_20', 'full_45']
+    ],
+    video_p_price_min: [400000, 550000, 800000, 1200000, 1800000],
+    video_p_price_max: [900000, 1300000, 2000000, 3000000, 5000000],
+    video_p_hours_min: [4, 6, 6, 8],
     video_p_hours_max: [8, 10, 12, 24],
-    video_p_second_camera: ['no', 'extra_cost', 'included', 'always'],
-    video_p_drone: ['no', 'extra_cost', 'included'],
-    video_p_same_day_edit: [true, false],
-    video_p_social_reel: ['no', 'extra_cost', 'included'],
-    video_p_delivery_time: ['1_month', '2_months', '3_months', '6_months'],
+    video_p_second_camera: ['extra_cost', 'included', 'always', 'no'],
+    video_p_drone: ['extra_cost', 'included', 'included', 'no'],
+    video_p_same_day_edit: [true, true, false, false],
+    video_p_raw_footage: ['extra_cost', 'included', 'no', 'extra_cost'],
+    video_p_social_reel: ['included', 'extra_cost', 'included', 'no'],
+    video_p_delivery_time: ['1_month', '2_months', '2_months', '3_months'],
+    video_p_equipment: [
+      ['4k', 'gimbal', 'slider'],
+      ['4k', 'cinema_camera', 'gimbal', 'slider', 'lighting'],
+      ['cinema_camera', 'gimbal', 'crane', 'lighting'],
+      ['4k', 'gimbal', 'slider', 'lighting']
+    ],
   },
   dj: {
-    dj_p_genres: [['reggaeton', 'pop', 'cumbia'], ['salsa', 'bachata', 'romantic'], ['rock', '80s_90s', 'electronic'], ['pop', 'disco', 'jazz']],
-    dj_p_styles: [['elegant', 'mixed'], ['party', 'mixed'], ['elegant', 'chill'], ['party']],
-    dj_p_price_min: [250000, 400000, 600000, 900000],
-    dj_p_price_max: [600000, 900000, 1400000, 2000000],
-    dj_p_hours_min: [3, 4, 5],
+    // Géneros que domina (multiple) - debe coincidir con dj_u_genres opciones
+    dj_p_genres: [
+      ['reggaeton', 'pop', 'pop_latino', 'cumbia', 'salsa', 'bachata'], 
+      ['salsa', 'bachata', 'romantic', 'jazz', 'cumbia'], 
+      ['rock', '80s_90s', 'electronic', 'pop', 'disco'], 
+      ['pop', 'pop_latino', 'disco', 'jazz', 'romantic'],
+      ['reggaeton', 'cumbia', 'salsa', 'bachata', '80s_90s'],
+      ['electronic', 'pop', 'disco', 'reggaeton', 'pop_latino']
+    ],
+    // Estilos que maneja (multiple) - debe coincidir con dj_u_style opciones
+    dj_p_styles: [
+      ['elegant', 'mixed', 'party'], 
+      ['party', 'mixed'], 
+      ['elegant', 'chill', 'mixed'], 
+      ['party', 'mixed', 'elegant'],
+      ['mixed', 'party'],
+      ['elegant', 'mixed', 'chill']
+    ],
+    dj_p_price_min: [250000, 350000, 500000, 700000, 1000000],
+    dj_p_price_max: [550000, 800000, 1200000, 1600000, 2500000],
+    dj_p_hours_min: [3, 4, 4, 5],
     dj_p_hours_max: [6, 8, 10, 12],
-    dj_p_ceremony_music: [true, false],
-    dj_p_mc_levels: [['minimal'], ['minimal', 'moderate'], ['moderate', 'full'], ['no', 'minimal', 'moderate', 'full']],
-    dj_p_lighting_levels: [['basic', 'standard'], ['standard', 'premium'], ['premium', 'custom'], ['basic', 'standard', 'premium']],
-    dj_p_effects: [['fog'], ['fog', 'laser'], ['cold_sparks', 'confetti'], ['fog', 'cold_sparks', 'laser', 'confetti']],
-    dj_p_karaoke: [true, false],
-    dj_p_screens: ['no', 'one', 'multiple'],
+    dj_p_ceremony_music: [true, true, true, false],
+    dj_p_cocktail_music: [true, true, true, false],
+    // MC levels (multiple) - debe coincidir con dj_u_mc opciones
+    dj_p_mc_levels: [
+      ['no', 'minimal', 'moderate'], 
+      ['minimal', 'moderate', 'full'], 
+      ['moderate', 'full'], 
+      ['no', 'minimal', 'moderate', 'full']
+    ],
+    // Lighting levels (multiple) - debe coincidir con dj_u_lighting opciones
+    dj_p_lighting_levels: [
+      ['basic', 'standard', 'premium'], 
+      ['standard', 'premium', 'custom'], 
+      ['premium', 'custom'], 
+      ['basic', 'standard', 'premium', 'custom']
+    ],
+    // Effects (multiple) - debe coincidir con dj_u_effects opciones
+    dj_p_effects: [
+      ['fog', 'confetti'], 
+      ['fog', 'laser', 'cold_sparks'], 
+      ['cold_sparks', 'confetti', 'bubbles'], 
+      ['fog', 'cold_sparks', 'laser', 'confetti', 'bubbles']
+    ],
+    dj_p_karaoke: [true, true, false, false],
+    dj_p_screens: ['no', 'one', 'multiple', 'multiple'],
+    dj_p_equipment_sound: [
+      ['small_100', 'medium_200', 'wireless_mic'],
+      ['medium_200', 'large_400', 'subwoofer', 'wireless_mic'],
+      ['large_400', 'xlarge', 'subwoofer', 'wireless_mic'],
+      ['medium_200', 'large_400', 'wireless_mic']
+    ],
   },
   catering: {
     catering_p_service_types: [['plated', 'buffet'], ['stations', 'cocktail'], ['plated', 'buffet', 'stations'], ['family_style', 'buffet']],
@@ -553,7 +642,7 @@ async function createProviders(auth, db) {
         facebook: '',
         tiktok: '',
         portfolioImages: [],
-        status: Math.random() > 0.2 ? 'active' : 'pending',
+        status: 'active', // Todos activos para testing
         // Sistema de leads POR CATEGORÍA
         categoryLeadLimits,
         categoryLeadsUsed,

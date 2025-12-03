@@ -3,14 +3,45 @@
  * Matri.AI - Sistema de cálculo de compatibilidad entre usuarios y proveedores
  * 
  * Este servicio calcula el match score basándose en:
- * 1. Respuestas de encuestas por categoría
- * 2. Criterios de matching definidos para cada categoría
- * 3. Pesos asignados a cada criterio
+ * 1. Datos del wizard inicial (perfil general del usuario y proveedor)
+ * 2. Respuestas de mini-encuestas por categoría
+ * 3. Criterios de matching definidos para cada categoría
+ * 4. Pesos asignados a cada criterio
+ * 
+ * El sistema combina información de ambas fuentes para generar un score más preciso.
  */
 
 import { CategoryId } from '@/store/authStore';
 import { CATEGORY_SURVEYS } from '@/lib/surveys';
 import { MatchingCriterion, SurveyResponses, SurveyQuestion } from '@/lib/surveys/types';
+
+// ============================================
+// TIPOS PARA DATOS DEL WIZARD
+// ============================================
+
+// Datos del wizard del usuario (novios)
+export interface UserWizardProfile {
+  budget: string;
+  guestCount: string;
+  region: string;
+  eventStyle: string;
+  ceremonyTypes: string[];
+  priorityCategories: string[];
+  involvementLevel: string;
+}
+
+// Datos del wizard del proveedor
+export interface ProviderWizardProfile {
+  serviceStyle: string;
+  priceRange: string;
+  workRegion: string;
+  acceptsOutsideZone: boolean;
+  categories: string[];
+}
+
+// ============================================
+// TIPOS PARA EL MATCHING
+// ============================================
 
 // Tipos para el resultado del matching
 export interface MatchResult {
@@ -19,6 +50,7 @@ export interface MatchResult {
   category: CategoryId;
   matchScore: number;
   matchDetails: MatchDetail[];
+  wizardMatchDetails?: WizardMatchDetail[]; // Detalles del match basado en wizard
   createdAt: Date;
 }
 
@@ -31,6 +63,15 @@ export interface MatchDetail {
   score: number;
   weight: number;
   matchType: 'exact' | 'contains' | 'range_overlap' | 'boolean_match';
+}
+
+// Detalles del match basado en datos del wizard
+export interface WizardMatchDetail {
+  criterion: string;
+  userValue: string | string[] | boolean;
+  providerValue: string | string[] | boolean;
+  score: number;
+  weight: number;
 }
 
 /**
@@ -431,6 +472,260 @@ export function getMatchSummary(matchResult: MatchResult): string {
     summary += `. Áreas a considerar: ${weakMatches.length} criterios con menor coincidencia`;
   }
 
+  return summary;
+}
+
+// ============================================
+// MATCHING MEJORADO CON DATOS DEL WIZARD
+// ============================================
+
+/**
+ * Mapeo de presupuesto del usuario a rango de precio del proveedor
+ * Basado en los rangos definidos en wizardStore.ts
+ */
+const BUDGET_TO_PRICE_COMPATIBILITY: Record<string, string[]> = {
+  'under_5m': ['budget'],
+  '5m_10m': ['budget', 'mid'],
+  '10m_15m': ['mid'],
+  '15m_20m': ['mid', 'premium'],
+  '20m_30m': ['premium'],
+  '30m_50m': ['premium', 'luxury'],
+  'over_50m': ['luxury'],
+};
+
+/**
+ * Mapeo de estilo del evento del usuario a estilo de servicio del proveedor
+ */
+const EVENT_STYLE_TO_SERVICE_STYLE: Record<string, string[]> = {
+  'classic': ['traditional', 'classic', 'editorial'],
+  'rustic': ['documentary', 'artistic', 'natural'],
+  'modern': ['modern', 'cinematic', 'editorial'],
+  'romantic': ['artistic', 'romantic', 'documentary'],
+  'glamorous': ['editorial', 'cinematic', 'glamorous'],
+  'vintage': ['traditional', 'artistic', 'vintage'],
+  'beach': ['documentary', 'artistic', 'natural'],
+  'industrial': ['modern', 'cinematic', 'editorial'],
+};
+
+/**
+ * Calcula el score de matching basado en datos del wizard (perfil general)
+ * Este score complementa el score de la mini-encuesta
+ * 
+ * @param userProfile - Datos del wizard del usuario
+ * @param providerProfile - Datos del wizard del proveedor
+ * @param category - Categoría del servicio (para contexto)
+ * @returns Score (0-100) y detalles del match
+ */
+export function calculateWizardMatchScore(
+  userProfile: UserWizardProfile,
+  providerProfile: ProviderWizardProfile,
+  category: CategoryId
+): { score: number; details: WizardMatchDetail[] } {
+  const details: WizardMatchDetail[] = [];
+  let totalWeight = 0;
+  let weightedScore = 0;
+
+  // 1. Match de ubicación (peso: 25)
+  const locationWeight = 25;
+  let locationScore = 0;
+  
+  if (userProfile.region === providerProfile.workRegion) {
+    locationScore = 1; // Match perfecto de región
+  } else if (providerProfile.acceptsOutsideZone) {
+    locationScore = 0.7; // Proveedor acepta trabajar fuera de su zona
+  } else {
+    locationScore = 0.2; // No hay match de ubicación
+  }
+  
+  details.push({
+    criterion: 'location',
+    userValue: userProfile.region,
+    providerValue: providerProfile.workRegion,
+    score: locationScore,
+    weight: locationWeight,
+  });
+  totalWeight += locationWeight;
+  weightedScore += locationScore * locationWeight;
+
+  // 2. Match de presupuesto vs rango de precio (peso: 30)
+  const budgetWeight = 30;
+  let budgetScore = 0;
+  
+  const compatiblePriceRanges = BUDGET_TO_PRICE_COMPATIBILITY[userProfile.budget] || [];
+  if (compatiblePriceRanges.includes(providerProfile.priceRange)) {
+    budgetScore = 1; // Presupuesto compatible
+  } else {
+    // Calcular proximidad del rango
+    const priceOrder = ['budget', 'mid', 'premium', 'luxury'];
+    const userIndex = priceOrder.findIndex(p => compatiblePriceRanges.includes(p));
+    const providerIndex = priceOrder.indexOf(providerProfile.priceRange);
+    
+    if (userIndex >= 0 && providerIndex >= 0) {
+      const distance = Math.abs(userIndex - providerIndex);
+      budgetScore = Math.max(0, 1 - (distance * 0.3)); // Penalización por distancia
+    } else {
+      budgetScore = 0.5; // Score neutral si no hay datos
+    }
+  }
+  
+  details.push({
+    criterion: 'budget',
+    userValue: userProfile.budget,
+    providerValue: providerProfile.priceRange,
+    score: budgetScore,
+    weight: budgetWeight,
+  });
+  totalWeight += budgetWeight;
+  weightedScore += budgetScore * budgetWeight;
+
+  // 3. Match de estilo (peso: 25)
+  const styleWeight = 25;
+  let styleScore = 0;
+  
+  const compatibleStyles = EVENT_STYLE_TO_SERVICE_STYLE[userProfile.eventStyle] || [];
+  if (compatibleStyles.includes(providerProfile.serviceStyle)) {
+    styleScore = 1; // Estilo compatible
+  } else {
+    // Verificar si hay alguna coincidencia parcial
+    styleScore = 0.4; // Score base para estilos no compatibles pero profesionales
+  }
+  
+  details.push({
+    criterion: 'style',
+    userValue: userProfile.eventStyle,
+    providerValue: providerProfile.serviceStyle,
+    score: styleScore,
+    weight: styleWeight,
+  });
+  totalWeight += styleWeight;
+  weightedScore += styleScore * styleWeight;
+
+  // 4. Categoría es prioritaria para el usuario (peso: 20)
+  const priorityWeight = 20;
+  let priorityScore = 0;
+  
+  if (userProfile.priorityCategories.includes(category)) {
+    // La categoría es prioritaria, verificar que el proveedor la ofrece
+    if (providerProfile.categories.includes(category)) {
+      priorityScore = 1;
+    } else {
+      priorityScore = 0; // El proveedor no ofrece esta categoría
+    }
+  } else {
+    // No es prioritaria pero el proveedor la ofrece
+    priorityScore = providerProfile.categories.includes(category) ? 0.7 : 0;
+  }
+  
+  details.push({
+    criterion: 'priority',
+    userValue: userProfile.priorityCategories,
+    providerValue: providerProfile.categories,
+    score: priorityScore,
+    weight: priorityWeight,
+  });
+  totalWeight += priorityWeight;
+  weightedScore += priorityScore * priorityWeight;
+
+  // Calcular score final
+  const finalScore = totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : 0;
+
+  return { score: finalScore, details };
+}
+
+/**
+ * Calcula el score de matching COMBINADO (wizard + mini-encuesta)
+ * Este es el método principal que debe usarse para el matching completo
+ * 
+ * @param userSurveyResponses - Respuestas de la mini-encuesta del usuario
+ * @param providerSurveyResponses - Respuestas de la mini-encuesta del proveedor
+ * @param userProfile - Datos del wizard del usuario (opcional)
+ * @param providerProfile - Datos del wizard del proveedor (opcional)
+ * @param category - Categoría del servicio
+ * @returns Score combinado (0-100) y detalles
+ */
+export function calculateCombinedMatchScore(
+  userSurveyResponses: SurveyResponses,
+  providerSurveyResponses: SurveyResponses,
+  userProfile: UserWizardProfile | null,
+  providerProfile: ProviderWizardProfile | null,
+  category: CategoryId
+): { 
+  score: number; 
+  surveyScore: number;
+  wizardScore: number;
+  surveyDetails: MatchDetail[];
+  wizardDetails: WizardMatchDetail[];
+} {
+  // 1. Calcular score de la mini-encuesta (peso: 60%)
+  const surveyResult = calculateMatchScore(
+    userSurveyResponses,
+    providerSurveyResponses,
+    category
+  );
+  
+  // 2. Calcular score del wizard si hay datos disponibles (peso: 40%)
+  let wizardResult = { score: 0, details: [] as WizardMatchDetail[] };
+  let wizardWeight = 0;
+  
+  if (userProfile && providerProfile) {
+    wizardResult = calculateWizardMatchScore(userProfile, providerProfile, category);
+    wizardWeight = 40; // El wizard contribuye 40% al score total
+  }
+  
+  // 3. Combinar scores
+  const surveyWeight = 100 - wizardWeight; // 60% si hay wizard, 100% si no hay
+  
+  const combinedScore = Math.round(
+    (surveyResult.score * (surveyWeight / 100)) + 
+    (wizardResult.score * (wizardWeight / 100))
+  );
+
+  return {
+    score: combinedScore,
+    surveyScore: surveyResult.score,
+    wizardScore: wizardResult.score,
+    surveyDetails: surveyResult.details,
+    wizardDetails: wizardResult.details,
+  };
+}
+
+/**
+ * Genera un resumen legible del match combinado
+ */
+export function getCombinedMatchSummary(
+  score: number,
+  surveyScore: number,
+  wizardScore: number,
+  surveyDetails: MatchDetail[],
+  wizardDetails: WizardMatchDetail[]
+): string {
+  let summary = `Compatibilidad total: ${score}%`;
+  
+  if (wizardScore > 0) {
+    summary += ` (Perfil: ${wizardScore}%, Preferencias: ${surveyScore}%)`;
+  }
+  
+  // Encontrar fortalezas del wizard
+  const strongWizardMatches = wizardDetails.filter(d => d.score >= 0.8);
+  if (strongWizardMatches.length > 0) {
+    const strengths = strongWizardMatches.map(d => {
+      switch (d.criterion) {
+        case 'location': return 'ubicación';
+        case 'budget': return 'presupuesto';
+        case 'style': return 'estilo';
+        case 'priority': return 'categoría prioritaria';
+        default: return d.criterion;
+      }
+    });
+    summary += `. Excelente match en: ${strengths.join(', ')}`;
+  }
+  
+  // Encontrar fortalezas de la encuesta
+  const strongSurveyMatches = surveyDetails.filter(d => d.score >= 0.8).slice(0, 2);
+  if (strongSurveyMatches.length > 0) {
+    summary += `. ${strongSurveyMatches.length} criterios específicos con alta compatibilidad`;
+  }
+  
   return summary;
 }
 
