@@ -1763,6 +1763,8 @@ invitations: {
 
 _Documento creado: Diciembre 2025_
 _Versión: 1.1_
-_Estado: ✅ IMPLEMENTADO_
+_Estado: ✅ COMPLETAMENTE IMPLEMENTADO_
 _Fecha de implementación: Diciembre 2025_
+
+> **Nota:** Este documento contiene las especificaciones de ajustes que ya fueron implementados. Para ver la documentación oficial actualizada de todas las encuestas, consultar `CATEGORY_SURVEYS.md`.
 

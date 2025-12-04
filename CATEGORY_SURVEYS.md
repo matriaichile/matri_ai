@@ -11,13 +11,36 @@
 7. [Decoración](#7-decoración)
 8. [Wedding Planner](#8-wedding-planner)
 9. [Maquillaje & Peinado](#9-maquillaje--peinado)
-10. [Criterios de Matchmaking](#10-criterios-de-matchmaking)
+10. [Entretenimiento](#10-entretenimiento)
+11. [Tortas & Dulces](#11-tortas--dulces)
+12. [Transporte](#12-transporte)
+13. [Invitaciones](#13-invitaciones)
+14. [Vestidos & Trajes](#14-vestidos--trajes)
+15. [Criterios de Matchmaking](#15-criterios-de-matchmaking)
 
 ---
 
 ## 1. Introducción
 
-Este documento detalla todas las preguntas de las mini-encuestas que deben completar tanto **usuarios (novios)** como **proveedores** para cada una de las 8 categorías del sistema.
+Este documento detalla todas las preguntas de las mini-encuestas que deben completar tanto **usuarios (novios)** como **proveedores** para cada una de las **13 categorías** del sistema.
+
+### Categorías Disponibles
+
+| ID | Categoría | Icono | Descripción |
+|----|-----------|-------|-------------|
+| `photography` | Fotografía | 📷 | Captura los mejores momentos de tu día especial |
+| `video` | Videografía | 🎬 | Revive tu boda una y otra vez |
+| `dj` | DJ / VJ | 🎵 | La música perfecta para tu celebración |
+| `catering` | Banquetería | 🍽️ | Delicias gastronómicas para tus invitados |
+| `venue` | Centro de Eventos | 🏛️ | El lugar ideal para tu celebración |
+| `decoration` | Decoración | 💐 | Transforma el espacio en un sueño |
+| `wedding_planner` | Wedding Planner | 📋 | Coordinación profesional de tu evento |
+| `makeup` | Maquillaje & Peinado | ✨ | Luce radiante en tu día especial |
+| `entertainment` | Entretenimiento | 🎉 | Shows y actividades para tu evento |
+| `cakes` | Tortas & Dulces | 🎂 | Tortas de novios y mesas de dulces |
+| `transport` | Transporte | 🚗 | Traslado para novios e invitados |
+| `invitations` | Invitaciones | 💌 | Invitaciones y papelería de boda |
+| `dress` | Vestidos & Trajes | 👗 | El atuendo perfecto para tu día especial |
 
 ### Principio de Diseño
 
@@ -55,18 +78,16 @@ interface SurveyQuestion {
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `photo_u_style` | ¿Qué estilo fotográfico prefieres? | single | `documentary` (Documental/Natural), `artistic` (Artístico/Creativo), `classic` (Clásico/Tradicional), `editorial` (Editorial/Revista), `candid` (Espontáneo/Candid), `cinematic` (Cinemático) | 25% |
+| `photo_u_style` | ¿Qué estilo fotográfico prefieres? | multiple | `documentary` (Documental/Natural), `artistic` (Artístico/Creativo), `classic` (Clásico/Tradicional), `editorial` (Editorial/Revista), `candid` (Espontáneo/Candid), `cinematic` (Cinemático) | 25% |
 | `photo_u_hours` | ¿Cuántas horas de cobertura necesitas? | single | `4` (4 horas), `6` (6 horas), `8` (8 horas), `10` (10 horas), `full_day` (Día completo +12h) | 15% |
 | `photo_u_budget` | ¿Cuál es tu presupuesto para fotografía? | single | `under_500k` (Menos de $500.000), `500k_800k` ($500.000 - $800.000), `800k_1200k` ($800.000 - $1.200.000), `1200k_1800k` ($1.200.000 - $1.800.000), `over_1800k` (Más de $1.800.000) | 20% |
 | `photo_u_preboda` | ¿Necesitas sesión pre-boda? | boolean | Sí / No | 5% |
 | `photo_u_postboda` | ¿Te interesa sesión post-boda (trash the dress, etc.)? | boolean | Sí / No | 5% |
 | `photo_u_second_shooter` | ¿Necesitas segundo fotógrafo? | single | `no` (No necesario), `preferred` (Preferible), `required` (Indispensable) | 5% |
-| `photo_u_delivery_time` | ¿En cuánto tiempo necesitas las fotos? | single | `2_weeks` (2 semanas), `1_month` (1 mes), `2_months` (2 meses), `3_months` (3+ meses), `flexible` (Flexible) | 5% |
+| `photo_u_delivery_time` | ¿En cuánto tiempo necesitas las fotos? | single | `2_weeks` (2 semanas), `1_month` (1 mes), `over_1_month` (+1 mes), `indifferent` (Me es indiferente) | 5% |
 | `photo_u_delivery_format` | ¿Qué formato de entrega prefieres? | multiple | `digital_hd` (Digital HD), `digital_raw` (Digital RAW), `printed_album` (Álbum impreso), `usb_box` (USB en caja especial), `online_gallery` (Galería online) | 5% |
 | `photo_u_photo_count` | ¿Cuántas fotos editadas esperas recibir? | single | `under_200` (Menos de 200), `200_400` (200-400), `400_600` (400-600), `over_600` (Más de 600), `unlimited` (Sin límite) | 5% |
 | `photo_u_retouching` | ¿Qué nivel de retoque prefieres? | single | `natural` (Natural/Mínimo), `moderate` (Moderado), `editorial` (Tipo revista/Alto) | 5% |
-| `photo_u_locations` | ¿Cuántas locaciones tendrá tu evento? | single | `1` (Solo una), `2` (Dos locaciones), `3_plus` (Tres o más) | 3% |
-| `photo_u_priorities` | ¿Qué momentos son más importantes para ti? | multiple | `getting_ready` (Preparativos), `ceremony` (Ceremonia), `portraits` (Retratos de pareja), `family` (Fotos familiares), `party` (Fiesta), `details` (Detalles decoración) | 2% |
 
 ### 2.2 Encuesta para Proveedores
 
@@ -78,18 +99,15 @@ interface SurveyQuestion {
 | `photo_p_price_min` | Precio mínimo de tu servicio | number | CLP | 20% |
 | `photo_p_price_max` | Precio máximo de tu servicio | number | CLP | - |
 | `photo_p_preboda` | ¿Ofreces sesión pre-boda? | boolean | Sí / No | 5% |
-| `photo_p_preboda_included` | ¿Está incluida en el paquete base? | boolean | Sí / No | - |
 | `photo_p_postboda` | ¿Ofreces sesión post-boda? | boolean | Sí / No | 5% |
 | `photo_p_second_shooter` | ¿Ofreces segundo fotógrafo? | single | `no` (No), `extra_cost` (Costo adicional), `included` (Incluido en algunos paquetes), `always` (Siempre incluido) | 5% |
-| `photo_p_delivery_time` | ¿Cuál es tu tiempo de entrega habitual? | single | `2_weeks`, `1_month`, `2_months`, `3_months` | 5% |
+| `photo_p_delivery_time` | ¿Cuál es tu tiempo de entrega habitual? | single | `2_weeks`, `1_month`, `over_1_month` | 5% |
 | `photo_p_delivery_formats` | ¿Qué formatos de entrega ofreces? | multiple | `digital_hd`, `digital_raw`, `printed_album`, `usb_box`, `online_gallery` | 5% |
 | `photo_p_photo_count_min` | Mínimo de fotos editadas que entregas | number | 50-1000 | 5% |
 | `photo_p_photo_count_max` | Máximo de fotos editadas que entregas | number | 100-2000 | - |
 | `photo_p_retouching_levels` | ¿Qué niveles de retoque ofreces? | multiple | `natural`, `moderate`, `editorial` | 5% |
 | `photo_p_travel` | ¿Viajas fuera de tu región? | boolean | Sí / No | 3% |
-| `photo_p_travel_cost` | ¿Cobras adicional por traslado? | single | `no` (No), `yes_km` (Sí, por km), `yes_flat` (Sí, tarifa fija), `negotiable` (Negociable) | - |
 | `photo_p_experience_years` | Años de experiencia en bodas | number | 0-30 | 2% |
-| `photo_p_weddings_per_year` | ¿Cuántas bodas realizas al año? | number | 1-100 | - |
 
 ---
 
@@ -99,23 +117,20 @@ interface SurveyQuestion {
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `video_u_style` | ¿Qué estilo de video prefieres? | single | `documentary` (Documental), `cinematic` (Cinemático/Película), `narrative` (Narrativo/Historia), `traditional` (Tradicional), `artistic` (Artístico/Experimental) | 25% |
-| `video_u_duration` | ¿Qué duración de video final prefieres? | single | `highlight_3` (Highlight 3-5 min), `highlight_10` (Highlight 8-12 min), `medium_20` (Medio 15-25 min), `full_45` (Completo 30-45 min), `full_extended` (Extendido +60 min) | 15% |
+| `video_u_style` | ¿Qué estilo de video prefieres? | multiple | `documentary` (Documental/Natural), `artistic` (Artístico/Creativo), `classic` (Clásico/Tradicional), `editorial` (Editorial/Revista), `candid` (Espontáneo/Candid), `cinematic` (Cinemático) | 25% |
+| `video_u_duration` | ¿Qué duración de video final prefieres? | multiple | `highlight_3` (Highlight 3-5 min), `highlight_10` (Highlight 8-12 min), `medium_20` (Medio 15-25 min), `full_45` (Completo 30-45 min), `full_extended` (Extendido +60 min) | 15% |
 | `video_u_budget` | ¿Cuál es tu presupuesto para video? | single | `under_600k` (Menos de $600.000), `600k_1000k` ($600.000 - $1.000.000), `1000k_1500k` ($1.000.000 - $1.500.000), `1500k_2500k` ($1.500.000 - $2.500.000), `over_2500k` (Más de $2.500.000) | 20% |
 | `video_u_hours` | ¿Cuántas horas de cobertura necesitas? | single | `4` (4 horas), `6` (6 horas), `8` (8 horas), `10` (10 horas), `full_day` (Día completo) | 10% |
 | `video_u_second_camera` | ¿Necesitas segundo camarógrafo? | single | `no` (No necesario), `preferred` (Preferible), `required` (Indispensable) | 5% |
 | `video_u_drone` | ¿Te gustaría incluir tomas con drone? | single | `no` (No), `nice_to_have` (Sería bueno), `required` (Indispensable) | 5% |
 | `video_u_same_day_edit` | ¿Te interesa un video editado el mismo día? | boolean | Sí / No | 5% |
-| `video_u_raw_footage` | ¿Quieres recibir el material sin editar? | boolean | Sí / No | 3% |
-| `video_u_social_reel` | ¿Necesitas versión corta para redes sociales? | boolean | Sí / No | 5% |
-| `video_u_delivery_time` | ¿En cuánto tiempo necesitas el video? | single | `1_month` (1 mes), `2_months` (2 meses), `3_months` (3 meses), `6_months` (6 meses), `flexible` (Flexible) | 5% |
-| `video_u_music_preference` | ¿Tienes preferencia musical para el video? | single | `provider_choice` (Que elija el videógrafo), `romantic` (Romántica/Emotiva), `modern` (Moderna/Pop), `classical` (Clásica), `custom` (Quiero elegir yo) | 2% |
+| `video_u_delivery_time` | ¿En cuánto tiempo necesitas el video? | single | `2_weeks` (2 semanas), `1_month` (1 mes), `over_1_month` (+1 mes), `indifferent` (Me es indiferente) | 5% |
 
 ### 3.2 Encuesta para Proveedores
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `video_p_styles` | ¿Qué estilos de video ofreces? | multiple | `documentary`, `cinematic`, `narrative`, `traditional`, `artistic` | 25% |
+| `video_p_styles` | ¿Qué estilos de video ofreces? | multiple | `documentary`, `artistic`, `classic`, `editorial`, `candid`, `cinematic` | 25% |
 | `video_p_durations` | ¿Qué duraciones de video ofreces? | multiple | `highlight_3`, `highlight_10`, `medium_20`, `full_45`, `full_extended` | 15% |
 | `video_p_price_min` | Precio mínimo de tu servicio | number | CLP | 20% |
 | `video_p_price_max` | Precio máximo de tu servicio | number | CLP | - |
@@ -124,11 +139,8 @@ interface SurveyQuestion {
 | `video_p_second_camera` | ¿Ofreces segundo camarógrafo? | single | `no`, `extra_cost`, `included`, `always` | 5% |
 | `video_p_drone` | ¿Ofreces tomas con drone? | single | `no`, `extra_cost`, `included` | 5% |
 | `video_p_same_day_edit` | ¿Ofreces edición el mismo día? | boolean | Sí / No | 5% |
-| `video_p_raw_footage` | ¿Entregas material sin editar? | single | `no`, `extra_cost`, `included` | 3% |
-| `video_p_social_reel` | ¿Ofreces versión para redes? | single | `no`, `extra_cost`, `included` | 5% |
-| `video_p_delivery_time` | Tiempo de entrega habitual | single | `1_month`, `2_months`, `3_months`, `6_months` | 5% |
+| `video_p_delivery_time` | Tiempo de entrega habitual | single | `2_weeks`, `1_month`, `over_1_month` | 5% |
 | `video_p_equipment` | ¿Qué equipo utilizas? | multiple | `4k` (Cámaras 4K), `cinema_camera` (Cámaras de cine), `gimbal` (Estabilizador/Gimbal), `slider` (Slider), `crane` (Grúa), `lighting` (Iluminación profesional) | 2% |
-| `video_p_experience_years` | Años de experiencia en bodas | number | 0-30 | - |
 
 ---
 
@@ -141,7 +153,7 @@ interface SurveyQuestion {
 | `dj_u_genres` | ¿Qué géneros musicales te gustan? | multiple | `reggaeton` (Reggaetón), `pop` (Pop Internacional), `pop_latino` (Pop Latino), `cumbia` (Cumbia), `salsa` (Salsa), `bachata` (Bachata), `rock` (Rock), `electronic` (Electrónica), `80s_90s` (80s y 90s), `disco` (Disco), `jazz` (Jazz/Lounge), `romantic` (Baladas/Románticas) | 25% |
 | `dj_u_style` | ¿Qué estilo de fiesta prefieres? | single | `elegant` (Elegante/Sofisticado), `party` (Fiesta total), `mixed` (Mezcla de ambos), `chill` (Relajado/Lounge) | 15% |
 | `dj_u_budget` | ¿Cuál es tu presupuesto para DJ? | single | `under_400k` (Menos de $400.000), `400k_600k` ($400.000 - $600.000), `600k_900k` ($600.000 - $900.000), `900k_1400k` ($900.000 - $1.400.000), `over_1400k` (Más de $1.400.000) | 20% |
-| `dj_u_hours` | ¿Cuántas horas de música necesitas? | single | `3` (3 horas), `4` (4 horas), `5` (5 horas), `6` (6 horas), `unlimited` (Sin límite) | 10% |
+| `dj_u_hours` | ¿Cuántas horas de música necesitas? | single | `5` (5 hrs), `6` (6 hrs), `7` (7 hrs), `over_7` (+7 hrs) | 10% |
 | `dj_u_ceremony_music` | ¿Necesitas música para la ceremonia? | boolean | Sí / No | 5% |
 | `dj_u_cocktail_music` | ¿Necesitas música para el cóctel? | boolean | Sí / No | 3% |
 | `dj_u_mc` | ¿Necesitas que el DJ anime/presente? | single | `no` (No, solo música), `minimal` (Mínimo, solo anuncios), `moderate` (Moderado), `full` (Animación completa) | 10% |
@@ -149,9 +161,6 @@ interface SurveyQuestion {
 | `dj_u_effects` | ¿Qué efectos especiales te interesan? | multiple | `fog` (Máquina de humo), `cold_sparks` (Chispas frías), `laser` (Láser), `confetti` (Confetti), `bubbles` (Burbujas), `none` (Ninguno) | 3% |
 | `dj_u_karaoke` | ¿Te gustaría tener karaoke? | boolean | Sí / No | 2% |
 | `dj_u_requests` | ¿Permitirás solicitudes de invitados? | single | `no` (No), `limited` (Limitadas), `yes` (Sí, todas) | 2% |
-| `dj_u_screens` | ¿Necesitas pantallas/proyección? | single | `no` (No), `one` (Una pantalla), `multiple` (Varias pantallas) | - |
-| `dj_u_live_band` | ¿Combinarás con banda en vivo? | boolean | Sí / No | - |
-| `dj_u_first_dance_song` | ¿Ya tienes canción para el primer baile? | boolean | Sí / No | - |
 
 ### 4.2 Encuesta para Proveedores
 
@@ -171,10 +180,6 @@ interface SurveyQuestion {
 | `dj_p_karaoke` | ¿Ofreces karaoke? | boolean | Sí / No | 2% |
 | `dj_p_screens` | ¿Ofreces pantallas/proyección? | single | `no`, `one`, `multiple` | 2% |
 | `dj_p_equipment_sound` | ¿Qué equipo de sonido tienes? | multiple | `small_100` (Hasta 100 personas), `medium_200` (Hasta 200 personas), `large_400` (Hasta 400 personas), `xlarge` (Más de 400 personas), `subwoofer` (Subwoofers), `wireless_mic` (Micrófonos inalámbricos) | 5% |
-| `dj_p_backup_equipment` | ¿Tienes equipo de respaldo? | boolean | Sí / No | - |
-| `dj_p_experience_years` | Años de experiencia en bodas | number | 0-30 | - |
-| `dj_p_weddings_per_year` | Bodas que realizas al año | number | 1-100 | - |
-| `dj_p_setup_time` | Tiempo de montaje necesario | single | `1h` (1 hora), `2h` (2 horas), `3h` (3 horas), `4h` (4+ horas) | - |
 
 ---
 
@@ -184,45 +189,37 @@ interface SurveyQuestion {
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `catering_u_service_type` | ¿Qué tipo de servicio prefieres? | single | `plated` (Servido a la mesa), `buffet` (Buffet), `stations` (Estaciones temáticas), `cocktail` (Cóctel/Finger food), `family_style` (Estilo familiar) | 20% |
-| `catering_u_cuisine` | ¿Qué tipo de cocina prefieres? | multiple | `chilean` (Chilena tradicional), `international` (Internacional), `mediterranean` (Mediterránea), `asian` (Asiática/Fusión), `gourmet` (Gourmet/Alta cocina), `comfort` (Comfort food) | 15% |
-| `catering_u_budget_pp` | ¿Cuál es tu presupuesto por persona? | single | `under_25k` (Menos de $25.000), `25k_35k` ($25.000 - $35.000), `35k_50k` ($35.000 - $50.000), `50k_70k` ($50.000 - $70.000), `over_70k` (Más de $70.000) | 20% |
-| `catering_u_guest_count` | ¿Cuántos invitados tendrás? | single | `under_50` (Menos de 50), `50_100` (50-100), `100_150` (100-150), `150_200` (150-200), `200_300` (200-300), `over_300` (Más de 300) | 10% |
-| `catering_u_courses` | ¿Cuántos tiempos de comida? | single | `2` (2 tiempos), `3` (3 tiempos), `4` (4 tiempos), `5_plus` (5 o más tiempos) | 5% |
-| `catering_u_cocktail` | ¿Incluirás hora de cóctel? | boolean | Sí / No | 5% |
-| `catering_u_dietary` | ¿Necesitas opciones especiales? | multiple | `vegetarian` (Vegetariana), `vegan` (Vegana), `gluten_free` (Sin gluten), `kosher` (Kosher), `halal` (Halal), `none` (Ninguna) | 5% |
-| `catering_u_beverages` | ¿Qué bebestibles necesitas? | multiple | `soft_drinks` (Bebidas), `wine` (Vinos), `beer` (Cerveza), `cocktails` (Cócteles), `open_bar` (Barra libre), `premium_liquor` (Licores premium) | 5% |
+| `catering_u_service_type` | ¿Qué tipo de servicio prefieres? | multiple | `cocktail` (Coctel / Finger Food), `dinner` (Cena - Entrada, fondo y postre), `buffet` (Buffet), `stations` (Estaciones temáticas), `extra` (Extra - Mesón de postres y trasnoches) | 20% |
+| `catering_u_cuisine` | ¿Qué tipo de cocina prefieres? | multiple | `chilean` (Chilena tradicional), `international` (Internacional), `mediterranean` (Mediterránea), `asian` (Asiática/Fusión), `gourmet` (Gourmet/Alta cocina), `comfort` (Comfort food), `bbq` (Asados o parrilla) | 15% |
+| `catering_u_budget_pp` | ¿Cuál es tu presupuesto por persona? | single | `under_25k` (Menos de $25.000), `25k_35k` ($25.000 - $35.000), `35k_50k` ($35.000 - $50.000), `50k_70k` ($50.000 - $70.000), `over_70k` (Más de $70.000), `skip` (Omitir) | 20% |
+| `catering_u_courses` | ¿De cuántos tiempos quieres que sea tu cena? | single | `2` (2 tiempos), `3` (3 tiempos), `4` (4 tiempos), `5_plus` (5 o más tiempos) | 5% |
+| `catering_u_dietary` | ¿Necesitas opciones especiales? | multiple | `vegetarian` (Vegetariana), `vegan` (Vegana), `gluten_free` (Sin gluten), `kosher` (Kosher), `halal` (Halal), `none` (Ninguna), `other` (Otra: ¿Cuál?) | 5% |
+| `catering_u_beverages` | ¿Qué bebestibles necesitas? | multiple | `soft_drinks` (Bebidas), `juices` (Jugos / Aguas saborizadas), `wine` (Vinos), `beer` (Cerveza), `cocktails` (Cócteles), `open_bar` (Barra libre), `premium_liquor` (Licores premium) | 5% |
 | `catering_u_tasting` | ¿Quieres degustación previa? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 3% |
-| `catering_u_cake` | ¿Incluir torta de novios? | single | `no` (No, tengo otro proveedor), `simple` (Sí, simple), `elaborate` (Sí, elaborada), `dessert_table` (Mesa de postres completa) | 5% |
-| `catering_u_staff` | ¿Qué nivel de servicio esperas? | single | `basic` (Básico), `standard` (Estándar), `premium` (Premium/Garzones dedicados) | 5% |
+| `catering_u_cake` | ¿Incluir torta de novios? | single | `yes` (Sí), `no` (No) | 5% |
+| `catering_u_staff` | ¿Qué nivel de servicio esperas? | single | `basic` (Básico), `standard` (Estándar), `premium` (Premium) | 5% |
 | `catering_u_setup` | ¿Necesitas montaje de mesas? | boolean | Sí / No | 2% |
-| `catering_u_late_night` | ¿Necesitas snack de medianoche? | boolean | Sí / No | - |
-| `catering_u_children_menu` | ¿Necesitas menú infantil? | boolean | Sí / No | - |
-| `catering_u_vendor_meals` | ¿Incluir comida para proveedores? | boolean | Sí / No | - |
+| `catering_u_end_time` | ¿Hasta qué hora debe estar la banquetera en el evento? | single | `0_1am` (00:00 – 1:00 am), `2_3am` (2:00 – 3:00 am), `4_5am` (4:00 – 5:00 am), `over_5am` (+5:00 am) | 5% |
 
 ### 5.2 Encuesta para Proveedores
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `catering_p_service_types` | ¿Qué tipos de servicio ofreces? | multiple | `plated`, `buffet`, `stations`, `cocktail`, `family_style` | 20% |
-| `catering_p_cuisines` | ¿Qué tipos de cocina ofreces? | multiple | `chilean`, `international`, `mediterranean`, `asian`, `gourmet`, `comfort` | 15% |
+| `catering_p_service_types` | ¿Qué tipos de servicio ofreces? | multiple | `cocktail`, `dinner`, `buffet`, `stations`, `extra` | 20% |
+| `catering_p_cuisines` | ¿Qué tipos de cocina ofreces? | multiple | `chilean`, `international`, `mediterranean`, `asian`, `gourmet`, `comfort`, `bbq` | 15% |
 | `catering_p_price_pp_min` | Precio mínimo por persona | number | CLP | 20% |
 | `catering_p_price_pp_max` | Precio máximo por persona | number | CLP | - |
 | `catering_p_guests_min` | Mínimo de invitados que atiendes | number | 10-500 | 10% |
 | `catering_p_guests_max` | Máximo de invitados que atiendes | number | 50-1000 | - |
 | `catering_p_courses` | ¿Cuántos tiempos ofreces? | multiple | `2`, `3`, `4`, `5_plus` | 5% |
-| `catering_p_cocktail` | ¿Ofreces servicio de cóctel? | boolean | Sí / No | 5% |
-| `catering_p_dietary` | ¿Qué opciones especiales manejas? | multiple | `vegetarian`, `vegan`, `gluten_free`, `kosher`, `halal` | 5% |
-| `catering_p_beverages` | ¿Qué bebestibles ofreces? | multiple | `soft_drinks`, `wine`, `beer`, `cocktails`, `open_bar`, `premium_liquor` | 5% |
+| `catering_p_dietary` | ¿Qué opciones especiales manejas? | multiple | `vegetarian`, `vegan`, `gluten_free`, `kosher`, `halal`, `other` | 5% |
+| `catering_p_beverages` | ¿Qué bebestibles ofreces? | multiple | `soft_drinks`, `juices`, `wine`, `beer`, `cocktails`, `open_bar`, `premium_liquor` | 5% |
 | `catering_p_tasting` | ¿Ofreces degustación previa? | single | `yes_free` (Sí, gratis), `yes_paid` (Sí, con costo), `no` (No) | 3% |
-| `catering_p_cake` | ¿Ofreces torta de novios? | single | `no`, `simple`, `elaborate`, `dessert_table` | 5% |
+| `catering_p_cake` | ¿Ofreces torta de novios? | single | `yes`, `no` | 5% |
 | `catering_p_staff_levels` | ¿Qué niveles de servicio ofreces? | multiple | `basic`, `standard`, `premium` | 5% |
 | `catering_p_setup` | ¿Ofreces montaje de mesas? | boolean | Sí / No | 2% |
-| `catering_p_equipment` | ¿Qué equipamiento incluyes? | multiple | `tables` (Mesas), `chairs` (Sillas), `tableware` (Vajilla), `glassware` (Cristalería), `linens` (Mantelería), `heating` (Calefacción), `tents` (Carpas) | - |
-| `catering_p_kitchen_needs` | ¿Qué necesitas del lugar? | multiple | `full_kitchen` (Cocina completa), `basic_kitchen` (Cocina básica), `electricity` (Solo electricidad), `nothing` (Nada, traigo todo) | - |
-| `catering_p_experience_years` | Años de experiencia en eventos | number | 0-30 | - |
-| `catering_p_events_per_year` | Eventos que realizas al año | number | 1-200 | - |
-| `catering_p_certifications` | ¿Tienes certificaciones? | multiple | `health_permit` (Resolución sanitaria), `haccp` (HACCP), `organic` (Orgánico certificado), `none` (Ninguna) | - |
+| `catering_p_equipment` | ¿Qué equipamiento incluyes? | multiple | `tables` (Mesas), `chairs` (Sillas), `tableware` (Vajilla), `glassware` (Cristalería), `linens` (Mantelería), `heating` (Calefacción), `tents` (Carpas) | 5% |
+| `catering_p_end_time` | ¿Hasta qué hora puedes quedarte en el evento? | single | `0_1am`, `2_3am`, `4_5am`, `over_5am` | 5% |
 
 ---
 
@@ -232,24 +229,24 @@ interface SurveyQuestion {
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `venue_u_type` | ¿Qué tipo de lugar prefieres? | single | `hacienda` (Hacienda/Campo), `hotel` (Hotel), `restaurant` (Restaurant), `garden` (Jardín/Parque), `beach` (Playa), `winery` (Viña), `loft` (Loft/Industrial), `mansion` (Casona/Mansión), `castle` (Castillo/Palacio) | 20% |
-| `venue_u_setting` | ¿Interior o exterior? | single | `indoor` (Interior), `outdoor` (Exterior), `both` (Ambos/Mixto), `flexible` (Flexible según clima) | 15% |
+| `venue_u_type` | ¿Qué tipo de lugar prefieres? | multiple | `event_hall` (Salón de eventos), `hacienda` (Hacienda/Campo), `hotel` (Hotel), `restaurant` (Restaurant), `garden` (Jardín/Parque), `beach` (Playa), `winery` (Viña), `loft` (Loft/Industrial), `mansion` (Casona/Mansión) | 20% |
+| `venue_u_setting` | ¿Interior o exterior? | single | `indoor` (Interior), `outdoor` (Exterior), `both` (Ambos/Mixto) | 15% |
 | `venue_u_budget` | ¿Cuál es tu presupuesto para el lugar? | single | `under_1m` (Menos de $1.000.000), `1m_2m` ($1.000.000 - $2.000.000), `2m_4m` ($2.000.000 - $4.000.000), `4m_7m` ($4.000.000 - $7.000.000), `over_7m` (Más de $7.000.000) | 20% |
-| `venue_u_capacity` | ¿Cuántos invitados tendrás? | single | `under_50` (Menos de 50), `50_100` (50-100), `100_150` (100-150), `150_200` (150-200), `200_300` (200-300), `over_300` (Más de 300) | 15% |
 | `venue_u_exclusivity` | ¿Necesitas exclusividad del lugar? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 5% |
 | `venue_u_ceremony_space` | ¿Necesitas espacio para ceremonia? | boolean | Sí / No | 5% |
-| `venue_u_parking` | ¿Necesitas estacionamiento? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario, habrá valet) | 5% |
+| `venue_u_parking` | ¿Necesitas estacionamiento? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 5% |
 | `venue_u_accommodation` | ¿Necesitas alojamiento para invitados? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 3% |
 | `venue_u_catering_policy` | ¿Preferencia de catering? | single | `venue_only` (Solo del lugar), `external_ok` (Puede ser externo), `no_preference` (Sin preferencia) | 5% |
-| `venue_u_end_time` | ¿Hasta qué hora necesitas el lugar? | single | `midnight` (Medianoche), `2am` (2:00 AM), `4am` (4:00 AM), `sunrise` (Hasta el amanecer), `flexible` (Flexible) | 5% |
+| `venue_u_end_time` | ¿Hasta qué hora necesitas el lugar? | single | `0_1am` (00:00 – 1:00 am), `2_3am` (2:00 – 3:00 am), `4_5am` (4:00 – 5:00 am), `over_5am` (+5:00 am) | 5% |
 | `venue_u_accessibility` | ¿Necesitas accesibilidad especial? | boolean | Sí / No | 2% |
-| `venue_u_rain_plan` | ¿Necesitas plan de lluvia? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No, evento interior) | - |
+| `venue_u_dance_floor` | ¿Tiene pista de baile? | boolean | Sí / No | 5% |
+| `venue_u_bridal_suite` | ¿Tiene pieza para novia y novio? | single | `yes` (Sí), `no` (No), `not_needed` (No es necesario) | 3% |
 
 ### 6.2 Encuesta para Proveedores
 
 | ID | Pregunta | Tipo | Opciones | Peso |
 |----|----------|------|----------|------|
-| `venue_p_type` | ¿Qué tipo de lugar eres? | single | `hacienda`, `hotel`, `restaurant`, `garden`, `beach`, `winery`, `loft`, `mansion`, `castle` | 20% |
+| `venue_p_type` | ¿Qué tipo de lugar eres? | multiple | `event_hall`, `hacienda`, `hotel`, `restaurant`, `garden`, `beach`, `winery`, `loft`, `mansion` | 20% |
 | `venue_p_settings` | ¿Qué espacios ofreces? | multiple | `indoor`, `outdoor`, `both` | 15% |
 | `venue_p_price_min` | Precio mínimo de arriendo | number | CLP | 20% |
 | `venue_p_price_max` | Precio máximo de arriendo | number | CLP | - |
@@ -258,16 +255,13 @@ interface SurveyQuestion {
 | `venue_p_exclusivity` | ¿Ofreces exclusividad? | boolean | Sí / No | 5% |
 | `venue_p_ceremony_space` | ¿Tienes espacio para ceremonia? | boolean | Sí / No | 5% |
 | `venue_p_parking` | ¿Tienes estacionamiento? | single | `yes_free` (Sí, gratis), `yes_paid` (Sí, con costo), `valet` (Servicio valet), `no` (No) | 5% |
-| `venue_p_parking_capacity` | Capacidad de estacionamiento | number | 0-500 | - |
 | `venue_p_accommodation` | ¿Ofreces alojamiento? | single | `yes` (Sí), `nearby` (Convenio cercano), `no` (No) | 3% |
-| `venue_p_accommodation_rooms` | Número de habitaciones | number | 0-100 | - |
 | `venue_p_catering_policy` | ¿Política de catering? | single | `exclusive` (Solo nuestro catering), `preferred` (Preferimos el nuestro), `external_ok` (Externo permitido), `no_catering` (No ofrecemos catering) | 5% |
-| `venue_p_end_time` | ¿Hasta qué hora pueden estar? | single | `midnight`, `2am`, `4am`, `sunrise`, `flexible` | 5% |
-| `venue_p_sound_restrictions` | ¿Hay restricciones de sonido? | boolean | Sí / No | - |
+| `venue_p_end_time` | ¿Hasta qué hora pueden estar? | single | `0_1am`, `2_3am`, `4_5am`, `over_5am` | 5% |
 | `venue_p_accessibility` | ¿Tienes accesibilidad? | boolean | Sí / No | 2% |
-| `venue_p_rain_plan` | ¿Tienes plan de lluvia? | boolean | Sí / No | - |
-| `venue_p_included_services` | ¿Qué servicios incluyes? | multiple | `tables` (Mesas), `chairs` (Sillas), `linens` (Mantelería), `lighting` (Iluminación básica), `sound` (Sonido básico), `coordinator` (Coordinador), `security` (Seguridad), `cleaning` (Limpieza) | - |
-| `venue_p_restrictions` | ¿Qué restricciones tienes? | multiple | `no_fireworks` (Sin fuegos artificiales), `no_confetti` (Sin confetti), `no_red_wine` (Sin vino tinto), `no_pets` (Sin mascotas), `no_external_dj` (Sin DJ externo), `none` (Ninguna) | - |
+| `venue_p_dance_floor` | ¿Tienes pista de baile? | boolean | Sí / No | 5% |
+| `venue_p_bridal_suite` | ¿Tienes pieza para novia y novio? | boolean | Sí / No | 3% |
+| `venue_p_included_services` | ¿Qué servicios incluyes? | multiple | `tables` (Mesas), `chairs` (Sillas), `linens` (Mantelería), `lighting` (Iluminación básica), `sound` (Sonido básico), `coordinator` (Coordinador), `security` (Seguridad), `cleaning` (Limpieza) | 5% |
 
 ---
 
@@ -304,8 +298,6 @@ interface SurveyQuestion {
 | `deco_p_extras` | ¿Qué elementos adicionales ofreces? | multiple | `arch`, `backdrop`, `hanging`, `candles`, `neon`, `balloons` | 5% |
 | `deco_p_rental` | ¿Ofreces arriendo de mobiliario? | boolean | Sí / No | 5% |
 | `deco_p_rental_items` | ¿Qué mobiliario arriendas? | multiple | `chairs` (Sillas), `tables` (Mesas), `lounge` (Mobiliario lounge), `bars` (Barras), `lighting` (Iluminación), `linens` (Mantelería) | - |
-| `deco_p_setup_time` | Tiempo de montaje necesario | single | `2h` (2 horas), `4h` (4 horas), `6h` (6 horas), `full_day` (Día completo) | - |
-| `deco_p_experience_years` | Años de experiencia | number | 0-30 | - |
 
 ---
 
@@ -341,9 +333,7 @@ interface SurveyQuestion {
 | `wp_p_guest_management` | ¿Ofreces gestión de invitados? | boolean | Sí / No | 5% |
 | `wp_p_rehearsal` | ¿Ofreces coordinación del ensayo? | boolean | Sí / No | 3% |
 | `wp_p_team_size` | ¿Cuántas personas en tu equipo el día del evento? | single | `1` (Solo yo), `2` (2 personas), `3_plus` (3 o más) | 2% |
-| `wp_p_events_per_month` | ¿Cuántos eventos manejas por mes? | single | `1` (1), `2_3` (2-3), `4_plus` (4 o más) | - |
 | `wp_p_experience_years` | Años de experiencia | number | 0-20 | - |
-| `wp_p_certifications` | ¿Tienes certificaciones? | multiple | `wpi` (Wedding Planner Institute), `abc` (ABC Certification), `other` (Otras), `none` (Ninguna) | - |
 
 ---
 
@@ -364,7 +354,6 @@ interface SurveyQuestion {
 | `makeup_u_bridesmaids_count` | ¿Cuántas personas del cortejo? | number | 0-15 | - |
 | `makeup_u_mothers` | ¿Incluir madres? | boolean | Sí / No | 3% |
 | `makeup_u_touch_ups` | ¿Necesitas retoques durante el evento? | single | `no` (No), `kit` (Solo kit de retoque), `person` (Persona presente) | 4% |
-| `makeup_u_location` | ¿Dónde necesitas el servicio? | single | `home` (A domicilio), `salon` (En salón), `venue` (En el lugar del evento), `flexible` (Flexible) | - |
 
 ### 9.2 Encuesta para Proveedores
 
@@ -381,18 +370,189 @@ interface SurveyQuestion {
 | `makeup_p_team_size` | ¿Cuántas personas en tu equipo? | single | `1` (Solo yo), `2` (2 personas), `3_plus` (3 o más) | 5% |
 | `makeup_p_max_clients` | Máximo de personas que atiendes por evento | number | 1-20 | 5% |
 | `makeup_p_touch_ups` | ¿Ofreces retoques durante el evento? | single | `no`, `kit`, `person` | 4% |
-| `makeup_p_location` | ¿Dónde ofreces el servicio? | multiple | `home`, `salon`, `venue` | 3% |
+| `makeup_p_location` | ¿Dónde ofreces el servicio? | multiple | `home` (A domicilio), `salon` (En salón), `venue` (En el lugar del evento) | 3% |
 | `makeup_p_travel` | ¿Viajas fuera de tu zona? | boolean | Sí / No | - |
-| `makeup_p_products` | ¿Qué marcas de productos usas? | multiple | `mac` (MAC), `nars` (NARS), `charlotte_tilbury` (Charlotte Tilbury), `bobbi_brown` (Bobbi Brown), `dior` (Dior), `other_premium` (Otras premium), `mixed` (Variadas) | - |
-| `makeup_p_experience_years` | Años de experiencia en novias | number | 0-20 | - |
 
 ---
 
-## 10. Criterios de Matchmaking - VERSIÓN AVANZADA
+## 10. Entretenimiento
 
-### 10.1 Arquitectura del Sistema de Matchmaking
+### 10.1 Encuesta para Usuarios
 
-El sistema de matchmaking ha sido mejorado significativamente para proporcionar scores más precisos y justos. Las mejoras principales incluyen:
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `ent_u_type` | ¿Qué tipo de entretenimiento buscas? | multiple | `live_band` (Banda en vivo), `solo_artist` (Artista solista), `dancers` (Show de baile), `magician` (Mago/Ilusionista), `comedian` (Comediante/Stand-up), `photo_booth` (Cabina de fotos), `caricaturist` (Caricaturista), `fireworks` (Fuegos artificiales), `casino` (Casino/Juegos), `karaoke_pro` (Karaoke profesional), `mariachi` (Mariachi), `other` (Otro) | 30% |
+| `ent_u_moment` | ¿En qué momento del evento necesitas el entretenimiento? | multiple | `ceremony` (Durante la ceremonia), `cocktail` (Durante el cóctel), `dinner` (Durante la cena), `party` (Durante la fiesta), `special_moment` (Momento especial) | 15% |
+| `ent_u_duration` | ¿Cuánto tiempo de show necesitas? | single | `30min` (30 minutos), `1hr` (1 hora), `2hr` (2 horas), `3hr` (3 horas), `full_event` (Todo el evento), `flexible` (Flexible) | 10% |
+| `ent_u_budget` | ¿Cuál es tu presupuesto para entretenimiento? | single | `under_300k` (Menos de $300.000), `300k_500k` ($300.000 - $500.000), `500k_800k` ($500.000 - $800.000), `800k_1500k` ($800.000 - $1.500.000), `over_1500k` (Más de $1.500.000), `skip` (Omitir) | 20% |
+| `ent_u_style` | ¿Qué estilo de entretenimiento prefieres? | single | `elegant` (Elegante/Sofisticado), `fun` (Divertido/Animado), `romantic` (Romántico), `interactive` (Interactivo), `surprise` (Sorpresa) | 10% |
+| `ent_u_audience` | ¿Para qué tipo de audiencia es el entretenimiento? | single | `adults_only` (Solo adultos), `family` (Familiar), `mixed` (Mixto) | 5% |
+| `ent_u_space` | ¿Tienes espacio adecuado para el show? | single | `yes_stage` (Sí, con escenario), `yes_space` (Sí, espacio amplio sin escenario), `limited` (Espacio limitado), `need_advice` (Necesito asesoría) | 5% |
+| `ent_u_equipment` | ¿Necesitas que el proveedor traiga su equipo de sonido? | single | `yes` (Sí, necesito todo el equipo), `partial` (Solo algunos elementos), `no` (No, ya tengo sonido) | 5% |
+
+### 10.2 Encuesta para Proveedores
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `ent_p_types` | ¿Qué tipo de entretenimiento ofreces? | multiple | `live_band`, `solo_artist`, `dancers`, `magician`, `comedian`, `photo_booth`, `caricaturist`, `fireworks`, `casino`, `karaoke_pro`, `mariachi` | 30% |
+| `ent_p_moments` | ¿En qué momentos del evento puedes actuar? | multiple | `ceremony`, `cocktail`, `dinner`, `party`, `special_moment` | 15% |
+| `ent_p_duration_min` | Duración mínima de tu show (minutos) | number | 15-240 | 10% |
+| `ent_p_duration_max` | Duración máxima de tu show (minutos) | number | 30-480 | - |
+| `ent_p_price_min` | Precio mínimo de tu servicio | number | CLP | 20% |
+| `ent_p_price_max` | Precio máximo de tu servicio | number | CLP | - |
+| `ent_p_styles` | ¿Qué estilos de entretenimiento manejas? | multiple | `elegant`, `fun`, `romantic`, `interactive`, `surprise` | 10% |
+| `ent_p_audience` | ¿Para qué audiencias trabajas? | multiple | `adults_only`, `family`, `mixed` | 5% |
+| `ent_p_equipment` | ¿Qué equipo incluyes? | multiple | `sound` (Equipo de sonido), `lighting` (Iluminación), `props` (Props/Accesorios), `stage` (Escenario portátil), `none` (Solo el show, sin equipo) | 5% |
+| `ent_p_team_size` | ¿Cuántas personas conforman tu show? | single | `1` (Solo yo), `2_3` (2-3 personas), `4_6` (4-6 personas), `over_6` (Más de 6 personas) | 5% |
+| `ent_p_travel` | ¿Viajas fuera de tu región? | boolean | Sí / No | - |
+
+---
+
+## 11. Tortas & Dulces
+
+### 11.1 Encuesta para Usuarios
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `cakes_u_type` | ¿Qué tipo de torta o dulces necesitas? | multiple | `wedding_cake` (Torta de novios tradicional), `naked_cake` (Naked cake), `fondant` (Torta con fondant), `buttercream` (Torta con buttercream), `dessert_table` (Mesa de dulces completa), `cupcakes` (Cupcakes), `macarons` (Macarons), `donuts` (Donuts), `mini_desserts` (Mini postres variados) | 25% |
+| `cakes_u_servings` | ¿Para cuántas porciones necesitas la torta? | single | `under_50` (Menos de 50 porciones), `50_100` (50-100 porciones), `100_150` (100-150 porciones), `150_200` (150-200 porciones), `over_200` (Más de 200 porciones), `skip` (Omitir) | 15% |
+| `cakes_u_tiers` | ¿Cuántos pisos te gustaría que tenga la torta? | single | `1` (1 piso), `2` (2 pisos), `3` (3 pisos), `4_plus` (4 o más pisos), `no_preference` (Sin preferencia) | 10% |
+| `cakes_u_flavor` | ¿Qué sabores prefieres? | multiple | `vanilla` (Vainilla), `chocolate` (Chocolate), `red_velvet` (Red velvet), `lemon` (Limón), `carrot` (Zanahoria), `fruit` (Frutas), `dulce_leche` (Dulce de leche), `coffee` (Café/Moka), `mixed` (Diferentes sabores por piso), `other` (Otro) | 15% |
+| `cakes_u_style` | ¿Qué estilo de decoración prefieres? | single | `classic` (Clásico/Elegante), `modern` (Moderno/Minimalista), `rustic` (Rústico), `romantic` (Romántico), `glamorous` (Glamoroso), `whimsical` (Fantasía) | 15% |
+| `cakes_u_budget` | ¿Cuál es tu presupuesto para torta/dulces? | single | `under_100k` (Menos de $100.000), `100k_200k` ($100.000 - $200.000), `200k_400k` ($200.000 - $400.000), `400k_600k` ($400.000 - $600.000), `over_600k` (Más de $600.000), `skip` (Omitir) | 15% |
+| `cakes_u_dietary` | ¿Necesitas opciones especiales? | multiple | `gluten_free` (Sin gluten), `vegan` (Vegana), `sugar_free` (Sin azúcar), `lactose_free` (Sin lactosa), `none` (Ninguna) | 5% |
+| `cakes_u_tasting` | ¿Quieres degustación previa? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 5% |
+| `cakes_u_delivery` | ¿Necesitas entrega y montaje en el lugar? | single | `yes` (Sí, entrega y montaje), `delivery_only` (Solo entrega), `pickup` (Yo la retiro) | 5% |
+
+### 11.2 Encuesta para Proveedores
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `cakes_p_types` | ¿Qué tipo de tortas y dulces ofreces? | multiple | `wedding_cake`, `naked_cake`, `fondant`, `buttercream`, `dessert_table`, `cupcakes`, `macarons`, `donuts`, `mini_desserts` | 25% |
+| `cakes_p_servings_min` | Mínimo de porciones que preparas | number | 10-200 | 15% |
+| `cakes_p_servings_max` | Máximo de porciones que preparas | number | 50-500 | - |
+| `cakes_p_tiers_max` | ¿Hasta cuántos pisos puedes hacer? | single | `1`, `2`, `3`, `4`, `5_plus` | 10% |
+| `cakes_p_flavors` | ¿Qué sabores ofreces? | multiple | `vanilla`, `chocolate`, `red_velvet`, `lemon`, `carrot`, `fruit`, `dulce_leche`, `coffee`, `custom` (Sabores personalizados) | 15% |
+| `cakes_p_styles` | ¿Qué estilos de decoración manejas? | multiple | `classic`, `modern`, `rustic`, `romantic`, `glamorous`, `whimsical` | 15% |
+| `cakes_p_price_min` | Precio mínimo de torta de novios | number | CLP | 15% |
+| `cakes_p_price_max` | Precio máximo de torta de novios | number | CLP | - |
+| `cakes_p_dietary` | ¿Qué opciones especiales ofreces? | multiple | `gluten_free`, `vegan`, `sugar_free`, `lactose_free`, `none` | 5% |
+| `cakes_p_tasting` | ¿Ofreces degustación previa? | single | `yes_free` (Sí, gratis), `yes_paid` (Sí, con costo), `no` (No) | 5% |
+| `cakes_p_delivery` | ¿Ofreces entrega y montaje? | single | `yes_included` (Sí, incluido), `yes_extra` (Sí, con costo adicional), `delivery_only` (Solo entrega), `no` (No, solo retiro) | 5% |
+| `cakes_p_lead_time` | ¿Con cuánta anticipación necesitas el pedido? | single | `1_week` (1 semana), `2_weeks` (2 semanas), `1_month` (1 mes), `2_months` (2 meses o más) | - |
+
+---
+
+## 12. Transporte
+
+### 12.1 Encuesta para Usuarios
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `transport_u_type` | ¿Qué tipo de transporte necesitas? | multiple | `bride_groom` (Para novios), `guests` (Para invitados), `bridal_party` (Para cortejo), `family` (Para familia) | 25% |
+| `transport_u_vehicle_type` | ¿Qué tipo de vehículo prefieres para los novios? | single | `classic_car` (Auto clásico/Vintage), `luxury_car` (Auto de lujo), `limousine` (Limusina), `convertible` (Convertible), `carriage` (Carruaje), `sports_car` (Auto deportivo), `motorcycle` (Motocicleta), `van` (Van/Minibus), `no_preference` (Sin preferencia) | 20% |
+| `transport_u_guest_vehicle` | ¿Qué tipo de transporte necesitas para invitados? | single | `bus` (Bus), `minibus` (Minibus), `vans` (Vans múltiples), `shuttle` (Servicio de shuttle), `not_needed` (No necesito para invitados) | 15% |
+| `transport_u_route` | ¿Qué rutas necesitas cubrir? | multiple | `home_ceremony` (Casa → Ceremonia), `ceremony_venue` (Ceremonia → Recepción), `venue_hotel` (Recepción → Hotel/Casas), `hotel_venue` (Hotel → Venue), `full_circuit` (Circuito completo) | 15% |
+| `transport_u_budget` | ¿Cuál es tu presupuesto para transporte? | single | `under_200k` (Menos de $200.000), `200k_400k` ($200.000 - $400.000), `400k_700k` ($400.000 - $700.000), `700k_1200k` ($700.000 - $1.200.000), `over_1200k` (Más de $1.200.000), `skip` (Omitir) | 15% |
+| `transport_u_decoration` | ¿Quieres decoración en el vehículo de novios? | single | `yes` (Sí, con decoración), `simple` (Decoración simple), `no` (No, sin decoración) | 5% |
+| `transport_u_driver` | ¿Necesitas chofer profesional? | single | `yes_formal` (Sí, con uniforme formal), `yes_casual` (Sí, vestimenta casual), `no` (No, manejaré yo) | 5% |
+| `transport_u_hours` | ¿Por cuántas horas necesitas el servicio? | single | `2` (2 horas), `4` (4 horas), `6` (6 horas), `8` (8 horas), `full_day` (Día completo) | 5% |
+
+### 12.2 Encuesta para Proveedores
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `transport_p_service_types` | ¿Qué servicios de transporte ofreces? | multiple | `bride_groom`, `guests`, `bridal_party`, `family` | 25% |
+| `transport_p_vehicle_types` | ¿Qué tipos de vehículos tienes disponibles? | multiple | `classic_car`, `luxury_car`, `limousine`, `convertible`, `carriage`, `sports_car`, `motorcycle`, `van`, `bus` | 20% |
+| `transport_p_capacity_max` | ¿Cuál es la capacidad máxima de pasajeros que puedes transportar? | number | 2-100 | 15% |
+| `transport_p_price_min` | Precio mínimo del servicio | number | CLP | 15% |
+| `transport_p_price_max` | Precio máximo del servicio | number | CLP | - |
+| `transport_p_decoration` | ¿Ofreces decoración del vehículo? | single | `yes_included` (Sí, incluida), `yes_extra` (Sí, con costo adicional), `no` (No) | 5% |
+| `transport_p_driver` | ¿Incluyes chofer profesional? | single | `yes_formal` (Sí, con uniforme formal), `yes_casual` (Sí, vestimenta casual), `optional` (Opcional), `no` (No, solo arriendo vehículo) | 5% |
+| `transport_p_hours_min` | Mínimo de horas de servicio | number | 1-12 | 5% |
+| `transport_p_hours_max` | Máximo de horas de servicio | number | 2-24 | - |
+| `transport_p_extras` | ¿Qué extras ofreces? | multiple | `champagne` (Champagne/Bebidas), `music` (Sistema de música), `red_carpet` (Alfombra roja), `photos` (Sesión de fotos con vehículo), `none` (Sin extras) | 5% |
+| `transport_p_travel` | ¿Viajas fuera de tu zona? | boolean | Sí / No | - |
+
+---
+
+## 13. Invitaciones
+
+### 13.1 Encuesta para Usuarios
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `inv_u_type` | ¿Qué tipo de invitaciones prefieres? | single | `printed` (Impresas/Físicas), `digital` (Digitales), `both` (Ambas), `video` (Video invitación) | 25% |
+| `inv_u_quantity` | ¿Cuántas invitaciones necesitas? | single | `under_50` (Menos de 50), `50_100` (50-100), `100_150` (100-150), `150_200` (150-200), `over_200` (Más de 200), `skip` (Omitir) | 15% |
+| `inv_u_style` | ¿Qué estilo de diseño prefieres? | single | `classic` (Clásico/Elegante), `modern` (Moderno/Minimalista), `rustic` (Rústico), `romantic` (Romántico), `bohemian` (Bohemio), `glamorous` (Glamoroso), `vintage` (Vintage), `custom` (Personalizado) | 20% |
+| `inv_u_extras` | ¿Qué elementos adicionales necesitas? | multiple | `save_the_date` (Save the Date), `rsvp` (Tarjetas RSVP), `menu` (Menú), `place_cards` (Tarjetas de ubicación), `thank_you` (Tarjetas de agradecimiento), `programs` (Programas de ceremonia), `envelope` (Sobres personalizados), `sealing_wax` (Lacre/Sello de cera), `none` (Solo invitaciones) | 15% |
+| `inv_u_budget` | ¿Cuál es tu presupuesto para invitaciones? | single | `under_100k` (Menos de $100.000), `100k_200k` ($100.000 - $200.000), `200k_400k` ($200.000 - $400.000), `400k_600k` ($400.000 - $600.000), `over_600k` (Más de $600.000), `skip` (Omitir) | 15% |
+| `inv_u_paper` | ¿Qué tipo de papel prefieres? (solo para impresas) | single | `standard` (Estándar), `cotton` (Algodón), `recycled` (Reciclado), `textured` (Texturizado), `transparent` (Acrílico/Transparente), `no_preference` (Sin preferencia) | 5% |
+| `inv_u_printing` | ¿Qué técnica de impresión prefieres? | single | `digital` (Digital), `letterpress` (Letterpress), `foil` (Hot stamping/Foil), `embossed` (Embossing), `laser_cut` (Corte láser), `no_preference` (Sin preferencia) | 5% |
+| `inv_u_timeline` | ¿Cuándo necesitas las invitaciones? | single | `2_weeks` (2 semanas), `1_month` (1 mes), `2_months` (2 meses), `3_months` (3 meses o más), `flexible` (Flexible) | 5% |
+
+### 13.2 Encuesta para Proveedores
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `inv_p_types` | ¿Qué tipos de invitaciones ofreces? | multiple | `printed`, `digital`, `video` | 25% |
+| `inv_p_styles` | ¿Qué estilos de diseño manejas? | multiple | `classic`, `modern`, `rustic`, `romantic`, `bohemian`, `glamorous`, `vintage`, `custom` | 20% |
+| `inv_p_extras` | ¿Qué papelería adicional ofreces? | multiple | `save_the_date`, `rsvp`, `menu`, `place_cards`, `thank_you`, `programs`, `envelope`, `sealing_wax` | 15% |
+| `inv_p_price_min` | Precio mínimo por invitación | number | CLP | 15% |
+| `inv_p_price_max` | Precio máximo por invitación | number | CLP | - |
+| `inv_p_min_quantity` | Cantidad mínima de pedido | number | 10-100 | 15% |
+| `inv_p_papers` | ¿Qué tipos de papel trabajas? | multiple | `standard`, `cotton`, `recycled`, `textured`, `transparent` | 5% |
+| `inv_p_printing` | ¿Qué técnicas de impresión ofreces? | multiple | `digital`, `letterpress`, `foil`, `embossed`, `laser_cut` | 5% |
+| `inv_p_lead_time` | ¿Cuál es tu tiempo de entrega habitual? | single | `1_week` (1 semana), `2_weeks` (2 semanas), `3_weeks` (3 semanas), `1_month` (1 mes), `over_1_month` (Más de 1 mes) | 5% |
+| `inv_p_samples` | ¿Ofreces muestras previas? | single | `yes_free` (Sí, gratis), `yes_paid` (Sí, con costo), `digital_only` (Solo prueba digital), `no` (No) | 5% |
+| `inv_p_shipping` | ¿Ofreces envío? | single | `yes_included` (Sí, incluido), `yes_extra` (Sí, con costo adicional), `pickup_only` (Solo retiro) | - |
+
+---
+
+## 14. Vestidos & Trajes
+
+### 14.1 Encuesta para Usuarios
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `dress_u_need` | ¿Qué necesitas para tu boda? | multiple | `bride_dress` (Vestido de novia), `groom_suit` (Traje de novio), `bridesmaids` (Vestidos de damas de honor), `groomsmen` (Trajes de padrinos), `flower_girl` (Vestuario pajes/damitas), `mother_bride` (Vestido madre de la novia), `mother_groom` (Vestido madre del novio), `accessories` (Solo accesorios) | 25% |
+| `dress_u_bride_style` | ¿Qué estilo de vestido de novia prefieres? | multiple | `classic` (Clásico/Tradicional), `romantic` (Romántico), `modern` (Moderno/Minimalista), `bohemian` (Bohemio), `glamorous` (Glamoroso), `vintage` (Vintage), `princess` (Princesa), `sexy` (Sensual) | 20% |
+| `dress_u_bride_silhouette` | ¿Qué silueta de vestido prefieres? | multiple | `a_line` (Línea A), `ballgown` (Corte princesa/Ball gown), `mermaid` (Sirena), `sheath` (Recto/Columna), `empire` (Imperio), `trumpet` (Trompeta), `tea_length` (Midi/Té), `mini` (Corto), `no_preference` (Sin preferencia) | 15% |
+| `dress_u_groom_style` | ¿Qué estilo de traje para el novio? | single | `classic_suit` (Traje clásico), `tuxedo` (Smoking/Tuxedo), `modern` (Moderno/Slim fit), `casual` (Semi-formal), `vintage` (Vintage), `destination` (Para boda destino), `not_needed` (No necesito traje de novio) | 15% |
+| `dress_u_service_type` | ¿Qué tipo de servicio prefieres? | single | `buy_new` (Comprar nuevo), `custom` (Diseño a medida), `rent` (Arriendo), `second_hand` (Segunda mano/Outlet), `alterations` (Solo ajustes/arreglos), `no_preference` (Sin preferencia) | 15% |
+| `dress_u_budget_bride` | ¿Cuál es tu presupuesto para el vestido de novia? | single | `under_500k` (Menos de $500.000), `500k_1m` ($500.000 - $1.000.000), `1m_2m` ($1.000.000 - $2.000.000), `2m_3m` ($2.000.000 - $3.000.000), `3m_5m` ($3.000.000 - $5.000.000), `over_5m` (Más de $5.000.000), `skip` (Omitir) | 15% |
+| `dress_u_budget_groom` | ¿Cuál es tu presupuesto para el traje de novio? | single | `under_200k` (Menos de $200.000), `200k_400k` ($200.000 - $400.000), `400k_700k` ($400.000 - $700.000), `700k_1m` ($700.000 - $1.000.000), `over_1m` (Más de $1.000.000), `skip` (Omitir/No necesito) | 10% |
+| `dress_u_timeline` | ¿Cuánto tiempo tienes antes de la boda? | single | `under_3m` (Menos de 3 meses), `3_6m` (3-6 meses), `6_9m` (6-9 meses), `9_12m` (9-12 meses), `over_12m` (Más de 1 año) | 5% |
+| `dress_u_accessories` | ¿Qué accesorios necesitas? | multiple | `veil` (Velo), `tiara` (Tiara/Corona), `headpiece` (Tocado/Peineta), `shoes` (Zapatos), `jewelry` (Joyería), `belt` (Cinturón/Faja), `jacket` (Chaqueta/Capa), `none` (Ninguno/Ya los tengo) | 5% |
+| `dress_u_fitting` | ¿Necesitas pruebas y ajustes incluidos? | single | `required` (Indispensable), `preferred` (Preferible), `not_needed` (No necesario) | 5% |
+
+### 14.2 Encuesta para Proveedores
+
+| ID | Pregunta | Tipo | Opciones | Peso |
+|----|----------|------|----------|------|
+| `dress_p_services` | ¿Qué servicios de vestuario ofreces? | multiple | `bride_dress` (Vestidos de novia), `groom_suit` (Trajes de novio), `bridesmaids` (Vestidos de damas de honor), `groomsmen` (Trajes de padrinos), `flower_girl` (Vestuario pajes/damitas), `mother_outfits` (Vestidos para madres), `accessories` (Accesorios), `shoes` (Zapatos de novia/novio) | 25% |
+| `dress_p_bride_styles` | ¿Qué estilos de vestido de novia manejas? | multiple | `classic`, `romantic`, `modern`, `bohemian`, `glamorous`, `vintage`, `princess`, `sexy` | 20% |
+| `dress_p_silhouettes` | ¿Qué siluetas de vestido ofreces? | multiple | `a_line`, `ballgown`, `mermaid`, `sheath`, `empire`, `trumpet`, `tea_length`, `mini` | 15% |
+| `dress_p_groom_styles` | ¿Qué estilos de traje de novio ofreces? | multiple | `classic_suit`, `tuxedo`, `modern`, `casual`, `vintage`, `destination`, `none` (No ofrezco trajes de novio) | 15% |
+| `dress_p_service_types` | ¿Qué tipos de servicio ofreces? | multiple | `buy_new` (Venta de nuevos), `custom` (Diseño a medida), `rent` (Arriendo), `second_hand` (Segunda mano/Outlet), `alterations` (Ajustes y arreglos) | 15% |
+| `dress_p_price_bride_min` | Precio mínimo vestido de novia | number | CLP | 15% |
+| `dress_p_price_bride_max` | Precio máximo vestido de novia | number | CLP | - |
+| `dress_p_price_groom_min` | Precio mínimo traje de novio | number | CLP | 10% |
+| `dress_p_price_groom_max` | Precio máximo traje de novio | number | CLP | - |
+| `dress_p_accessories` | ¿Qué accesorios ofreces? | multiple | `veil` (Velos), `tiara` (Tiaras/Coronas), `headpiece` (Tocados/Peinetas), `shoes` (Zapatos), `jewelry` (Joyería), `belt` (Cinturones/Fajas), `jacket` (Chaquetas/Capas), `none` (No ofrezco accesorios) | 5% |
+| `dress_p_fittings` | ¿Cuántas pruebas incluyes? | single | `1` (1 prueba), `2` (2 pruebas), `3` (3 pruebas), `unlimited` (Ilimitadas hasta quedar perfecto), `extra_cost` (Pruebas adicionales con costo) | 5% |
+| `dress_p_alterations` | ¿Incluyes ajustes y arreglos? | single | `yes_included` (Sí, incluidos en el precio), `yes_extra` (Sí, con costo adicional), `basic_only` (Solo ajustes básicos incluidos), `no` (No, deben hacerse aparte) | 5% |
+| `dress_p_lead_time` | ¿Cuánto tiempo necesitas de anticipación? | single | `under_2m` (Menos de 2 meses), `2_4m` (2-4 meses), `4_6m` (4-6 meses), `6_9m` (6-9 meses), `over_9m` (Más de 9 meses) | 5% |
+| `dress_p_designers` | ¿Trabajas con diseñadores o marcas específicas? | single | `yes_exclusive` (Sí, marcas exclusivas), `yes_various` (Sí, varias marcas), `own_designs` (Diseños propios), `no` (No, sin marca específica) | - |
+| `dress_p_appointment` | ¿Cómo funciona la atención? | single | `appointment_only` (Solo con cita previa), `walk_in` (Sin cita, horario tienda), `both` (Ambas opciones), `home_service` (Atención a domicilio) | - |
+
+---
+
+## 15. Criterios de Matchmaking
+
+### 15.1 Arquitectura del Sistema de Matchmaking
+
+El sistema de matchmaking ha sido diseñado para proporcionar scores precisos y justos. Las características principales incluyen:
 
 1. **Criterios de matching EXPLÍCITOS** por categoría (no automáticos)
 2. **Sistema de especificidad**: proveedores nicho obtienen bonus
@@ -400,408 +560,31 @@ El sistema de matchmaking ha sido mejorado significativamente para proporcionar 
 4. **Score de cobertura**: qué tan bien el proveedor cubre las necesidades
 5. **Combinación de datos**: wizard inicial + mini-encuestas por categoría
 
-### 10.2 Cálculo del Match Score
-
-```typescript
-interface MatchResult {
-  score: number;           // Score final (0-100)
-  specificityBonus: number; // Bonus por ser especialista (+0 a +10)
-  coverageScore: number;   // % de criterios bien cubiertos
-  surveyScore: number;     // Score de la mini-encuesta
-  wizardScore: number;     // Score del wizard inicial
-}
-
-function calculateCombinedMatchScore(
-  userSurveyResponses: SurveyResponses,
-  providerSurveyResponses: SurveyResponses,
-  userWizardProfile: UserWizardProfile,
-  providerWizardProfile: ProviderWizardProfile,
-  category: CategoryId
-): MatchResult {
-  // 1. Calcular score de mini-encuesta (70% del total)
-  const surveyResult = calculateMatchScore(userSurveyResponses, providerSurveyResponses, category);
-  
-  // 2. Calcular score del wizard (30% del total)
-  const wizardResult = calculateWizardMatchScore(userWizardProfile, providerWizardProfile, category);
-  
-  // 3. Calcular especificidad del proveedor (bonus +0 a +10)
-  const specificityBonus = calculateProviderSpecificity(providerSurveyResponses, category);
-  
-  // 4. Combinar scores
-  const combinedScore = (surveyResult.score * 0.7) + (wizardResult.score * 0.3) + specificityBonus;
-  
-  return {
-    score: Math.min(100, Math.round(combinedScore)),
-    specificityBonus,
-    coverageScore: surveyResult.coverageScore,
-    surveyScore: surveyResult.score,
-    wizardScore: wizardResult.score,
-  };
-}
-```
-
-### 10.3 Tipos de Comparación Mejorados
+### 15.2 Tipos de Comparación
 
 | Tipo | Lógica de Match | Descripción |
 |------|-----------------|-------------|
-| `single_in_multiple` | 100% si la opción del usuario está en las del proveedor | Usuario elige UNA opción, proveedor ofrece MÚLTIPLES. Bonus si proveedor es especialista (ofrece pocas opciones). |
-| `contains` | % de opciones del usuario cubiertas por el proveedor | Múltiple vs múltiple. Score proporcional a cuántas preferencias del usuario cubre el proveedor. |
-| `range_overlap` | Calcula superposición de rangos | Mapea strings de presupuesto del usuario a rangos numéricos y compara con min/max del proveedor. |
-| `boolean_match` | Si usuario necesita (true), proveedor debe ofrecer | Si usuario no necesita algo, cualquier valor del proveedor es válido. |
-| `preference_match` | Mapeo de preferencias a scores | Para campos como "required/preferred/not_needed" vs opciones del proveedor. |
-| `exact` | Coincidencia exacta de valores | Para campos donde debe haber match exacto (ej: tipo de venue). |
-| `threshold_at_most` | Proveedor debe entregar ANTES o igual | **Para tiempos de entrega**: Si usuario quiere en 2 meses y proveedor entrega en 2 semanas → **100%** (entrega antes = perfecto). |
-| `threshold_at_least` | Proveedor debe ofrecer AL MENOS lo que usuario pide | **Para cantidad de fotos, horario de venue, mesas**: Si proveedor puede hacer más de lo que usuario necesita → **100%**. |
-| `threshold_can_accommodate` | Proveedor debe poder acomodar lo que usuario necesita | **Para horas de cobertura, capacidad**: Si lo que usuario necesita está dentro del rango del proveedor → **100%**. |
+| `single_in_multiple` | 100% si la opción del usuario está en las del proveedor | Usuario elige UNA opción, proveedor ofrece MÚLTIPLES |
+| `contains` | % de opciones del usuario cubiertas por el proveedor | Múltiple vs múltiple |
+| `range_overlap` | Calcula superposición de rangos | Mapea strings de presupuesto del usuario a rangos numéricos |
+| `boolean_match` | Si usuario necesita (true), proveedor debe ofrecer | Si usuario no necesita algo, cualquier valor del proveedor es válido |
+| `preference_match` | Mapeo de preferencias a scores | Para campos como "required/preferred/not_needed" |
+| `exact` | Coincidencia exacta de valores | Para campos donde debe haber match exacto |
+| `threshold_at_most` | Proveedor debe entregar ANTES o igual | Para tiempos de entrega |
+| `threshold_at_least` | Proveedor debe ofrecer AL MENOS lo que usuario pide | Para cantidad de fotos, horario de venue, mesas |
+| `threshold_can_accommodate` | Proveedor debe poder acomodar lo que usuario necesita | Para horas de cobertura, capacidad |
 
-### 10.3.1 Tipos de Comparación "Threshold" (Umbral) - IMPORTANTE
+### 15.3 Sistema de Especificidad
 
-Estos tipos de comparación son **críticos** para preguntas donde "más es mejor" o "antes es mejor":
-
-#### `threshold_at_most` - Para tiempos de entrega
-**Lógica**: El proveedor debe entregar **ANTES O IGUAL** de cuando el usuario lo necesita.
-
-```
-Usuario quiere fotos en: 2 meses
-Proveedor entrega en: 2 semanas
-Resultado: 100% ✅ (entrega ANTES = perfecto)
-
-Usuario quiere fotos en: 1 mes
-Proveedor entrega en: 3 meses
-Resultado: ~30% ⚠️ (tarda más de lo necesario)
-```
-
-#### `threshold_at_least` - Para cantidades y horarios
-**Lógica**: El proveedor debe poder ofrecer **AL MENOS** lo que el usuario necesita.
-
-```
-Usuario necesita venue hasta: 2am
-Venue permite hasta: 4am
-Resultado: 100% ✅ (permite MÁS tarde = perfecto)
-
-Usuario quiere: 400 fotos
-Proveedor entrega hasta: 800 fotos
-Resultado: 100% ✅ (puede dar MÁS = perfecto)
-```
-
-#### `threshold_can_accommodate` - Para rangos de servicio
-**Lógica**: Lo que el usuario necesita debe estar **DENTRO** del rango del proveedor.
-
-```
-Usuario necesita: 8 horas de cobertura
-Proveedor ofrece: 4-12 horas
-Resultado: 100% ✅ (8 está en el rango = perfecto)
-
-Usuario tiene: 150 invitados
-Catering atiende: 50-500 personas
-Resultado: 100% ✅ (150 está en el rango = perfecto)
-```
-
-### 10.4 Sistema de Especificidad
-
-Los proveedores "nicho" (especializados) obtienen un bonus, mientras que los proveedores "generalistas" (que ofrecen todo) no reciben penalización pero tampoco bonus.
-
-```typescript
-// Cálculo de especificidad
-function calculateProviderSpecificity(providerResponses, category): number {
-  // Para cada pregunta de tipo "multiple":
-  // - Si selecciona 1-2 de 6 opciones = muy especialista (0.8-1.0)
-  // - Si selecciona 3-4 de 6 opciones = moderadamente especialista (0.4-0.6)
-  // - Si selecciona 5-6 de 6 opciones = generalista (0-0.2)
-  
-  // El bonus máximo es +10 puntos al score final
-  return specificityScore * 10;
-}
-```
+Los proveedores "nicho" (especializados) obtienen un bonus, mientras que los proveedores "generalistas" no reciben penalización pero tampoco bonus.
 
 **Ejemplo práctico:**
 - Fotógrafo que solo hace estilo "documental" → +8-10 puntos de bonus
 - Fotógrafo que hace todos los estilos → +0-2 puntos de bonus
-- Ambos pueden tener scores altos, pero el especialista tiene ventaja cuando el usuario busca exactamente ese estilo
-
-### 10.5 Mapeo de Rangos de Presupuesto
-
-El sistema mapea los rangos de presupuesto del usuario (strings) a valores numéricos para compararlos con los precios min/max del proveedor:
-
-```typescript
-// Ejemplo para Fotografía
-const userRangeMapping = {
-  'under_500k': { min: 0, max: 500000 },
-  '500k_800k': { min: 500000, max: 800000 },
-  '800k_1200k': { min: 800000, max: 1200000 },
-  '1200k_1800k': { min: 1200000, max: 1800000 },
-  'over_1800k': { min: 1800000, max: 10000000 },
-};
-
-// Si el rango del usuario se superpone con el rango del proveedor → score alto
-// Si no hay superposición → score bajo proporcional a la distancia
-```
-
-### 10.6 Pesos por Categoría (Criterios Explícitos)
-
-Los criterios de matching están definidos explícitamente para cada categoría, con mapeos precisos entre preguntas de usuario y proveedor.
-
-#### Fotografía
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `photo_u_style` | `photo_p_styles` | single_in_multiple | 25% | |
-| `photo_u_budget` | `photo_p_price_min/max` | range_overlap | 20% | |
-| `photo_u_hours` | `photo_p_hours_min/max` | **threshold_can_accommodate** | 15% | Si usuario quiere 8h y proveedor ofrece 4-12h → 100% |
-| `photo_u_preboda` | `photo_p_preboda` | boolean_match | 5% | |
-| `photo_u_postboda` | `photo_p_postboda` | boolean_match | 5% | |
-| `photo_u_second_shooter` | `photo_p_second_shooter` | preference_match | 5% | |
-| `photo_u_delivery_time` | `photo_p_delivery_time` | **threshold_at_most** | 5% | Si usuario quiere en 2 meses y proveedor entrega en 2 semanas → 100% |
-| `photo_u_delivery_format` | `photo_p_delivery_formats` | contains | 5% | |
-| `photo_u_photo_count` | `photo_p_photo_count_min/max` | **threshold_at_least** | 5% | Si usuario quiere 400 y proveedor entrega hasta 800 → 100% |
-| `photo_u_retouching` | `photo_p_retouching_levels` | single_in_multiple | 5% | |
-
-#### Videografía
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `video_u_style` | `video_p_styles` | single_in_multiple | 25% | |
-| `video_u_budget` | `video_p_price_min/max` | range_overlap | 20% | |
-| `video_u_duration` | `video_p_durations` | single_in_multiple | 15% | |
-| `video_u_hours` | `video_p_hours_min/max` | **threshold_can_accommodate** | 10% | Si usuario quiere 8h y proveedor ofrece 4-12h → 100% |
-| `video_u_second_camera` | `video_p_second_camera` | preference_match | 5% | |
-| `video_u_drone` | `video_p_drone` | preference_match | 5% | |
-| `video_u_same_day_edit` | `video_p_same_day_edit` | boolean_match | 5% | |
-| `video_u_raw_footage` | `video_p_raw_footage` | preference_match | 3% | |
-| `video_u_social_reel` | `video_p_social_reel` | preference_match | 5% | |
-| `video_u_delivery_time` | `video_p_delivery_time` | **threshold_at_most** | 5% | Si usuario quiere en 3 meses y proveedor entrega en 1 mes → 100% |
-
-#### DJ/VJ
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `dj_u_genres` | `dj_p_genres` | contains | 25% | |
-| `dj_u_budget` | `dj_p_price_min/max` | range_overlap | 20% | |
-| `dj_u_style` | `dj_p_styles` | single_in_multiple | 15% | |
-| `dj_u_hours` | `dj_p_hours_min/max` | **threshold_can_accommodate** | 10% | Si usuario quiere 5h y proveedor ofrece 3-8h → 100% |
-| `dj_u_mc` | `dj_p_mc_levels` | single_in_multiple | 10% | |
-| `dj_u_ceremony_music` | `dj_p_ceremony_music` | boolean_match | 5% | |
-| `dj_u_lighting` | `dj_p_lighting_levels` | single_in_multiple | 5% | |
-| `dj_u_cocktail_music` | `dj_p_cocktail_music` | boolean_match | 3% | |
-| `dj_u_effects` | `dj_p_effects` | contains | 3% | |
-| `dj_u_karaoke` | `dj_p_karaoke` | boolean_match | 2% | |
-
-#### Banquetería
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `catering_u_service_type` | `catering_p_service_types` | single_in_multiple | 20% | |
-| `catering_u_budget_pp` | `catering_p_price_pp_min/max` | range_overlap | 20% | |
-| `catering_u_cuisine` | `catering_p_cuisines` | contains | 15% | |
-| `catering_u_guest_count` | `catering_p_guests_min/max` | **threshold_can_accommodate** | 10% | Si usuario tiene 150 invitados y proveedor atiende 50-500 → 100% |
-| `catering_u_courses` | `catering_p_courses` | single_in_multiple | 5% | |
-| `catering_u_cocktail` | `catering_p_cocktail` | boolean_match | 5% | |
-| `catering_u_dietary` | `catering_p_dietary` | contains | 5% | |
-| `catering_u_beverages` | `catering_p_beverages` | contains | 5% | |
-| `catering_u_cake` | `catering_p_cake` | exact | 5% | |
-| `catering_u_staff` | `catering_p_staff_levels` | single_in_multiple | 5% | |
-| `catering_u_tasting` | `catering_p_tasting` | preference_match | 3% | |
-| `catering_u_setup` | `catering_p_setup` | boolean_match | 2% | |
-
-#### Centro de Eventos
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `venue_u_type` | `venue_p_type` | exact | 20% | |
-| `venue_u_budget` | `venue_p_price_min/max` | range_overlap | 20% | |
-| `venue_u_capacity` | `venue_p_capacity_min/max` | **threshold_can_accommodate** | 15% | Si usuario tiene 150 invitados y venue tiene capacidad 50-300 → 100% |
-| `venue_u_setting` | `venue_p_settings` | single_in_multiple | 15% | |
-| `venue_u_exclusivity` | `venue_p_exclusivity` | preference_match | 5% | |
-| `venue_u_ceremony_space` | `venue_p_ceremony_space` | boolean_match | 5% | |
-| `venue_u_parking` | `venue_p_parking` | preference_match | 5% | |
-| `venue_u_catering_policy` | `venue_p_catering_policy` | exact | 5% | |
-| `venue_u_end_time` | `venue_p_end_time` | **threshold_at_least** | 5% | Si usuario quiere hasta 2am y venue permite hasta 4am → 100% |
-| `venue_u_accommodation` | `venue_p_accommodation` | preference_match | 3% | |
-| `venue_u_accessibility` | `venue_p_accessibility` | boolean_match | 2% | |
-
-#### Decoración
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `deco_u_style` | `deco_p_styles` | single_in_multiple | 25% | |
-| `deco_u_budget` | `deco_p_price_min/max` | range_overlap | 20% | |
-| `deco_u_colors` | `deco_p_color_expertise` | contains | 15% | |
-| `deco_u_flowers` | `deco_p_flower_types` | contains | 10% | |
-| `deco_u_bridal_bouquet` | `deco_p_bridal_bouquet` | boolean_match | 5% | |
-| `deco_u_ceremony_deco` | `deco_p_ceremony_deco` | boolean_match | 5% | |
-| `deco_u_table_centerpieces` | `deco_p_centerpiece_types` | single_in_multiple | 5% | |
-| `deco_u_table_count` | `deco_p_table_capacity` | **threshold_at_least** | 5% | Si usuario tiene 25 mesas y proveedor puede hacer hasta 50 → 100% |
-| `deco_u_extras` | `deco_p_extras` | contains | 5% | |
-| `deco_u_rental` | `deco_p_rental` | boolean_match | 5% | |
-
-#### Wedding Planner
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `wp_u_service_level` | `wp_p_service_levels` | single_in_multiple | 25% | |
-| `wp_u_budget` | `wp_p_price_min/max` | range_overlap | 20% | |
-| `wp_u_vendor_help` | `wp_p_vendor_network` | preference_match | 15% | |
-| `wp_u_design_help` | `wp_p_design_services` | contains | 10% | |
-| `wp_u_budget_management` | `wp_p_budget_management` | boolean_match | 5% | |
-| `wp_u_timeline_management` | `wp_p_timeline_management` | boolean_match | 5% | |
-| `wp_u_guest_management` | `wp_p_guest_management` | boolean_match | 5% | |
-| `wp_u_rehearsal` | `wp_p_rehearsal` | boolean_match | 3% | |
-
-#### Maquillaje & Peinado
-| Criterio Usuario | Criterio Proveedor | Tipo Match | Peso | Notas |
-|------------------|-------------------|------------|------|-------|
-| `makeup_u_style` | `makeup_p_styles` | single_in_multiple | 25% | |
-| `makeup_u_budget` | `makeup_p_price_bride` | range_overlap | 20% | |
-| `makeup_u_hair` | `makeup_p_hair` | boolean_match | 15% | |
-| `makeup_u_trial` | `makeup_p_trial` | preference_match | 10% | |
-| `makeup_u_hair_style` | `makeup_p_hair_styles` | single_in_multiple | 10% | |
-| `makeup_u_lashes` | `makeup_p_lashes` | preference_match | 5% | |
-| `makeup_u_touch_ups` | `makeup_p_touch_ups` | exact | 4% | |
-| `makeup_u_extensions` | `makeup_p_extensions` | boolean_match | 3% | |
-| `makeup_u_bridesmaids` | `makeup_p_max_clients` | **threshold_at_least** | 5% | Si usuario necesita 8 personas y proveedor atiende hasta 15 → 100% |
-
----
-
-## Anexo: Estructura de Datos TypeScript
-
-### Tipos para Encuestas
-
-```typescript
-// Tipo de pregunta
-type QuestionType = 'single' | 'multiple' | 'range' | 'boolean' | 'text' | 'number';
-
-// Opción de respuesta
-interface QuestionOption {
-  id: string;
-  label: string;
-  description?: string;
-}
-
-// Definición de pregunta
-interface SurveyQuestion {
-  id: string;
-  question: string;
-  type: QuestionType;
-  options?: QuestionOption[];
-  min?: number;
-  max?: number;
-  required: boolean;
-  weight: number; // 0-100
-}
-
-// Respuestas guardadas
-interface SurveyResponse {
-  id: string;
-  entityId: string; // userId o providerId
-  entityType: 'user' | 'provider';
-  category: string;
-  responses: Record<string, string | string[] | number | boolean>;
-  completedAt: Timestamp;
-}
-
-// Categoría con sus preguntas
-interface CategorySurveyConfig {
-  categoryId: string;
-  categoryName: string;
-  userQuestions: SurveyQuestion[];
-  providerQuestions: SurveyQuestion[];
-}
-```
-
-### Tipos para Matching Avanzado
-
-```typescript
-// Criterio de matching explícito
-interface ExplicitMatchCriterion {
-  userQuestionId: string;
-  providerQuestionId: string;
-  weight: number;
-  matchType: 'exact' | 'contains' | 'range_overlap' | 'boolean_match' | 'single_in_multiple' | 'preference_match';
-  // Para rangos numéricos, mapeo de opciones del usuario a valores
-  userRangeMapping?: Record<string, { min: number; max: number }>;
-  // Para preference_match
-  preferenceMapping?: Record<string, number>;
-}
-
-// Resultado del matching
-interface MatchResult {
-  providerId: string;
-  userId: string;
-  category: CategoryId;
-  matchScore: number;          // Score final (0-100)
-  matchDetails: MatchDetail[]; // Detalles por criterio
-  specificityBonus: number;    // Bonus por ser especialista (+0 a +10)
-  coverageScore: number;       // % de criterios bien cubiertos
-  createdAt: Date;
-}
-
-// Detalle de un criterio
-interface MatchDetail {
-  criterionId: string;
-  userQuestionId: string;
-  providerQuestionId: string;
-  userValue: string | string[] | number | boolean | undefined;
-  providerValue: string | string[] | number | boolean | undefined;
-  score: number;               // Score del criterio (0-1)
-  weight: number;              // Peso del criterio
-  matchType: string;           // Tipo de comparación usado
-  explanation?: string;        // Explicación legible
-}
-
-// Perfiles del wizard
-interface UserWizardProfile {
-  budget: string;
-  guestCount: string;
-  region: string;
-  eventStyle: string;
-  ceremonyTypes: string[];
-  priorityCategories: string[];
-  involvementLevel: string;
-}
-
-interface ProviderWizardProfile {
-  serviceStyle: string;
-  priceRange: string;
-  workRegion: string;
-  acceptsOutsideZone: boolean;
-  categories: string[];
-}
-```
-
----
-
-## Anexo: Ejemplos de Cálculo de Match
-
-### Ejemplo 1: Proveedor Especialista vs Generalista
-
-**Usuario busca:** Fotografía documental, presupuesto $800k-1.2M
-
-**Proveedor A (Especialista):**
-- Estilos: solo "documental"
-- Precio: $700k - $1M
-- Score base: 95%
-- Bonus especificidad: +8%
-- **Score final: 100%** (capped)
-
-**Proveedor B (Generalista):**
-- Estilos: todos los 6 estilos
-- Precio: $500k - $2M
-- Score base: 90%
-- Bonus especificidad: +1%
-- **Score final: 91%**
-
-### Ejemplo 2: Match de Rango de Presupuesto
-
-**Usuario:** "500k_800k" → se mapea a { min: 500000, max: 800000 }
-
-**Proveedor:** price_min: 400000, price_max: 900000
-
-**Cálculo:**
-- Superposición: 500000 - 800000 (todo el rango del usuario)
-- Score: 100% (superposición completa)
-
-**Proveedor alternativo:** price_min: 900000, price_max: 1500000
-
-**Cálculo:**
-- No hay superposición
-- Gap: 100000 (900k - 800k)
-- Score: ~50% (penalización por estar fuera del rango)
 
 ---
 
 *Documento actualizado: Diciembre 2025*
-*Versión: 2.0 - Sistema de Matchmaking Avanzado*
-
+*Versión: 3.0 - Incluye todas las categorías implementadas*
+*Total de categorías: 13*
+*Estado: ✅ IMPLEMENTADO*
