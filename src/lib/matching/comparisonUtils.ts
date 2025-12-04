@@ -173,6 +173,7 @@ const MAKEUP_CRITERIA: MatchCriterion[] = [
 ];
 
 // Mapa de criterios exportado
+// Nota: Las categorías sin criterios específicos usan un array vacío y caen al fallback
 export const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, MatchCriterion[]> = {
   photography: PHOTOGRAPHY_CRITERIA,
   video: VIDEO_CRITERIA,
@@ -182,6 +183,12 @@ export const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, MatchCriterion[]> = 
   decoration: DECORATION_CRITERIA,
   wedding_planner: WEDDING_PLANNER_CRITERIA,
   makeup: MAKEUP_CRITERIA,
+  // Categorías pendientes de implementar criterios específicos
+  entertainment: [],
+  cakes: [],
+  transport: [],
+  invitations: [],
+  dress: [],
 };
 
 // ============================================

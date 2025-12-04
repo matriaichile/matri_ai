@@ -244,6 +244,7 @@ export default function ProviderDashboardPage() {
         phone: lead.userInfo.phone,
         eventDate: lead.userInfo.eventDate,
         budget: lead.userInfo.budget,
+        budgetAmount: 0, // No disponible en userInfo denormalizada
         region: lead.userInfo.region,
         // Campos que no tenemos en userInfo - se mostrarán como vacíos
         isDateTentative: false,

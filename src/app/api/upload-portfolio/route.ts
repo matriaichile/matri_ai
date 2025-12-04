@@ -381,13 +381,6 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// Exportar constantes útiles
-export const config = {
-  api: {
-    bodyParser: false, // Necesario para manejar FormData
-  },
-};
-
 // Exportar info sobre límites para usar en el cliente
 export { MAX_PORTFOLIO_ITEMS, MIN_PORTFOLIO_ITEMS };
 

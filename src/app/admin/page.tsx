@@ -20,6 +20,7 @@ import {
   Heart,
   XCircle,
   MessageSquare,
+  Calendar,
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -233,6 +234,27 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Formatear fecha de registro
+  const formatRegistrationDate = (date: Date | undefined) => {
+    if (!date) return 'Sin fecha';
+    const d = new Date(date);
+    return d.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // Calcular días desde el registro
+  const getDaysSinceRegistration = (date: Date | undefined) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - d.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   const getProgressClass = (used: number, limit: number) => {
     if (limit === 0) return styles.high;
     const pct = (used / limit) * 100;
@@ -425,6 +447,9 @@ export default function AdminDashboardPage() {
                       
                       // Métricas del proveedor
                       const metrics = provider.metrics || { timesInterested: 0, timesNotInterested: 0 };
+                      
+                      // Días desde registro
+                      const daysSinceProvider = getDaysSinceRegistration(provider.createdAt);
 
                       return (
                         <tr key={provider.id}>
@@ -438,6 +463,11 @@ export default function AdminDashboardPage() {
                               )}
                             </div>
                             <div className={styles.cellSecondary}>{provider.email}</div>
+                            <div className={styles.cellDate}>
+                              <Calendar size={12} />
+                              <span>{formatRegistrationDate(provider.createdAt)}</span>
+                              {daysSinceProvider !== null && <span className={styles.cellDateDays}>({daysSinceProvider}d)</span>}
+                            </div>
                           </td>
                           <td>{provider.categories.map(getCategoryLabel).join(', ')}</td>
                           <td>{getRegionLabel(provider.workRegion)}</td>
@@ -565,28 +595,36 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map(user => (
-                      <tr key={user.id}>
-                        <td>
-                          <div className={styles.cellPrimary}>{user.coupleNames}</div>
-                        </td>
-                        <td>
-                          <div className={styles.cellSecondary}>{user.email}</div>
-                          <div className={styles.cellSecondary}>{user.phone}</div>
-                        </td>
-                        <td>{user.eventDate || 'Sin definir'}</td>
-                        <td>{getRegionLabel(user.region)}</td>
-                        <td>
-                          <button
-                            className={styles.actionBtn}
-                            onClick={() => handleViewUserMatches(user)}
-                            title="Ver proveedores asignados"
-                          >
-                            <Eye />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredUsers.map(user => {
+                      const daysSince = getDaysSinceRegistration(user.createdAt);
+                      return (
+                        <tr key={user.id}>
+                          <td>
+                            <div className={styles.cellPrimary}>{user.coupleNames}</div>
+                          </td>
+                          <td>
+                            <div className={styles.cellSecondary}>{user.email}</div>
+                            <div className={styles.cellSecondary}>{user.phone}</div>
+                            <div className={styles.cellDate}>
+                              <Calendar size={12} />
+                              <span>{formatRegistrationDate(user.createdAt)}</span>
+                              {daysSince !== null && <span className={styles.cellDateDays}>({daysSince}d)</span>}
+                            </div>
+                          </td>
+                          <td>{user.eventDate || 'Sin definir'}</td>
+                          <td>{getRegionLabel(user.region)}</td>
+                          <td>
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => handleViewUserMatches(user)}
+                              title="Ver proveedores asignados"
+                            >
+                              <Eye />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

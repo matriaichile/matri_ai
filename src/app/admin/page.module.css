@@ -393,6 +393,27 @@
   margin-top: 0.125rem;
 }
 
+/* Fecha de Registro inline debajo del email */
+.cellDate {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+  font-size: 0.7rem;
+  color: var(--admin-text-muted);
+}
+
+.cellDate svg {
+  color: var(--admin-accent);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.cellDateDays {
+  color: var(--admin-accent);
+  opacity: 0.8;
+}
+
 /* Verified Badge */
 .verifiedBadge {
   display: flex;

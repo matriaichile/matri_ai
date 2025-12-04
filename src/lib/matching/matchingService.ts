@@ -906,6 +906,7 @@ const MAKEUP_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
 ];
 
 // Mapa de criterios por categoría
+// Nota: Las categorías sin criterios específicos usan un array vacío y caen al fallback
 const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, ExplicitMatchCriterion[]> = {
   photography: PHOTOGRAPHY_MATCHING_CRITERIA,
   video: VIDEO_MATCHING_CRITERIA,
@@ -915,6 +916,12 @@ const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, ExplicitMatchCriterion[]> =
   decoration: DECORATION_MATCHING_CRITERIA,
   wedding_planner: WEDDING_PLANNER_MATCHING_CRITERIA,
   makeup: MAKEUP_MATCHING_CRITERIA,
+  // Categorías pendientes de implementar criterios específicos
+  entertainment: [],
+  cakes: [],
+  transport: [],
+  invitations: [],
+  dress: [],
 };
 
 // ============================================

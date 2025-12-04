@@ -1292,90 +1292,114 @@
 }
 
 /* ====================================
-   PROFILE SECTION
+   PROFILE SECTION - Diseño Premium Compacto
    ==================================== */
 .profileSection {
   width: 100%;
+  position: relative;
+}
+
+/* Efecto de gradiente de fondo sutil */
+.profileSection::before {
+  content: '';
+  position: absolute;
+  top: -1rem;
+  left: -2rem;
+  right: -2rem;
+  height: 120px;
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(212, 175, 55, 0.05) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .profileActions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .editProfileButton {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 8px;
   color: var(--color-primary);
   font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.editProfileButton:hover {
-  background: rgba(212, 175, 55, 0.2);
-  border-color: var(--color-primary);
-}
-
-.cancelButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-text-muted);
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancelButton:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
-.saveButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border: none;
-  border-radius: 8px;
-  color: #000;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.editProfileButton:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(212, 175, 55, 0.15);
+}
+
+.cancelButton {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 8px;
+  color: #f87171;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+}
+
 .saveButton:hover:not(:disabled) {
-  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
   transform: translateY(-1px);
 }
 
 .saveButton:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .spinner {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border: 2px solid transparent;
   border-top-color: #000;
   border-radius: 50%;
@@ -1389,15 +1413,73 @@
 .profileGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: 0.875rem;
   width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1200px) {
+  .profileGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .profileCard {
-  background: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1.25rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+/* Línea de brillo superior */
+.profileCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.3) 50%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Gradiente de fondo en hover */
+.profileCard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.03) 0%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.profileCard:hover {
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+}
+
+.profileCard:hover::before,
+.profileCard:hover::after {
+  opacity: 1;
 }
 
 .profileCardFull {
@@ -1407,19 +1489,27 @@
 .profileCardTitle {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
-  margin: 0 0 1rem;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.875rem;
+  position: relative;
+  z-index: 1;
 }
 
 .profileCardTitle svg {
   color: var(--color-primary);
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
+  padding: 5px;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 7px;
+  box-sizing: content-box;
 }
 
 .profileCardTitle span {
@@ -1431,61 +1521,72 @@
 .profileCardContent {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .profileField {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .fieldLabel {
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  font-weight: 500;
 }
 
 .fieldValue {
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--color-text);
+  line-height: 1.35;
 }
 
 .fieldInput {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.7rem;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
 }
 
 .fieldInput:focus {
   outline: none;
-  border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.04);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.08);
 }
 
 .fieldSelect {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.7rem;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23D4AF37' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem;
 }
 
 .fieldSelect:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.08);
 }
 
 .fieldSelect option {
@@ -1494,58 +1595,73 @@
 }
 
 .fieldTextarea {
-  padding: 0.75rem;
+  padding: 0.6rem 0.7rem;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
+  line-height: 1.45;
   transition: all 0.2s ease;
 }
 
 .fieldTextarea:focus {
   outline: none;
-  border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.04);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.08);
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
   cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.checkboxLabel:hover {
+  color: var(--color-text);
 }
 
 .checkboxLabel input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   accent-color: var(--color-primary);
+  cursor: pointer;
 }
 
 .tagsList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 0.35rem;
 }
 
 .tag {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 14px;
+  padding: 0.3rem 0.5rem;
+  background: rgba(212, 175, 55, 0.07);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 10px;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: var(--color-primary);
   white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.tag:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .tag svg {
@@ -1555,36 +1671,38 @@
 }
 
 /* ====================================
-   CATEGORIES EDITOR
+   CATEGORIES EDITOR - Diseño Compacto
    ==================================== */
 .fieldHint {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--color-text-muted);
   font-weight: 400;
+  font-style: italic;
 }
 
 .categoriesEditor {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .categoriesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.45rem;
 }
 
 .categoryToggle {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.875rem;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1593,7 +1711,7 @@
 
 .categoryToggle:hover:not(:disabled) {
   background: rgba(212, 175, 55, 0.05);
-  border-color: rgba(212, 175, 55, 0.3);
+  border-color: rgba(212, 175, 55, 0.25);
 }
 
 .categoryToggle:disabled {
@@ -1603,13 +1721,13 @@
 
 .categoryToggleActive {
   background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(212, 175, 55, 0.35);
   color: var(--color-primary);
 }
 
 .categoryToggle svg:first-child {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
@@ -1623,12 +1741,17 @@
 .categoryCheckIcon {
   color: var(--color-primary);
   flex-shrink: 0;
+  width: 14px;
+  height: 14px;
 }
 
 .categoryAddIcon {
   color: var(--color-text-muted);
   flex-shrink: 0;
-  opacity: 0.5;
+  opacity: 0.4;
+  width: 14px;
+  height: 14px;
+  transition: all 0.15s ease;
 }
 
 .categoryToggle:hover .categoryAddIcon {
@@ -1639,28 +1762,31 @@
 .newCategoriesNote {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.875rem;
-  background: rgba(234, 179, 8, 0.1);
-  border: 1px solid rgba(234, 179, 8, 0.2);
-  border-radius: 6px;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(234, 179, 8, 0.06);
+  border: 1px solid rgba(234, 179, 8, 0.18);
+  border-radius: 7px;
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #fbbf24;
   margin: 0;
 }
 
 .newCategoriesNote svg {
   flex-shrink: 0;
+  width: 14px;
+  height: 14px;
 }
 
 .socialLink {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
+  padding: 0.25rem 0;
 }
 
 .socialLink svg {
@@ -1673,7 +1799,7 @@
 .socialLink a {
   color: var(--color-text);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1685,7 +1811,7 @@
 
 .noData {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   font-style: italic;
   margin: 0;
@@ -1693,14 +1819,19 @@
 
 .descriptionText {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0;
+  padding: 0.55rem 0.7rem;
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 8px;
+  border-left: 2px solid rgba(212, 175, 55, 0.25);
 }
 
 .statusText {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .statusactive {
@@ -2252,6 +2383,31 @@
 
   .profileGrid {
     grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+  
+  .profileCard {
+    padding: 0.875rem;
+    border-radius: 10px;
+  }
+  
+  .profileCardTitle {
+    font-size: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .profileCardTitle svg {
+    width: 12px;
+    height: 12px;
+    padding: 4px;
+  }
+  
+  .fieldValue {
+    font-size: 0.8rem;
+  }
+  
+  .categoriesGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .surveysGrid {
