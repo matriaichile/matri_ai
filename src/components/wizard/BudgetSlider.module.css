@@ -4,27 +4,23 @@
   --slider-thumb: #a855f7;
   
   width: 100%;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
 .label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 1rem;
+  display: none; /* Ocultar label redundante - ya se muestra en el título del paso */
 }
 
 .valueDisplay {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  gap: 0.375rem;
 }
 
 .value {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #a855f7, #ec4899);
   -webkit-background-clip: text;
@@ -34,9 +30,9 @@
 }
 
 .rangeLabel {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.6rem;
   background: rgba(168, 85, 247, 0.15);
   border-radius: 9999px;
   border: 1px solid rgba(168, 85, 247, 0.3);
@@ -45,7 +41,7 @@
 .sliderContainer {
   position: relative;
   width: 100%;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 
 .slider {
@@ -110,16 +106,16 @@
 .rangeLabels {
   display: flex;
   justify-content: space-between;
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.5);
 }
 
 .markers {
   position: relative;
   width: 100%;
-  height: 24px;
-  margin-top: 0.5rem;
+  height: 20px;
+  margin-top: 0.25rem;
 }
 
 .marker {

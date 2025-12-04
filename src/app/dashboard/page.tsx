@@ -42,7 +42,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
-import { updateUserProfile, updateLeadStatus } from '@/lib/firebase/firestore';
+import { updateUserProfile, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics } from '@/lib/firebase/firestore';
+import { RejectReasonModal } from '@/components/matches';
 import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES, CEREMONY_TYPES, EVENT_STYLES, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -135,6 +136,11 @@ export default function UserDashboardPage() {
   
   // Estado para filtro de categoría en matches
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  
+  // Estado para el modal de rechazo
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [matchToReject, setMatchToReject] = useState<LeadMatch | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -208,11 +214,11 @@ export default function UserDashboardPage() {
     }
   };
 
-  // Aprobar match - guarda en la base de datos
+  // Aprobar match - guarda en la base de datos con métricas
   const handleApproveMatch = async (leadId: string) => {
     try {
       setProcessingMatchId(leadId);
-      await updateLeadStatus(leadId, 'approved');
+      await approveLeadWithMetrics(leadId);
       setMatches(prev => prev.map(m => 
         m.id === leadId ? { ...m, status: 'approved' as const } : m
       ));
@@ -223,19 +229,35 @@ export default function UserDashboardPage() {
     }
   };
 
-  // Rechazar match - guarda en la base de datos
-  const handleRejectMatch = async (leadId: string) => {
+  // Abrir modal de rechazo - NO rechaza directamente
+  const handleRejectClick = (match: LeadMatch) => {
+    setMatchToReject(match);
+    setRejectModalOpen(true);
+  };
+
+  // Confirmar rechazo con motivo
+  const handleConfirmReject = async (reason: string, reasonId: string) => {
+    if (!matchToReject) return;
+    
     try {
-      setProcessingMatchId(leadId);
-      await updateLeadStatus(leadId, 'rejected');
+      setIsRejecting(true);
+      await rejectLeadWithReason(matchToReject.id, reason, reasonId);
       setMatches(prev => prev.map(m => 
-        m.id === leadId ? { ...m, status: 'rejected' as const } : m
+        m.id === matchToReject.id ? { ...m, status: 'rejected' as const } : m
       ));
+      setRejectModalOpen(false);
+      setMatchToReject(null);
     } catch (error) {
       console.error('Error rechazando match:', error);
     } finally {
-      setProcessingMatchId(null);
+      setIsRejecting(false);
     }
+  };
+
+  // Cerrar modal de rechazo
+  const handleCloseRejectModal = () => {
+    setRejectModalOpen(false);
+    setMatchToReject(null);
   };
 
   // Revertir estado a pendiente - guarda en la base de datos
@@ -546,7 +568,7 @@ export default function UserDashboardPage() {
                                 <div className={styles.matchActionsButtons}>
                                   <button 
                                     className={styles.rejectButton}
-                                    onClick={() => handleRejectMatch(match.id)}
+                                    onClick={() => handleRejectClick(match)}
                                     disabled={isProcessing}
                                     title="Descartar"
                                   >
@@ -1409,8 +1431,8 @@ export default function UserDashboardPage() {
                       <button 
                         className={styles.providerModalRejectButton}
                         onClick={() => {
-                          handleRejectMatch(selectedMatch.id);
                           handleCloseProviderDetails();
+                          handleRejectClick(selectedMatch);
                         }}
                         disabled={processingMatchId === selectedMatch.id}
                       >
@@ -1451,6 +1473,15 @@ export default function UserDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de rechazo con motivo */}
+      <RejectReasonModal
+        isOpen={rejectModalOpen}
+        providerName={matchToReject?.providerInfo?.providerName || ''}
+        onClose={handleCloseRejectModal}
+        onConfirm={handleConfirmReject}
+        isLoading={isRejecting}
+      />
     </DashboardLayout>
   );
 }

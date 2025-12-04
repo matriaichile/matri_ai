@@ -350,9 +350,6 @@ export const PROVIDER_CATEGORIES: WizardOption[] = [
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
   { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
-  { id: 'cake', label: 'Tortas & Dulces', iconType: 'cake' },
-  { id: 'transport', label: 'Transporte', iconType: 'car' },
-  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
 ];
 
 export const SERVICE_STYLES: WizardOption[] = [

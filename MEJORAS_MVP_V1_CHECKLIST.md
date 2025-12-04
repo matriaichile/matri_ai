@@ -9,9 +9,9 @@
 
 | Prioridad | Total | Completadas | Pendientes |
 | --------- | ----- | ----------- | ---------- |
-| 🔴 Alta   | 6     | 5           | 1          |
-| 🟡 Media  | 4     | 2           | 2          |
-| 🟢 Baja   | 2     | 0           | 2          |
+| 🔴 Alta   | 6     | 6           | 0          |
+| 🟡 Media  | 4     | 4           | 0          |
+| 🟢 Baja   | 2     | 1           | 1          |
 
 ---
 
@@ -98,7 +98,7 @@
 - [x] Agregar campo `rejectedAt` al tipo `Lead`
 - [x] Implementar opciones predefinidas + "Otro"
 - [x] Crear función `rejectLeadWithReason` en Firestore
-- [ ] Integrar en página de matches (pendiente conexión UI)
+- [x] Integrar en página de matches (dashboard y matches por categoría)
 
 **Archivos creados/modificados:**
 
@@ -106,20 +106,25 @@
 - `src/components/matches/RejectReasonModal.module.css` ✅ (NUEVO)
 - `src/components/matches/index.ts` ✅ (NUEVO)
 - `src/lib/firebase/firestore.ts` ✅
+- `src/app/dashboard/page.tsx` ✅
+- `src/app/dashboard/category/[categoryId]/matches/page.tsx` ✅
 
-#### 3.2 Límite de 5 Proveedores cada 24 horas 🔴 ✅ COMPLETADO (Lógica)
+#### 3.2 Límite de 5 Proveedores cada 24 horas 🔴 ✅ COMPLETADO
 
 - [x] Crear utilidad `matchLimits.ts` con lógica de localStorage
 - [x] Implementar funciones: `canShowMoreProviders`, `registerProviderShown`, `getTimeUntilReset`
 - [x] Implementar `formatTimeUntilReset`, `getRemainingSlots`, `unregisterProviderShown`
-- [ ] Crear componente `ShowMoreButton.tsx` (pendiente)
-- [ ] Integrar en página de matches (pendiente conexión UI)
-- [ ] Mostrar mensaje cuando se alcanza el límite (pendiente)
-- [ ] Mostrar tiempo restante para reset (pendiente)
+- [x] Crear componente `ShowMoreButton.tsx`
+- [x] Integrar en página de matches por categoría
+- [x] Mostrar mensaje cuando se alcanza el límite
+- [x] Mostrar tiempo restante para reset
+- [x] Crear función `generateNewMatchForUser` en Firestore
 
 **Archivos creados:**
 
 - `src/utils/matchLimits.ts` ✅ (NUEVO)
+- `src/components/matches/ShowMoreButton.tsx` ✅ (NUEVO)
+- `src/components/matches/ShowMoreButton.module.css` ✅ (NUEVO)
 
 ---
 
@@ -204,27 +209,31 @@
 - [ ] Mostrar galería en panel de detalles del match
 - [ ] Agregar indicador de progreso de upload
 
-#### 5.2 Badges de Verificación 🟢 - POSPUESTO
+#### 5.2 Badges de Verificación 🟢 ✅ COMPLETADO (Básico)
 
-- [ ] Agregar campo `badges` a `ProviderProfile`
-- [ ] Crear componente `BadgeDisplay.tsx`
-- [ ] Crear UI en admin para asignar badges
-- [ ] Mostrar badges en cards de match
+- [x] Agregar campo `isVerified` a `ProviderProfile`
+- [x] Crear UI en admin para toggle de verificación (solo super admin)
+- [x] Mostrar badge verificado en tabla de proveedores del admin
+- [ ] Mostrar badges en cards de match (pendiente UI en dashboard de usuario)
 
 ---
 
 ### Fase 6: Panel Admin
 
-#### 6.1 Métricas en Panel Admin 🟡
+#### 6.1 Métricas en Panel Admin 🟡 ✅ COMPLETADO
 
-- [ ] Agregar columnas de métricas en tabla de proveedores
-- [ ] Mostrar: Veces ofrecido, Me interesa, No me interesa, Tasa de conversión
-- [ ] Crear funciones para obtener métricas agregadas
+- [x] Agregar columnas de métricas en tabla de proveedores
+- [x] Mostrar: Veces ofrecido, Me interesa, No me interesa, Tasa de conversión
+- [x] Agregar badge de verificación con toggle (solo super admin)
+- [x] Crear función `updateProviderVerification` en admin-firestore
+- [x] Agregar campo `isVerified` a `ProviderProfile`
 
-**Archivos a modificar:**
+**Archivos modificados:**
 
-- `src/app/admin/page.tsx`
-- `src/lib/firebase/firestore.ts`
+- `src/app/admin/page.tsx` ✅
+- `src/app/admin/page.module.css` ✅
+- `src/lib/firebase/admin-firestore.ts` ✅
+- `src/store/authStore.ts` ✅
 
 ---
 

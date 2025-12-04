@@ -19,6 +19,7 @@ import {
   IconCar,
   IconMail,
   IconUsers,
+  IconParty,
 } from './Icons';
 
 // Mapa de iconos por tipo
@@ -39,6 +40,7 @@ const ICON_MAP: Record<string, React.FC> = {
   car: IconCar,
   mail: IconMail,
   users: IconUsers,
+  party: IconParty,
 };
 
 interface SelectionCardProps {

@@ -259,7 +259,6 @@ export default function UserRegisterPage() {
                   const budgetLabel = getBudgetLabel(value);
                   updateUserData({ budgetAmount: value, budget: budgetLabel });
                 }}
-                label="Presupuesto aproximado"
               />
             </div>
             

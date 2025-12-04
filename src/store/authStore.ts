@@ -105,6 +105,7 @@ export interface ProviderProfile {
   tiktok: string;
   portfolioImages: string[];
   status: ProviderStatus;
+  isVerified: boolean; // Badge de verificación (solo super admin puede modificar)
   // Sistema de leads POR CATEGORÍA - NUEVO
   categoryLeadLimits: CategoryLeadLimitsMap; // Límite máximo de leads por categoría
   categoryLeadsUsed: CategoryLeadLimitsMap; // Leads consumidos por categoría

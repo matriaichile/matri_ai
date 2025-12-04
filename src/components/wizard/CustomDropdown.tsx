@@ -17,6 +17,7 @@ interface CustomDropdownProps {
   label?: string;
   placeholder?: string;
   icon?: React.ReactNode;
+  dropUp?: boolean; // Si true, el dropdown se abre hacia arriba
 }
 
 /**
@@ -31,10 +32,11 @@ export default function CustomDropdown({
   label,
   placeholder = 'Selecciona una opción',
   icon,
+  dropUp = false,
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, bottom: 'auto' as number | 'auto' });
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -46,13 +48,26 @@ export default function CustomDropdown({
   const updateDropdownPosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 4, // 4px de gap
-        left: rect.left,
-        width: rect.width,
-      });
+      
+      if (dropUp) {
+        // Abrir hacia arriba - calcular desde el bottom de la ventana
+        const bottomPosition = window.innerHeight - rect.top + 4;
+        setDropdownPosition({
+          top: 0, // No se usa en dropUp
+          bottom: bottomPosition,
+          left: rect.left,
+          width: rect.width,
+        });
+      } else {
+        setDropdownPosition({
+          top: rect.bottom + 4, // 4px de gap
+          bottom: 'auto',
+          left: rect.left,
+          width: rect.width,
+        });
+      }
     }
-  }, []);
+  }, [dropUp]);
 
   // Cerrar al hacer click fuera
   useEffect(() => {
@@ -179,12 +194,15 @@ export default function CustomDropdown({
       {isOpen && typeof document !== 'undefined' && createPortal(
         <div 
           id="custom-dropdown-menu"
-          className={styles.dropdown} 
+          className={`${styles.dropdown} ${dropUp ? styles.dropdownUp : ''}`} 
           role="listbox" 
           ref={listRef}
           style={{
             position: 'fixed',
-            top: dropdownPosition.top,
+            ...(dropUp 
+              ? { bottom: dropdownPosition.bottom, top: 'auto' }
+              : { top: dropdownPosition.top, bottom: 'auto' }
+            ),
             left: dropdownPosition.left,
             width: dropdownPosition.width,
           }}

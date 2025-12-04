@@ -26,7 +26,9 @@ import {
 } from 'lucide-react';
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
-import { getUserLeadsByCategory, Lead, updateLeadStatus } from '@/lib/firebase/firestore';
+import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser } from '@/lib/firebase/firestore';
+import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
+import { registerProviderShown } from '@/utils/matchLimits';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 
@@ -65,6 +67,14 @@ export default function CategoryMatchesPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<ExtendedLead | null>(null);
   const [loadingProviderDetails, setLoadingProviderDetails] = useState(false);
+  
+  // Estado para el modal de rechazo
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [matchToReject, setMatchToReject] = useState<ExtendedLead | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
+  
+  // Estado para generar nuevos matches
+  const [isGeneratingNew, setIsGeneratingNew] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
@@ -98,11 +108,11 @@ export default function CategoryMatchesPage() {
     }
   }, [firebaseUser?.uid, categoryId]);
 
-  // Aprobar match
+  // Aprobar match - usa la función con métricas
   const handleApprove = async (leadId: string) => {
     try {
       setProcessingId(leadId);
-      await updateLeadStatus(leadId, 'approved');
+      await approveLeadWithMetrics(leadId);
       setMatches(prev => prev.map(m => 
         m.id === leadId ? { ...m, status: 'approved' as const } : m
       ));
@@ -113,18 +123,59 @@ export default function CategoryMatchesPage() {
     }
   };
 
-  // Rechazar match
-  const handleReject = async (leadId: string) => {
+  // Abrir modal de rechazo - NO rechaza directamente
+  const handleRejectClick = (match: ExtendedLead) => {
+    setMatchToReject(match);
+    setRejectModalOpen(true);
+  };
+
+  // Confirmar rechazo con motivo
+  const handleConfirmReject = async (reason: string, reasonId: string) => {
+    if (!matchToReject) return;
+    
     try {
-      setProcessingId(leadId);
-      await updateLeadStatus(leadId, 'rejected');
+      setIsRejecting(true);
+      await rejectLeadWithReason(matchToReject.id, reason, reasonId);
       setMatches(prev => prev.map(m => 
-        m.id === leadId ? { ...m, status: 'rejected' as const } : m
+        m.id === matchToReject.id ? { ...m, status: 'rejected' as const } : m
       ));
+      setRejectModalOpen(false);
+      setMatchToReject(null);
     } catch (error) {
       console.error('Error rechazando match:', error);
     } finally {
-      setProcessingId(null);
+      setIsRejecting(false);
+    }
+  };
+
+  // Cerrar modal de rechazo
+  const handleCloseRejectModal = () => {
+    setRejectModalOpen(false);
+    setMatchToReject(null);
+  };
+
+  // Generar un nuevo match para esta categoría
+  const handleRequestNewMatch = async (): Promise<boolean> => {
+    if (!firebaseUser?.uid || !categoryId) return false;
+    
+    try {
+      setIsGeneratingNew(true);
+      const newLead = await generateNewMatchForUser(firebaseUser.uid, categoryId);
+      
+      if (newLead) {
+        // Registrar en localStorage que se mostró un nuevo proveedor
+        registerProviderShown(firebaseUser.uid, categoryId, newLead.providerId);
+        
+        // Agregar el nuevo lead a la lista
+        setMatches(prev => [newLead, ...prev]);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error generando nuevo match:', error);
+      return false;
+    } finally {
+      setIsGeneratingNew(false);
     }
   };
 
@@ -340,7 +391,7 @@ export default function CategoryMatchesPage() {
                             <div className={styles.actionButtons}>
                               <button 
                                 className={styles.rejectButton}
-                                onClick={() => handleReject(match.id)}
+                                onClick={() => handleRejectClick(match)}
                                 disabled={processingId === match.id}
                                 title="Descartar"
                               >
@@ -372,6 +423,16 @@ export default function CategoryMatchesPage() {
                     );
                   })}
                 </div>
+                
+                {/* Botón para mostrar nuevo proveedor */}
+                {firebaseUser?.uid && (
+                  <ShowMoreButton
+                    userId={firebaseUser.uid}
+                    categoryId={categoryId}
+                    onRequestNewMatch={handleRequestNewMatch}
+                    isLoading={isGeneratingNew}
+                  />
+                )}
               </section>
             )}
 
@@ -684,8 +745,8 @@ export default function CategoryMatchesPage() {
                       <button 
                         className={styles.detailsRejectButton}
                         onClick={() => {
-                          handleReject(selectedMatch.id);
                           handleCloseDetails();
+                          handleRejectClick(selectedMatch);
                         }}
                         disabled={processingId === selectedMatch.id}
                       >
@@ -737,6 +798,15 @@ export default function CategoryMatchesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de rechazo con motivo */}
+      <RejectReasonModal
+        isOpen={rejectModalOpen}
+        providerName={matchToReject?.providerInfo?.providerName || ''}
+        onClose={handleCloseRejectModal}
+        onConfirm={handleConfirmReject}
+        isLoading={isRejecting}
+      />
     </div>
   );
 }

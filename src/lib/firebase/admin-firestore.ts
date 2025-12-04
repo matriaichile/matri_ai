@@ -879,3 +879,26 @@ export const getProviderLeadStats = async (providerId: string): Promise<{
   }
 };
 
+// ============================================
+// FUNCIONES DE VERIFICACIÓN DE PROVEEDORES (SUPER ADMIN)
+// ============================================
+
+/**
+ * Actualizar el estado de verificación de un proveedor
+ * Solo super admin puede usar esta función
+ */
+export const updateProviderVerification = async (
+  providerId: string,
+  isVerified: boolean
+): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
+      isVerified,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error al actualizar verificación del proveedor:', error);
+    throw error;
+  }
+};
+

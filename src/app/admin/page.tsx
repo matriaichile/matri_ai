@@ -16,6 +16,11 @@ import {
   X,
   AlertTriangle,
   Info,
+  CheckCircle,
+  TrendingUp,
+  Heart,
+  XCircle,
+  BarChart3,
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -27,6 +32,7 @@ import {
   getProviderLeadsForAdmin,
   updateProviderLeadLimit,
   updateProviderStatus,
+  updateProviderVerification,
 } from '@/lib/firebase/admin-firestore';
 import { AdminStats } from '@/store/adminStore';
 import { PROVIDER_CATEGORIES, REGIONS } from '@/store/wizardStore';
@@ -185,6 +191,20 @@ export default function AdminDashboardPage() {
       ));
     } catch (error) {
       console.error('Error actualizando estado:', error);
+    }
+  };
+
+  // Cambiar estado de verificación del proveedor (solo super admin)
+  const handleToggleVerification = async (provider: ProviderProfile) => {
+    if (!isSuperAdmin) return;
+    const newVerified = !provider.isVerified;
+    try {
+      await updateProviderVerification(provider.id, newVerified);
+      setProviders(providers.map(p => 
+        p.id === provider.id ? { ...p, isVerified: newVerified } : p
+      ));
+    } catch (error) {
+      console.error('Error actualizando verificación:', error);
     }
   };
 
@@ -393,6 +413,7 @@ export default function AdminDashboardPage() {
                       <th>Categoría</th>
                       <th>Región</th>
                       <th>Estado</th>
+                      <th>Métricas</th>
                       <th>Leads (Usados / Límite)</th>
                       <th>Acciones</th>
                     </tr>
@@ -402,11 +423,24 @@ export default function AdminDashboardPage() {
                       const used = provider.leadsUsed ?? 0;
                       const limit = provider.leadLimit ?? 10;
                       const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
+                      
+                      // Métricas del proveedor
+                      const metrics = provider.metrics || { timesOffered: 0, timesInterested: 0, timesNotInterested: 0 };
+                      const conversionRate = metrics.timesOffered > 0 
+                        ? Math.round((metrics.timesInterested / metrics.timesOffered) * 100) 
+                        : 0;
 
                       return (
                         <tr key={provider.id}>
                           <td>
-                            <div className={styles.cellPrimary}>{provider.providerName}</div>
+                            <div className={styles.cellPrimaryWithBadge}>
+                              <span className={styles.cellPrimary}>{provider.providerName}</span>
+                              {provider.isVerified && (
+                                <span className={styles.verifiedBadge} title="Proveedor verificado">
+                                  <CheckCircle size={14} />
+                                </span>
+                              )}
+                            </div>
                             <div className={styles.cellSecondary}>{provider.email}</div>
                           </td>
                           <td>{provider.categories.map(getCategoryLabel).join(', ')}</td>
@@ -428,6 +462,26 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
                           <td>
+                            <div className={styles.metricsCell}>
+                              <div className={styles.metricItem} title="Veces ofrecido">
+                                <TrendingUp size={12} />
+                                <span>{metrics.timesOffered}</span>
+                              </div>
+                              <div className={styles.metricItem} title="Me interesa">
+                                <Heart size={12} className={styles.metricInterested} />
+                                <span>{metrics.timesInterested}</span>
+                              </div>
+                              <div className={styles.metricItem} title="No me interesa">
+                                <XCircle size={12} className={styles.metricNotInterested} />
+                                <span>{metrics.timesNotInterested}</span>
+                              </div>
+                              <div className={`${styles.metricItem} ${styles.metricConversion}`} title="Tasa de conversión">
+                                <BarChart3 size={12} />
+                                <span>{conversionRate}%</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
                             <div className={styles.leadCounter}>
                               <div className={styles.leadCounterValue}>
                                 <span className={styles.leadUsed}>{used}</span>
@@ -444,6 +498,15 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>
                             <div className={styles.actions}>
+                              {isSuperAdmin && (
+                                <button
+                                  className={`${styles.actionBtn} ${provider.isVerified ? styles.actionBtnVerified : ''}`}
+                                  onClick={() => handleToggleVerification(provider)}
+                                  title={provider.isVerified ? 'Quitar verificación' : 'Verificar proveedor'}
+                                >
+                                  <CheckCircle />
+                                </button>
+                              )}
                               <button
                                 className={styles.actionBtn}
                                 onClick={() => handleEditLeads(provider)}

@@ -315,6 +315,7 @@ export default function ProviderRegisterPage() {
                 value={providerData.workRegion}
                 onChange={(value) => updateProviderData({ workRegion: value })}
                 placeholder="Selecciona una región"
+                dropUp={true}
                 icon={
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />

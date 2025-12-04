@@ -1498,3 +1498,136 @@ async function generateMatchesWithWizardOnly(
   console.log(`✓ Generados ${createdLeads.length} matches (solo wizard) para ${category}`);
   return createdLeads;
 }
+
+/**
+ * Genera UN NUEVO match adicional para un usuario en una categoría.
+ * Busca proveedores que no hayan sido mostrados aún al usuario.
+ * @returns El nuevo lead creado, o null si no hay más proveedores disponibles
+ */
+export const generateNewMatchForUser = async (
+  userId: string,
+  category: CategoryId
+): Promise<Lead | null> => {
+  try {
+    // 1. Obtener el perfil del usuario
+    const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
+    if (!userDoc.exists()) {
+      throw new Error('Usuario no encontrado');
+    }
+    const userProfile = userDoc.data();
+
+    // 2. Obtener los leads existentes del usuario para esta categoría
+    const existingLeadsQuery = query(
+      collection(db, COLLECTIONS.LEADS),
+      where('userId', '==', userId),
+      where('category', '==', category)
+    );
+    const existingLeadsSnap = await getDocs(existingLeadsQuery);
+    const existingProviderIds = new Set(
+      existingLeadsSnap.docs.map(doc => doc.data().providerId)
+    );
+
+    // 3. Obtener proveedores activos de esta categoría que no hayan sido mostrados
+    const providersQuery = query(
+      collection(db, COLLECTIONS.PROVIDERS),
+      where('status', '==', 'active'),
+      where('categories', 'array-contains', category)
+    );
+    const providersSnap = await getDocs(providersQuery);
+
+    // 4. Filtrar proveedores que no hayan sido mostrados y tengan leads disponibles
+    const availableProviders: Array<{
+      id: string;
+      data: ProviderProfile;
+      score: number;
+    }> = [];
+
+    for (const providerDoc of providersSnap.docs) {
+      const providerId = providerDoc.id;
+      
+      // Saltar si ya fue mostrado
+      if (existingProviderIds.has(providerId)) continue;
+
+      const providerData = providerDoc.data() as ProviderProfile;
+      
+      // Verificar que tiene leads disponibles para esta categoría
+      const leadLimit = providerData.categoryLeadLimits?.[category] || 10;
+      const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
+      if (leadsUsed >= leadLimit) continue;
+
+      // Calcular un score básico basado en compatibilidad de región y precio
+      let score = 50; // Base score
+      
+      // Bonus por región coincidente
+      if (providerData.workRegion === userProfile.region) {
+        score += 20;
+      } else if (providerData.acceptsOutsideZone) {
+        score += 10;
+      }
+
+      // Bonus por rango de precio compatible
+      const priceCompatibility: Record<string, string[]> = {
+        'under_5m': ['budget'],
+        '5m_10m': ['budget', 'mid'],
+        '10m_15m': ['mid'],
+        '15m_20m': ['mid', 'premium'],
+        '20m_30m': ['premium'],
+        '30m_50m': ['premium', 'luxury'],
+        'over_50m': ['luxury'],
+      };
+      const compatibleRanges = priceCompatibility[userProfile.budget] || [];
+      if (compatibleRanges.includes(providerData.priceRange)) {
+        score += 20;
+      }
+
+      // Agregar algo de variación aleatoria para que no siempre salgan los mismos
+      score += Math.random() * 10;
+
+      availableProviders.push({
+        id: providerId,
+        data: providerData,
+        score,
+      });
+    }
+
+    // 5. Si no hay proveedores disponibles, retornar null
+    if (availableProviders.length === 0) {
+      console.log(`No hay más proveedores disponibles para ${category}`);
+      return null;
+    }
+
+    // 6. Ordenar por score y tomar el mejor
+    availableProviders.sort((a, b) => b.score - a.score);
+    const selectedProvider = availableProviders[0];
+
+    // 7. Crear el nuevo lead
+    const newLead = await createCategoryLead(
+      userId,
+      selectedProvider.id,
+      category,
+      Math.round(selectedProvider.score),
+      {
+        coupleNames: userProfile.coupleNames || 'Pareja',
+        eventDate: userProfile.eventDate || 'Por definir',
+        budget: userProfile.budget || '',
+        region: userProfile.region || '',
+        email: userProfile.email,
+        phone: userProfile.phone || '',
+      },
+      {
+        providerName: selectedProvider.data.providerName,
+        categories: selectedProvider.data.categories || [],
+        priceRange: selectedProvider.data.priceRange || '',
+      }
+    );
+
+    // 8. Incrementar métrica de timesOffered del proveedor
+    await incrementProviderMetric(selectedProvider.id, 'timesOffered');
+
+    console.log(`✓ Nuevo match generado: ${selectedProvider.data.providerName} (score: ${Math.round(selectedProvider.score)})`);
+    return newLead;
+  } catch (error) {
+    console.error('Error generando nuevo match:', error);
+    throw error;
+  }
+};
