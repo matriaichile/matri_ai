@@ -42,10 +42,11 @@ import {
   PartyPopper,
   Shirt
 } from 'lucide-react';
-import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES } from '@/store/authStore';
+import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES, PortfolioImage } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { updateUserProfile, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics } from '@/lib/firebase/firestore';
 import { RejectReasonModal } from '@/components/matches';
+import { PortfolioGallery } from '@/components/portfolio';
 import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES, CEREMONY_TYPES, EVENT_STYLES, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -86,7 +87,7 @@ interface Provider {
   tiktok?: string;
   email?: string;
   phone?: string;
-  portfolioImages: string[];
+  portfolioImages: PortfolioImage[];
 }
 
 // Iconos por categoría
@@ -1293,6 +1294,20 @@ export default function UserDashboardPage() {
                       <p className={styles.providerModalDescription}>
                         {providers[selectedMatch.providerId]?.description}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Portafolio de fotos */}
+                  {providers[selectedMatch.providerId]?.portfolioImages && 
+                   providers[selectedMatch.providerId].portfolioImages.length > 0 && (
+                    <div className={styles.providerModalSection}>
+                      <h4>Portafolio</h4>
+                      <PortfolioGallery
+                        images={providers[selectedMatch.providerId].portfolioImages}
+                        providerName={selectedMatch.providerInfo.providerName}
+                        compact={true}
+                        maxPreviewImages={4}
+                      />
                     </div>
                   )}
 

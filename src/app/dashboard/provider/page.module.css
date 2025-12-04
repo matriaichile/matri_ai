@@ -911,6 +911,29 @@
 }
 
 /* ====================================
+   PORTFOLIO SECTION
+   ==================================== */
+.portfolioSection {
+  width: 100%;
+}
+
+.portfolioIntro {
+  margin-bottom: 1.25rem;
+  padding: 0.875rem 1rem;
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 10px;
+}
+
+.portfolioIntro p {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ====================================
    PROFILE SECTION
    ==================================== */
 .profileSection {

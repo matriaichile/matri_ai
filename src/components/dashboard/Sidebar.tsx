@@ -11,13 +11,14 @@ import {
   Inbox,
   ChevronLeft,
   Menu,
-  Mail
+  Mail,
+  Image
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 // Definición de tipos para las secciones
 type UserSection = 'matches' | 'surveys' | 'profile';
-type ProviderSection = 'overview' | 'leads' | 'surveys' | 'profile';
+type ProviderSection = 'overview' | 'leads' | 'surveys' | 'portfolio' | 'profile';
 
 // Props base del sidebar
 interface BaseSidebarProps {
@@ -276,6 +277,15 @@ export default function Sidebar(props: SidebarProps) {
               {completedSurveysCount}/{profile.categories.length}
             </span>
           )}
+        </button>
+
+        <button 
+          className={`${styles.navItem} ${activeSection === 'portfolio' ? styles.navItemActive : ''}`}
+          onClick={() => onSectionChange('portfolio')}
+          title={!showExpanded ? 'Portafolio' : undefined}
+        >
+          <Image size={18} />
+          {showExpanded && <span>Portafolio</span>}
         </button>
         
         <button 

@@ -10,7 +10,7 @@
 | Prioridad | Total | Completadas | Pendientes |
 | --------- | ----- | ----------- | ---------- |
 | 🔴 Alta   | 6     | 6           | 0          |
-| 🟡 Media  | 4     | 4           | 0          |
+| 🟡 Media  | 5     | 5           | 0          |
 | 🟢 Baja   | 2     | 1           | 1          |
 
 ---
@@ -178,36 +178,62 @@
 
 ### Fase 5: Funcionalidades Pospuestas (Para Después del MVP)
 
-#### 5.1 Portafolio de Fotos (5-10 imágenes) 🟡 - POSPUESTO PARA FASE 2
+#### 5.1 Portafolio de Fotos (5-10 imágenes) 🟡 ✅ COMPLETADO
 
-> ⚠️ **NOTA IMPORTANTE**: Esta funcionalidad se implementará después del MVP.
+> **Decisión técnica implementada:**
 >
-> **Decisión técnica:**
->
-> - ❌ NO usar Firebase Storage (costos altos a escala)
 > - ✅ Usar **Cloudflare R2** (bucket S3-compatible, sin egress fees)
-> - ✅ Servir imágenes públicamente a través de **Cloudflare CDN/Proxy**
+> - ✅ Servir imágenes públicamente a través de **Cloudflare Workers Proxy**
+> - ✅ Bucket creado: `matrimatch-media`
+> - ✅ Custom domain configurado: `www.matrimatch.cl`
 >
-> **Especificaciones:**
+> **Especificaciones implementadas:**
 >
-> - Límite de peso por imagen: **5MB máximo** (para optimizar storage)
-> - Mínimo 5 fotos, máximo 10 fotos por proveedor
+> - Límite de peso por imagen: **5MB máximo**
+> - Mínimo 5 fotos recomendado, máximo 10 fotos por proveedor
 > - Formatos permitidos: JPG, PNG, WebP
-> - Compresión automática antes de subir
-> - Drag & drop para reordenar
+> - Compresión automática en cliente (canvas resize)
+> - Drag & drop para reordenar imágenes
 
-**Tareas pendientes:**
+**Tareas completadas:**
 
-- [ ] Crear cuenta/bucket en Cloudflare R2
-- [ ] Configurar CORS y políticas de acceso
-- [ ] Crear API route para upload (`/api/upload-portfolio`)
-- [ ] Implementar compresión de imágenes en cliente (sharp o browser-image-compression)
-- [ ] Crear componente `PortfolioUploader.tsx`
-- [ ] Crear componente `PortfolioGallery.tsx`
-- [ ] Agregar validación min/max en UI
-- [ ] Implementar drag & drop para reordenar (react-beautiful-dnd o similar)
-- [ ] Mostrar galería en panel de detalles del match
-- [ ] Agregar indicador de progreso de upload
+- [x] Crear cuenta/bucket en Cloudflare R2 (`matrimatch-media`)
+- [x] Crear Cloudflare Worker proxy (`cloudflare-worker/r2-proxy.js`)
+- [x] Crear API route para upload (`/api/upload-portfolio`)
+- [x] Implementar compresión de imágenes en cliente (canvas API)
+- [x] Crear componente `PortfolioUploader.tsx` con drag & drop
+- [x] Crear componente `PortfolioGallery.tsx` con modal de visualización
+- [x] Agregar validación min/max en UI (5-10 imágenes)
+- [x] Implementar drag & drop para reordenar (nativo HTML5)
+- [x] Agregar indicador de progreso de upload (XMLHttpRequest)
+- [x] Integrar en dashboard de proveedor (nueva sección "Portafolio")
+- [x] Mostrar galería en panel de detalles del match (integrado en ambos dashboards)
+
+**Archivos creados:**
+
+- `src/lib/cloudflare/r2.server.ts` - Cliente R2 para servidor
+- `src/lib/cloudflare/r2.client.ts` - Funciones de upload para cliente
+- `src/app/api/upload-portfolio/route.ts` - API de upload/delete/reorder
+- `src/components/portfolio/PortfolioUploader.tsx` - Componente de carga
+- `src/components/portfolio/PortfolioUploader.module.css` - Estilos
+- `src/components/portfolio/PortfolioGallery.tsx` - Componente de galería
+- `src/components/portfolio/PortfolioGallery.module.css` - Estilos
+- `src/components/portfolio/index.ts` - Exports
+- `cloudflare-worker/r2-proxy.js` - Worker proxy para R2
+
+**Archivos modificados:**
+
+- `src/store/authStore.ts` - Nuevo tipo `PortfolioImage`
+- `src/lib/firebase/firestore.ts` - Función `updateProviderPortfolioImages`
+- `src/components/dashboard/Sidebar.tsx` - Nueva sección "Portafolio"
+- `src/app/dashboard/provider/page.tsx` - Integración del portafolio
+- `src/app/dashboard/provider/page.module.css` - Estilos de sección
+
+**Configuración pendiente (manual):**
+
+- [ ] Configurar variables de entorno R2 en `.env.local`
+- [ ] Desplegar Worker proxy en Cloudflare
+- [ ] Configurar CORS policy en R2 bucket
 
 #### 5.2 Badges de Verificación 🟢 ✅ COMPLETADO (Básico)
 

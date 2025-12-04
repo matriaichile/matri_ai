@@ -45,7 +45,7 @@ import {
   Filter,
   Plus
 } from 'lucide-react';
-import { useAuthStore, ProviderProfile, CategoryId, UserProfile } from '@/store/authStore';
+import { useAuthStore, ProviderProfile, CategoryId, UserProfile, PortfolioImage } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { PROVIDER_CATEGORIES, REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -55,6 +55,8 @@ import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, S
 import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 import { CATEGORY_MATCHING_CRITERIA, calculateCriterionMatch } from '@/lib/matching/comparisonUtils';
+import { PortfolioUploader } from '@/components/portfolio';
+import { updateProviderPortfolioImages } from '@/lib/firebase/firestore';
 import styles from './page.module.css';
 
 // Interfaz para los leads con info extendida
@@ -135,7 +137,7 @@ const EVENT_STYLE_LABELS: Record<string, string> = {
 export default function ProviderDashboardPage() {
   const router = useRouter();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
-  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'profile'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'profile'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -412,6 +414,52 @@ export default function ProviderDashboardPage() {
     });
   }, []);
 
+  // Handlers para el portafolio
+  const handlePortfolioImageUploaded = useCallback((newImage: PortfolioImage) => {
+    if (!userProfile || userProfile.type !== 'provider') return;
+    
+    const currentImages = (userProfile as ProviderProfile).portfolioImages || [];
+    const updatedImages = [...currentImages, newImage];
+    
+    // Actualizar el store local
+    setUserProfile({
+      ...userProfile,
+      portfolioImages: updatedImages,
+    } as ProviderProfile);
+  }, [userProfile, setUserProfile]);
+
+  const handlePortfolioImageDeleted = useCallback((key: string) => {
+    if (!userProfile || userProfile.type !== 'provider') return;
+    
+    const currentImages = (userProfile as ProviderProfile).portfolioImages || [];
+    const updatedImages = currentImages
+      .filter(img => img.key !== key)
+      .map((img, index) => ({ ...img, order: index }));
+    
+    // Actualizar el store local
+    setUserProfile({
+      ...userProfile,
+      portfolioImages: updatedImages,
+    } as ProviderProfile);
+  }, [userProfile, setUserProfile]);
+
+  const handlePortfolioImagesReordered = useCallback(async (reorderedImages: PortfolioImage[]) => {
+    if (!userProfile || userProfile.type !== 'provider' || !firebaseUser?.uid) return;
+    
+    // Actualizar el store local inmediatamente
+    setUserProfile({
+      ...userProfile,
+      portfolioImages: reorderedImages,
+    } as ProviderProfile);
+    
+    // Guardar en Firestore
+    try {
+      await updateProviderPortfolioImages(firebaseUser.uid, reorderedImages);
+    } catch (error) {
+      console.error('Error al guardar el orden de las imágenes:', error);
+    }
+  }, [userProfile, setUserProfile, firebaseUser?.uid]);
+
   const getCategoryLabel = (id: string) => PROVIDER_CATEGORIES.find((c) => c.id === id)?.label || id;
   const getRegionLabel = (id: string) => REGIONS.find((r) => r.id === id)?.label || id;
   const getPriceLabel = (id: string) => PRICE_RANGES_PROVIDER.find((p) => p.id === id)?.label || id;
@@ -476,6 +524,7 @@ export default function ProviderDashboardPage() {
     overview: { title: 'Resumen', subtitle: 'Vista general de tu rendimiento' },
     leads: { title: 'Mis Leads', subtitle: 'Parejas interesadas en tus servicios' },
     surveys: { title: 'Encuestas por Categoría', subtitle: 'Completa las encuestas para recibir mejores matches' },
+    portfolio: { title: 'Mi Portafolio', subtitle: 'Muestra tu mejor trabajo a las parejas' },
     profile: { title: 'Mi Perfil', subtitle: 'Información de tu negocio' },
   };
 
@@ -870,6 +919,27 @@ export default function ProviderDashboardPage() {
                 />
               )}
             </div>
+          </div>
+        )}
+
+        {/* Sección Portafolio */}
+        {activeSection === 'portfolio' && (
+          <div className={styles.portfolioSection}>
+            <div className={styles.portfolioIntro}>
+              <p>
+                Tu portafolio es tu carta de presentación. Sube entre 5 y 10 fotos de tu mejor trabajo 
+                para que las parejas puedan ver la calidad de tus servicios.
+              </p>
+            </div>
+            
+            <PortfolioUploader
+              providerId={firebaseUser?.uid || ''}
+              currentImages={profile?.portfolioImages || []}
+              onImageUploaded={handlePortfolioImageUploaded}
+              onImageDeleted={handlePortfolioImageDeleted}
+              onImagesReordered={handlePortfolioImagesReordered}
+              disabled={!firebaseUser?.uid}
+            />
           </div>
         )}
 

@@ -23,6 +23,7 @@ import {
   CategorySurveyStatusMap,
   CategoryLeadLimitsMap,
   ALL_CATEGORIES,
+  PortfolioImage,
 } from '@/store/authStore';
 import { UserWizardData, ProviderWizardData } from '@/store/wizardStore';
 
@@ -279,7 +280,7 @@ export const createProviderProfile = async (
       instagram: providerData.instagram,
       facebook: providerData.facebook,
       tiktok: providerData.tiktok,
-      portfolioImages: providerData.portfolioImages,
+      portfolioImages: [] as PortfolioImage[], // Portafolio vacío, se gestiona desde el dashboard
       status: 'active' as const, // Los proveedores empiezan como activos por defecto
       isVerified: false, // Los proveedores nuevos no están verificados (solo super admin puede cambiar)
       // Sistema de leads POR CATEGORÍA
@@ -354,6 +355,25 @@ export const updateProviderProfile = async (
     await updateDoc(doc(db, COLLECTIONS.PROVIDERS, userId), updateData);
   } catch (error) {
     console.error('Error al actualizar perfil de proveedor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Actualizar las imágenes del portafolio del proveedor
+ * Se usa principalmente para reordenar las imágenes
+ */
+export const updateProviderPortfolioImages = async (
+  userId: string,
+  images: PortfolioImage[]
+): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTIONS.PROVIDERS, userId), {
+      portfolioImages: images,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error al actualizar portafolio del proveedor:', error);
     throw error;
   }
 };

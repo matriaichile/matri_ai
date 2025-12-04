@@ -28,6 +28,7 @@ import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
+import { PortfolioGallery } from '@/components/portfolio';
 import { registerProviderShown } from '@/utils/matchLimits';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
@@ -617,6 +618,20 @@ export default function CategoryMatchesPage() {
                       <p className={styles.detailsDescription}>
                         {selectedMatch.providerDetails.description}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Portafolio de fotos */}
+                  {selectedMatch.providerDetails?.portfolioImages && 
+                   selectedMatch.providerDetails.portfolioImages.length > 0 && (
+                    <div className={styles.detailsSection}>
+                      <h3>Portafolio</h3>
+                      <PortfolioGallery
+                        images={selectedMatch.providerDetails.portfolioImages}
+                        providerName={selectedMatch.providerInfo.providerName}
+                        compact={true}
+                        maxPreviewImages={4}
+                      />
                     </div>
                   )}
 

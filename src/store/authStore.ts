@@ -84,6 +84,14 @@ export interface ProviderMetrics {
   timesNotInterested: number; // Veces que marcaron "No me interesa"
 }
 
+// Imagen del portafolio (almacenada en R2)
+export interface PortfolioImage {
+  key: string;          // Clave del objeto en R2
+  url: string;          // URL pública de la imagen
+  order: number;        // Orden de la imagen (0 = principal)
+  uploadedAt: string;   // Fecha de carga (ISO string)
+}
+
 // Datos del perfil de proveedor
 export interface ProviderProfile {
   id: string;
@@ -103,7 +111,7 @@ export interface ProviderProfile {
   instagram: string;
   facebook: string;
   tiktok: string;
-  portfolioImages: string[];
+  portfolioImages: PortfolioImage[];
   status: ProviderStatus;
   isVerified: boolean; // Badge de verificación (solo super admin puede modificar)
   // Sistema de leads POR CATEGORÍA - NUEVO
