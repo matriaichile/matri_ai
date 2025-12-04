@@ -221,6 +221,54 @@ function CategoryIcon({ categoryId }: { categoryId: CategoryId }) {
         <path d="M8 13v6a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-6" />
       </svg>
     ),
+    // Nuevas categorías
+    entertainment: (
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M5.8 11.3L2 22l10.7-3.8" />
+        <path d="M4 3h.01" />
+        <path d="M22 8h.01" />
+        <path d="M15 2h.01" />
+        <path d="M22 20h.01" />
+        <path d="M22 2l-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10" />
+        <path d="M22 13l-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.11.7-.72 1.22-1.43 1.22H17" />
+        <path d="M11 2l.33.82c.34.86-.2 1.82-1.11 1.98v0C9.52 4.9 9 5.52 9 6.23V7" />
+        <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z" />
+      </svg>
+    ),
+    cakes: (
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+        <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
+        <path d="M2 21h20" />
+        <path d="M7 8v2" />
+        <path d="M12 8v2" />
+        <path d="M17 8v2" />
+        <path d="M7 4h.01" />
+        <path d="M12 4h.01" />
+        <path d="M17 4h.01" />
+      </svg>
+    ),
+    transport: (
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
+      </svg>
+    ),
+    invitations: (
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect width="20" height="16" x="2" y="4" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      </svg>
+    ),
+    dress: (
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M6 2L3 8l3 1v13h12V9l3-1-3-6" />
+        <path d="M12 2v6" />
+        <path d="M9 8l3 3 3-3" />
+      </svg>
+    ),
   };
 
   return iconMap[categoryId] || null;

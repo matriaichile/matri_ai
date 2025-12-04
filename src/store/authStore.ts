@@ -7,6 +7,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 // ============================================
 
 // Las categorías del sistema (ordenadas por importancia)
+// Actualizado según AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
 export type CategoryId = 
   | 'catering'        // 1. Banquetera
   | 'venue'           // 2. Centro de eventos
@@ -14,10 +15,13 @@ export type CategoryId =
   | 'video'           // 4. Video
   | 'dj'              // 5. DJ/VJ
   | 'decoration'      // 6. Decoración
-  | 'entertainment'   // 7. Entretenimiento (NUEVA - pendiente encuestas)
+  | 'entertainment'   // 7. Entretenimiento
   | 'makeup'          // 8. Maquillaje
-  | 'dress'           // 9. Vestuario (NUEVA)
-  | 'wedding_planner';// 10. Wedding Planner
+  | 'cakes'           // 9. Tortas (NUEVA)
+  | 'transport'       // 10. Transporte (NUEVA)
+  | 'invitations'     // 11. Invitaciones (NUEVA)
+  | 'dress'           // 12. Vestuario
+  | 'wedding_planner';// 13. Wedding Planner
 
 // Estado de encuesta por categoría
 export type CategorySurveyStatus = 'not_started' | 'completed' | 'matches_generated';
@@ -291,6 +295,8 @@ export const useAuthStore = create<AuthState>()(
 // CONSTANTES DE CATEGORÍAS
 // ============================================
 
+// Información de categorías con iconos
+// Actualizado según AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
 export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; icon: string }> = {
   catering: { id: 'catering', name: 'Banquetería', icon: 'utensils' },
   venue: { id: 'venue', name: 'Centro de Eventos', icon: 'building' },
@@ -300,11 +306,14 @@ export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; i
   decoration: { id: 'decoration', name: 'Decoración', icon: 'flower' },
   entertainment: { id: 'entertainment', name: 'Entretenimiento', icon: 'party' },
   makeup: { id: 'makeup', name: 'Maquillaje & Peinado', icon: 'sparkles' },
+  cakes: { id: 'cakes', name: 'Tortas & Dulces', icon: 'cake' },           // NUEVA
+  transport: { id: 'transport', name: 'Transporte', icon: 'car' },         // NUEVA
+  invitations: { id: 'invitations', name: 'Invitaciones', icon: 'mail' },  // NUEVA
   dress: { id: 'dress', name: 'Vestidos & Trajes', icon: 'dress' },
   wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },
 };
 
-// Categorías ordenadas por importancia (nuevo orden solicitado)
+// Categorías ordenadas por importancia (nuevo orden según especificación)
 export const ALL_CATEGORIES: CategoryId[] = [
   'catering',        // 1. Banquetera
   'venue',           // 2. Centro de eventos
@@ -312,8 +321,11 @@ export const ALL_CATEGORIES: CategoryId[] = [
   'video',           // 4. Video
   'dj',              // 5. DJ/VJ
   'decoration',      // 6. Decoración
-  'entertainment',   // 7. Entretenimiento (pendiente encuestas del cliente)
+  'entertainment',   // 7. Entretenimiento
   'makeup',          // 8. Maquillaje
-  'dress',           // 9. Vestuario
-  'wedding_planner', // 10. Wedding Planner
+  'cakes',           // 9. Tortas (NUEVA)
+  'transport',       // 10. Transporte (NUEVA)
+  'invitations',     // 11. Invitaciones (NUEVA)
+  'dress',           // 12. Vestuario
+  'wedding_planner', // 13. Wedding Planner
 ];

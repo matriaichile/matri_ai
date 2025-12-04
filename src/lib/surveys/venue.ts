@@ -1,6 +1,8 @@
 /**
  * Encuestas de Centro de Eventos
  * Matri.AI - Sistema de Matchmaking por Categoría
+ * 
+ * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
  */
 
 import { SurveyQuestion } from './types';
@@ -10,8 +12,9 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'venue_u_type',
     question: '¿Qué tipo de lugar prefieres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single'
     options: [
+      { id: 'event_hall', label: 'Salón de eventos', description: 'Espacio dedicado a eventos' }, // NUEVO
       { id: 'hacienda', label: 'Hacienda / Campo', description: 'Naturaleza y tradición' },
       { id: 'hotel', label: 'Hotel', description: 'Comodidad y servicios' },
       { id: 'restaurant', label: 'Restaurant', description: 'Gastronomía destacada' },
@@ -32,7 +35,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'indoor', label: 'Interior', description: 'Climatizado' },
       { id: 'outdoor', label: 'Exterior', description: 'Al aire libre' },
       { id: 'both', label: 'Ambos / Mixto', description: 'Ceremonia afuera, fiesta adentro' },
-      { id: 'flexible', label: 'Flexible según clima' },
+      // ELIMINADO: { id: 'flexible', label: 'Flexible según clima' },
     ],
     required: true,
     weight: 15,
@@ -51,21 +54,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 20,
   },
-  {
-    id: 'venue_u_capacity',
-    question: '¿Cuántos invitados tendrás?',
-    type: 'single',
-    options: [
-      { id: 'under_50', label: 'Menos de 50' },
-      { id: '50_100', label: '50 - 100' },
-      { id: '100_150', label: '100 - 150' },
-      { id: '150_200', label: '150 - 200' },
-      { id: '200_300', label: '200 - 300' },
-      { id: 'over_300', label: 'Más de 300' },
-    ],
-    required: true,
-    weight: 15,
-  },
+  // ELIMINADO: venue_u_capacity (ya se pregunta al crear usuario)
   {
     id: 'venue_u_exclusivity',
     question: '¿Necesitas exclusividad del lugar?',
@@ -92,7 +81,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     options: [
       { id: 'required', label: 'Indispensable' },
       { id: 'preferred', label: 'Preferible' },
-      { id: 'not_needed', label: 'No necesario, habrá valet' },
+      { id: 'not_needed', label: 'No necesario' }, // CAMBIO: Eliminado "habrá valet"
     ],
     required: true,
     weight: 5,
@@ -126,11 +115,10 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Hasta qué hora necesitas el lugar?',
     type: 'single',
     options: [
-      { id: 'midnight', label: 'Medianoche' },
-      { id: '2am', label: '2:00 AM' },
-      { id: '4am', label: '4:00 AM' },
-      { id: 'sunrise', label: 'Hasta el amanecer' },
-      { id: 'flexible', label: 'Flexible' },
+      { id: '0_1am', label: '00:00 – 1:00 am' },
+      { id: '2_3am', label: '2:00 – 3:00 am' },
+      { id: '4_5am', label: '4:00 – 5:00 am' },
+      { id: 'over_5am', label: '+5:00 am' },
     ],
     required: true,
     weight: 5,
@@ -142,6 +130,25 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 2,
   },
+  {
+    id: 'venue_u_dance_floor',
+    question: '¿Tiene pista de baile?',
+    type: 'boolean',
+    required: true,
+    weight: 5,
+  },
+  {
+    id: 'venue_u_bridal_suite',
+    question: '¿Tiene pieza para novia y novio?',
+    type: 'single',
+    options: [
+      { id: 'yes', label: 'Sí' },
+      { id: 'no', label: 'No' },
+      { id: 'not_needed', label: 'No es necesario' },
+    ],
+    required: true,
+    weight: 3,
+  },
 ];
 
 // Preguntas para PROVEEDORES de centro de eventos
@@ -149,8 +156,9 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'venue_p_type',
     question: '¿Qué tipo de lugar eres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single' - para coincidir con usuarios
     options: [
+      { id: 'event_hall', label: 'Salón de eventos' }, // NUEVO
       { id: 'hacienda', label: 'Hacienda / Campo' },
       { id: 'hotel', label: 'Hotel' },
       { id: 'restaurant', label: 'Restaurant' },
@@ -270,11 +278,10 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Hasta qué hora pueden estar?',
     type: 'single',
     options: [
-      { id: 'midnight', label: 'Medianoche' },
-      { id: '2am', label: '2:00 AM' },
-      { id: '4am', label: '4:00 AM' },
-      { id: 'sunrise', label: 'Hasta el amanecer' },
-      { id: 'flexible', label: 'Flexible' },
+      { id: '0_1am', label: '00:00 – 1:00 am' },
+      { id: '2_3am', label: '2:00 – 3:00 am' },
+      { id: '4_5am', label: '4:00 – 5:00 am' },
+      { id: 'over_5am', label: '+5:00 am' },
     ],
     required: true,
     weight: 5,
@@ -285,6 +292,20 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     type: 'boolean',
     required: true,
     weight: 2,
+  },
+  {
+    id: 'venue_p_dance_floor',
+    question: '¿Tienes pista de baile?',
+    type: 'boolean',
+    required: true,
+    weight: 5,
+  },
+  {
+    id: 'venue_p_bridal_suite',
+    question: '¿Tienes pieza para novia y novio?',
+    type: 'boolean',
+    required: true,
+    weight: 3,
   },
   {
     id: 'venue_p_included_services',
@@ -304,4 +325,3 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 5,
   },
 ];
-

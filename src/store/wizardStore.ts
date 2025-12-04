@@ -278,6 +278,7 @@ export const COMPLETED_ITEMS: WizardOption[] = [
 ];
 
 // Categorías prioritarias ordenadas por importancia (nuevo orden)
+// Actualizado con nuevas categorías: cakes, transport, invitations
 export const PRIORITY_CATEGORIES: WizardOption[] = [
   { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
   { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
@@ -287,6 +288,9 @@ export const PRIORITY_CATEGORIES: WizardOption[] = [
   { id: 'decoration', label: 'Decoración', iconType: 'flower' },
   { id: 'entertainment', label: 'Entretenimiento', iconType: 'party' },
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
+  { id: 'cakes', label: 'Tortas & Dulces', iconType: 'cake' },
+  { id: 'transport', label: 'Transporte', iconType: 'car' },
+  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
   { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
 ];
@@ -339,6 +343,7 @@ export const REGIONS: WizardOption[] = [
 ];
 
 // Categorías de proveedores ordenadas por importancia (nuevo orden)
+// Actualizado con nuevas categorías: cakes, transport, invitations
 export const PROVIDER_CATEGORIES: WizardOption[] = [
   { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
   { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
@@ -348,6 +353,9 @@ export const PROVIDER_CATEGORIES: WizardOption[] = [
   { id: 'decoration', label: 'Decoración & Florería', iconType: 'flower' },
   { id: 'entertainment', label: 'Entretenimiento', iconType: 'party' },
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
+  { id: 'cakes', label: 'Tortas & Dulces', iconType: 'cake' },
+  { id: 'transport', label: 'Transporte', iconType: 'car' },
+  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
   { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
 ];

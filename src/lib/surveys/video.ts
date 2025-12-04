@@ -1,6 +1,8 @@
 /**
  * Encuestas de Videografía
  * Matri.AI - Sistema de Matchmaking por Categoría
+ * 
+ * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
  */
 
 import { SurveyQuestion } from './types';
@@ -10,13 +12,15 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'video_u_style',
     question: '¿Qué estilo de video prefieres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single'
     options: [
-      { id: 'documentary', label: 'Documental', description: 'Captura real de los momentos' },
-      { id: 'cinematic', label: 'Cinemático / Película', description: 'Estilo cinematográfico profesional' },
-      { id: 'narrative', label: 'Narrativo / Historia', description: 'Cuenta tu historia de amor' },
-      { id: 'traditional', label: 'Tradicional', description: 'Cobertura clásica completa' },
-      { id: 'artistic', label: 'Artístico / Experimental', description: 'Edición creativa y única' },
+      // CAMBIO: Mismas opciones que fotografía
+      { id: 'documentary', label: 'Documental / Natural', description: 'Momentos espontáneos y reales' },
+      { id: 'artistic', label: 'Artístico / Creativo', description: 'Composiciones únicas y originales' },
+      { id: 'classic', label: 'Clásico / Tradicional', description: 'Elegancia atemporal' },
+      { id: 'editorial', label: 'Editorial / Revista', description: 'Estilo de alta moda' },
+      { id: 'candid', label: 'Espontáneo / Candid', description: 'Sin poses, 100% natural' },
+      { id: 'cinematic', label: 'Cinemático', description: 'Estilo de película' },
     ],
     required: true,
     weight: 25,
@@ -24,7 +28,7 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'video_u_duration',
     question: '¿Qué duración de video final prefieres?',
-    type: 'single',
+    type: 'multiple', // Debe ser múltiple según especificación
     options: [
       { id: 'highlight_3', label: 'Highlight 3-5 min', description: 'Resumen corto para redes' },
       { id: 'highlight_10', label: 'Highlight 8-12 min', description: 'Resumen completo' },
@@ -94,48 +98,22 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
-  {
-    id: 'video_u_raw_footage',
-    question: '¿Quieres recibir el material sin editar?',
-    type: 'boolean',
-    required: true,
-    weight: 3,
-  },
-  {
-    id: 'video_u_social_reel',
-    question: '¿Necesitas versión corta para redes sociales?',
-    type: 'boolean',
-    required: true,
-    weight: 5,
-  },
+  // ELIMINADO: video_u_raw_footage
+  // ELIMINADO: video_u_social_reel
   {
     id: 'video_u_delivery_time',
     question: '¿En cuánto tiempo necesitas el video?',
     type: 'single',
     options: [
+      { id: '2_weeks', label: '2 semanas' },
       { id: '1_month', label: '1 mes' },
-      { id: '2_months', label: '2 meses' },
-      { id: '3_months', label: '3 meses' },
-      { id: '6_months', label: '6 meses' },
-      { id: 'flexible', label: 'Flexible' },
+      { id: 'over_1_month', label: '+1 mes' },
+      { id: 'indifferent', label: 'Me es indiferente' },
     ],
     required: true,
     weight: 5,
   },
-  {
-    id: 'video_u_music_preference',
-    question: '¿Tienes preferencia musical para el video?',
-    type: 'single',
-    options: [
-      { id: 'provider_choice', label: 'Que elija el videógrafo' },
-      { id: 'romantic', label: 'Romántica / Emotiva' },
-      { id: 'modern', label: 'Moderna / Pop' },
-      { id: 'classical', label: 'Clásica' },
-      { id: 'custom', label: 'Quiero elegir yo' },
-    ],
-    required: true,
-    weight: 2,
-  },
+  // ELIMINADO: video_u_music_preference
 ];
 
 // Preguntas para PROVEEDORES de videografía
@@ -145,11 +123,13 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Qué estilos de video ofreces?',
     type: 'multiple',
     options: [
-      { id: 'documentary', label: 'Documental' },
-      { id: 'cinematic', label: 'Cinemático / Película' },
-      { id: 'narrative', label: 'Narrativo / Historia' },
-      { id: 'traditional', label: 'Tradicional' },
-      { id: 'artistic', label: 'Artístico / Experimental' },
+      // Mismas opciones que fotografía para consistencia
+      { id: 'documentary', label: 'Documental / Natural' },
+      { id: 'artistic', label: 'Artístico / Creativo' },
+      { id: 'classic', label: 'Clásico / Tradicional' },
+      { id: 'editorial', label: 'Editorial / Revista' },
+      { id: 'candid', label: 'Espontáneo / Candid' },
+      { id: 'cinematic', label: 'Cinemático' },
     ],
     required: true,
     weight: 25,
@@ -239,38 +219,13 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 5,
   },
   {
-    id: 'video_p_raw_footage',
-    question: '¿Entregas material sin editar?',
-    type: 'single',
-    options: [
-      { id: 'no', label: 'No' },
-      { id: 'extra_cost', label: 'Sí, con costo adicional' },
-      { id: 'included', label: 'Incluido' },
-    ],
-    required: true,
-    weight: 3,
-  },
-  {
-    id: 'video_p_social_reel',
-    question: '¿Ofreces versión para redes?',
-    type: 'single',
-    options: [
-      { id: 'no', label: 'No' },
-      { id: 'extra_cost', label: 'Sí, con costo adicional' },
-      { id: 'included', label: 'Incluido' },
-    ],
-    required: true,
-    weight: 5,
-  },
-  {
     id: 'video_p_delivery_time',
     question: 'Tiempo de entrega habitual',
     type: 'single',
     options: [
+      { id: '2_weeks', label: '2 semanas' },
       { id: '1_month', label: '1 mes' },
-      { id: '2_months', label: '2 meses' },
-      { id: '3_months', label: '3 meses' },
-      { id: '6_months', label: '6 meses' },
+      { id: 'over_1_month', label: '+1 mes' },
     ],
     required: true,
     weight: 5,
@@ -291,4 +246,3 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 2,
   },
 ];
-

@@ -1,6 +1,8 @@
 /**
  * Encuestas de DJ/VJ
  * Matri.AI - Sistema de Matchmaking por Categoría
+ * 
+ * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
  */
 
 import { SurveyQuestion } from './types';
@@ -60,11 +62,10 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Cuántas horas de música necesitas?',
     type: 'single',
     options: [
-      { id: '3', label: '3 horas' },
-      { id: '4', label: '4 horas' },
-      { id: '5', label: '5 horas' },
-      { id: '6', label: '6 horas' },
-      { id: 'unlimited', label: 'Sin límite' },
+      { id: '5', label: '5 hrs' },
+      { id: '6', label: '6 hrs' },
+      { id: '7', label: '7 hrs' },
+      { id: 'over_7', label: '+7 hrs' },
     ],
     required: true,
     weight: 10,
@@ -308,4 +309,3 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 5,
   },
 ];
-

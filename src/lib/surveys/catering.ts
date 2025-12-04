@@ -1,6 +1,8 @@
 /**
  * Encuestas de Banquetería
  * Matri.AI - Sistema de Matchmaking por Categoría
+ * 
+ * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
  */
 
 import { SurveyQuestion } from './types';
@@ -10,13 +12,13 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'catering_u_service_type',
     question: '¿Qué tipo de servicio prefieres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single'
     options: [
-      { id: 'plated', label: 'Servido a la mesa', description: 'Servicio formal' },
-      { id: 'buffet', label: 'Buffet', description: 'Variedad y libertad' },
-      { id: 'stations', label: 'Estaciones temáticas', description: 'Interactivo y moderno' },
-      { id: 'cocktail', label: 'Cóctel / Finger food', description: 'Evento más casual' },
-      { id: 'family_style', label: 'Estilo familiar', description: 'Compartido en la mesa' },
+      { id: 'cocktail', label: 'Coctel / Finger Food' },
+      { id: 'dinner', label: 'Cena (Entrada, fondo y postre)' },
+      { id: 'buffet', label: 'Buffet' },
+      { id: 'stations', label: 'Estaciones temáticas' },
+      { id: 'extra', label: 'Extra (Mesón de postres y trasnoches)' },
     ],
     required: true,
     weight: 20,
@@ -32,6 +34,7 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'asian', label: 'Asiática / Fusión' },
       { id: 'gourmet', label: 'Gourmet / Alta cocina' },
       { id: 'comfort', label: 'Comfort food' },
+      { id: 'bbq', label: 'Asados o parrilla' }, // NUEVO
     ],
     required: true,
     weight: 15,
@@ -46,28 +49,15 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
       { id: '35k_50k', label: '$35.000 - $50.000' },
       { id: '50k_70k', label: '$50.000 - $70.000' },
       { id: 'over_70k', label: 'Más de $70.000' },
+      { id: 'skip', label: 'Omitir' }, // NUEVO
     ],
     required: true,
     weight: 20,
   },
-  {
-    id: 'catering_u_guest_count',
-    question: '¿Cuántos invitados tendrás?',
-    type: 'single',
-    options: [
-      { id: 'under_50', label: 'Menos de 50' },
-      { id: '50_100', label: '50 - 100' },
-      { id: '100_150', label: '100 - 150' },
-      { id: '150_200', label: '150 - 200' },
-      { id: '200_300', label: '200 - 300' },
-      { id: 'over_300', label: 'Más de 300' },
-    ],
-    required: true,
-    weight: 10,
-  },
+  // ELIMINADO: catering_u_guest_count (ya se pregunta al crear usuario)
   {
     id: 'catering_u_courses',
-    question: '¿Cuántos tiempos de comida?',
+    question: '¿De cuántos tiempos quieres que sea tu cena?', // CAMBIO en texto
     type: 'single',
     options: [
       { id: '2', label: '2 tiempos' },
@@ -78,13 +68,7 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
-  {
-    id: 'catering_u_cocktail',
-    question: '¿Incluirás hora de cóctel?',
-    type: 'boolean',
-    required: true,
-    weight: 5,
-  },
+  // ELIMINADO: catering_u_cocktail
   {
     id: 'catering_u_dietary',
     question: '¿Necesitas opciones especiales?',
@@ -96,6 +80,7 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'kosher', label: 'Kosher' },
       { id: 'halal', label: 'Halal' },
       { id: 'none', label: 'Ninguna' },
+      { id: 'other', label: 'Otra: ¿Cuál?' }, // NUEVO
     ],
     required: true,
     weight: 5,
@@ -106,6 +91,7 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
     type: 'multiple',
     options: [
       { id: 'soft_drinks', label: 'Bebidas' },
+      { id: 'juices', label: 'Jugos / Aguas saborizadas' }, // NUEVO
       { id: 'wine', label: 'Vinos' },
       { id: 'beer', label: 'Cerveza' },
       { id: 'cocktails', label: 'Cócteles' },
@@ -132,10 +118,8 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Incluir torta de novios?',
     type: 'single',
     options: [
-      { id: 'no', label: 'No, tengo otro proveedor' },
-      { id: 'simple', label: 'Sí, simple' },
-      { id: 'elaborate', label: 'Sí, elaborada' },
-      { id: 'dessert_table', label: 'Mesa de postres completa' },
+      { id: 'yes', label: 'Sí' },
+      { id: 'no', label: 'No' },
     ],
     required: true,
     weight: 5,
@@ -147,7 +131,7 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
     options: [
       { id: 'basic', label: 'Básico' },
       { id: 'standard', label: 'Estándar' },
-      { id: 'premium', label: 'Premium / Garzones dedicados' },
+      { id: 'premium', label: 'Premium' }, // CAMBIO: Eliminado "Garzones dedicados"
     ],
     required: true,
     weight: 5,
@@ -159,6 +143,19 @@ export const CATERING_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 2,
   },
+  {
+    id: 'catering_u_end_time',
+    question: '¿Hasta qué hora debe estar la banquetera en el evento?',
+    type: 'single',
+    options: [
+      { id: '0_1am', label: '00:00 – 1:00 am' },
+      { id: '2_3am', label: '2:00 – 3:00 am' },
+      { id: '4_5am', label: '4:00 – 5:00 am' },
+      { id: 'over_5am', label: '+5:00 am' },
+    ],
+    required: true,
+    weight: 5,
+  },
 ];
 
 // Preguntas para PROVEEDORES de banquetería
@@ -168,11 +165,11 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Qué tipos de servicio ofreces?',
     type: 'multiple',
     options: [
-      { id: 'plated', label: 'Servido a la mesa' },
+      { id: 'cocktail', label: 'Coctel / Finger Food' },
+      { id: 'dinner', label: 'Cena (Entrada, fondo y postre)' },
       { id: 'buffet', label: 'Buffet' },
       { id: 'stations', label: 'Estaciones temáticas' },
-      { id: 'cocktail', label: 'Cóctel / Finger food' },
-      { id: 'family_style', label: 'Estilo familiar' },
+      { id: 'extra', label: 'Extra (Mesón de postres y trasnoches)' },
     ],
     required: true,
     weight: 20,
@@ -188,6 +185,7 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'asian', label: 'Asiática / Fusión' },
       { id: 'gourmet', label: 'Gourmet / Alta cocina' },
       { id: 'comfort', label: 'Comfort food' },
+      { id: 'bbq', label: 'Asados o parrilla' }, // NUEVO
     ],
     required: true,
     weight: 15,
@@ -244,13 +242,6 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 5,
   },
   {
-    id: 'catering_p_cocktail',
-    question: '¿Ofreces servicio de cóctel?',
-    type: 'boolean',
-    required: true,
-    weight: 5,
-  },
-  {
     id: 'catering_p_dietary',
     question: '¿Qué opciones especiales manejas?',
     type: 'multiple',
@@ -260,6 +251,7 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'gluten_free', label: 'Sin gluten' },
       { id: 'kosher', label: 'Kosher' },
       { id: 'halal', label: 'Halal' },
+      { id: 'other', label: 'Otras opciones especiales' }, // NUEVO
     ],
     required: true,
     weight: 5,
@@ -270,6 +262,7 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     type: 'multiple',
     options: [
       { id: 'soft_drinks', label: 'Bebidas' },
+      { id: 'juices', label: 'Jugos / Aguas saborizadas' }, // NUEVO
       { id: 'wine', label: 'Vinos' },
       { id: 'beer', label: 'Cerveza' },
       { id: 'cocktails', label: 'Cócteles' },
@@ -296,10 +289,8 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Ofreces torta de novios?',
     type: 'single',
     options: [
+      { id: 'yes', label: 'Sí' },
       { id: 'no', label: 'No' },
-      { id: 'simple', label: 'Sí, simple' },
-      { id: 'elaborate', label: 'Sí, elaborada' },
-      { id: 'dessert_table', label: 'Mesa de postres completa' },
     ],
     required: true,
     weight: 5,
@@ -339,5 +330,17 @@ export const CATERING_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+  {
+    id: 'catering_p_end_time',
+    question: '¿Hasta qué hora puedes quedarte en el evento?',
+    type: 'single',
+    options: [
+      { id: '0_1am', label: '00:00 – 1:00 am' },
+      { id: '2_3am', label: '2:00 – 3:00 am' },
+      { id: '4_5am', label: '4:00 – 5:00 am' },
+      { id: 'over_5am', label: '+5:00 am' },
+    ],
+    required: true,
+    weight: 5,
+  },
 ];
-

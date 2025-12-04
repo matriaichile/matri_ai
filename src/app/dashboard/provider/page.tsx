@@ -43,7 +43,12 @@ import {
   ChevronDown,
   ChevronUp,
   Filter,
-  Plus
+  Plus,
+  PartyPopper,
+  Shirt,
+  Cake,
+  Car,
+  Send
 } from 'lucide-react';
 import { useAuthStore, ProviderProfile, CategoryId, UserProfile, PortfolioImage, ProfileImageData } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -96,6 +101,11 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   decoration: <Flower2 size={18} />,
   wedding_planner: <ClipboardList size={18} />,
   makeup: <Palette size={18} />,
+  entertainment: <PartyPopper size={18} />,
+  dress: <Shirt size={18} />,
+  cakes: <Cake size={18} />,
+  transport: <Car size={18} />,
+  invitations: <Send size={18} />,
 };
 
 // Labels de presupuesto
@@ -915,84 +925,80 @@ export default function ProviderDashboardPage() {
           </div>
         )}
 
-        {/* Sección Encuestas por Categoría */}
+        {/* Sección Encuestas por Categoría - Diseño Premium */}
         {activeSection === 'surveys' && (
           <div className={styles.surveysSection}>
-            <div className={styles.surveysIntro}>
-              <p>
-                Completa las encuestas de cada categoría que ofreces para recibir leads más relevantes. 
-                Cuanto más precisa sea tu información, mejores serán tus matches.
+            {/* Header elegante */}
+            <div className={styles.categoriesHeader}>
+              <h2 className={styles.categoriesTitle}>Configura tus servicios</h2>
+              <p className={styles.categoriesSubtitle}>
+                Completa las encuestas para recibir leads más relevantes y aumentar tus matches
               </p>
             </div>
-            
-            <div className={styles.surveysGrid}>
-              {profile?.categories?.map((category) => {
-                const categoryId = category as CategoryId;
-                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
-                const isCompleted = surveyStatus === 'completed';
-                const categoryInfo = getCategoryInfo(categoryId);
-                const surveyConfig = CATEGORY_SURVEYS[categoryId];
-                const questionCount = surveyConfig?.providerQuestions.length || 0;
-                
-                // Contar leads de esta categoría
-                const categoryLeads = leads.filter(l => l.category === categoryId);
-                
-                return (
-                  <div 
-                    key={category} 
-                    className={`${styles.surveyItem} ${isCompleted ? styles.surveyItemCompleted : ''}`}
-                  >
-                    <div className={styles.surveyItemIcon}>
-                      {CATEGORY_ICONS[category]}
-                    </div>
-                    <div className={styles.surveyItemInfo}>
-                      <h3>{categoryInfo?.name || getCategoryLabel(category)}</h3>
-                      <p>{questionCount} preguntas</p>
+
+            {/* Grid de categorías con iconos grandes */}
+            {profile?.categories && profile.categories.length > 0 ? (
+              <div className={styles.categoriesIconGrid}>
+                {profile.categories.map((category) => {
+                  const categoryId = category as CategoryId;
+                  const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                  const isCompleted = surveyStatus === 'completed';
+                  const categoryInfo = getCategoryInfo(categoryId);
+                  const surveyConfig = CATEGORY_SURVEYS[categoryId];
+                  const questionCount = surveyConfig?.providerQuestions.length || 0;
+                  
+                  // Contar leads de esta categoría
+                  const categoryLeads = leads.filter(l => l.category === categoryId);
+                  
+                  return (
+                    <div key={category} className={styles.categoryIconCardWrapper}>
+                      {/* Badge de leads - fuera de la tarjeta */}
                       {isCompleted && categoryLeads.length > 0 && (
-                        <span className={styles.leadsBadge}>
-                          <Users size={12} />
-                          <span>{categoryLeads.length} leads</span>
+                        <span className={styles.categoryLeadCount}>
+                          {categoryLeads.length}
                         </span>
                       )}
-                    </div>
-                    <div className={styles.surveyItemActions}>
-                      {isCompleted ? (
-                        <>
-                          <span className={styles.completedBadge}>
-                            <Check size={14} />
-                            <span>Completado</span>
+                      <Link 
+                        href={`/dashboard/provider/category/${categoryId}/survey`}
+                        className={`${styles.categoryIconCard} ${isCompleted ? styles.categoryIconCardCompleted : ''}`}
+                      >
+                        {/* Icono grande */}
+                        <div className={styles.categoryIconLarge}>
+                          {CATEGORY_ICONS[category]}
+                        </div>
+                        
+                        {/* Nombre */}
+                        <span className={styles.categoryIconName}>
+                          {categoryInfo?.name || getCategoryLabel(category)}
+                        </span>
+                        
+                        {/* Info adicional */}
+                        <span className={styles.categoryQuestionCount}>
+                          {questionCount} preguntas
+                        </span>
+                        
+                        {/* Estado */}
+                        {isCompleted ? (
+                          <span className={styles.categoryStatusCompleted}>
+                            <Check size={10} />
                           </span>
-                          <Link 
-                            href={`/dashboard/provider/category/${categoryId}/survey`}
-                            className={styles.editSurveyLink}
-                          >
-                            <Edit3 size={14} />
-                            <span>Editar</span>
-                          </Link>
-                        </>
-                      ) : (
-                        <Link 
-                          href={`/dashboard/provider/category/${categoryId}/survey`}
-                          className={styles.startSurveyLink}
-                        >
-                          <ClipboardList size={16} />
-                          <span>Completar encuesta</span>
-                          <ChevronRight size={16} />
-                        </Link>
-                      )}
+                        ) : (
+                          <span className={styles.categoryStatusPending}>
+                            Completar
+                          </span>
+                        )}
+                      </Link>
                     </div>
-                  </div>
-                );
-              })}
-
-              {(!profile?.categories || profile.categories.length === 0) && (
-                <EmptyState
-                  icon={<FileText size={48} />}
-                  title="No hay categorías seleccionadas"
-                  description="Actualiza tu perfil para seleccionar las categorías de servicios que ofreces"
-                />
-              )}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<FileText size={48} />}
+                title="No hay categorías seleccionadas"
+                description="Actualiza tu perfil para seleccionar las categorías de servicios que ofreces"
+              />
+            )}
           </div>
         )}
 

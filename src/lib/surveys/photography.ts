@@ -1,6 +1,8 @@
 /**
  * Encuestas de Fotografía
  * Matri.AI - Sistema de Matchmaking por Categoría
+ * 
+ * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
  */
 
 import { SurveyQuestion } from './types';
@@ -10,7 +12,7 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'photo_u_style',
     question: '¿Qué estilo fotográfico prefieres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single'
     options: [
       { id: 'documentary', label: 'Documental / Natural', description: 'Momentos espontáneos y reales' },
       { id: 'artistic', label: 'Artístico / Creativo', description: 'Composiciones únicas y originales' },
@@ -83,9 +85,8 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
     options: [
       { id: '2_weeks', label: '2 semanas' },
       { id: '1_month', label: '1 mes' },
-      { id: '2_months', label: '2 meses' },
-      { id: '3_months', label: '3+ meses' },
-      { id: 'flexible', label: 'Flexible' },
+      { id: 'over_1_month', label: '+1 mes' }, // CAMBIO
+      { id: 'indifferent', label: 'Me es indiferente' }, // CAMBIO
     ],
     required: true,
     weight: 5,
@@ -130,21 +131,7 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
-  {
-    id: 'photo_u_priorities',
-    question: '¿Qué momentos son más importantes para ti?',
-    type: 'multiple',
-    options: [
-      { id: 'getting_ready', label: 'Preparativos' },
-      { id: 'ceremony', label: 'Ceremonia' },
-      { id: 'portraits', label: 'Retratos de pareja' },
-      { id: 'family', label: 'Fotos familiares' },
-      { id: 'party', label: 'Fiesta' },
-      { id: 'details', label: 'Detalles decoración' },
-    ],
-    required: true,
-    weight: 5,
-  },
+  // ELIMINADO: photo_u_priorities
 ];
 
 // Preguntas para PROVEEDORES de fotografía
@@ -236,8 +223,7 @@ export const PHOTOGRAPHY_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     options: [
       { id: '2_weeks', label: '2 semanas' },
       { id: '1_month', label: '1 mes' },
-      { id: '2_months', label: '2 meses' },
-      { id: '3_months', label: '3 meses' },
+      { id: 'over_1_month', label: '+1 mes' },
     ],
     required: true,
     weight: 5,
@@ -303,4 +289,3 @@ export const PHOTOGRAPHY_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     weight: 2,
   },
 ];
-

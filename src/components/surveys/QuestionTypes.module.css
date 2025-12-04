@@ -10,8 +10,9 @@
   gap: 0.5rem;
   width: 100%;
   /* Padding para permitir que efectos de hover/glow no se corten */
-  padding: 0.5rem;
-  margin: -0.5rem;
+  /* Más padding a la izquierda para que el brillo del borde seleccionado se vea completo */
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  margin: -0.5rem -0.5rem -0.5rem -1rem;
   /* Prevenir scroll durante animaciones */
   overflow: visible;
 }
