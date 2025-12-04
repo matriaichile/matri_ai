@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Film, Play } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Film, Play, GripVertical } from 'lucide-react';
 import { 
   uploadPortfolioMedia, 
   compressImage, 
@@ -39,6 +39,13 @@ interface UploadingFile {
   isVideo: boolean;
 }
 
+// Estado para el video preview modal
+interface VideoPreviewState {
+  isOpen: boolean;
+  url: string;
+  title: string;
+}
+
 export default function PortfolioUploader({
   providerId,
   currentImages,
@@ -48,6 +55,7 @@ export default function PortfolioUploader({
   disabled = false,
 }: PortfolioUploaderProps) {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [videoPreview, setVideoPreview] = useState<VideoPreviewState>({ isOpen: false, url: '', title: '' });
   const [isDragging, setIsDragging] = useState(false);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -286,6 +294,18 @@ export default function PortfolioUploader({
     return getMediaTypeFromMime(item.mimeType) === 'video';
   };
 
+  // Abrir preview de video
+  const openVideoPreview = useCallback((url: string, index: number) => {
+    setVideoPreview({ isOpen: true, url, title: `Video ${index + 1}` });
+    document.body.style.overflow = 'hidden';
+  }, []);
+
+  // Cerrar preview de video
+  const closeVideoPreview = useCallback(() => {
+    setVideoPreview({ isOpen: false, url: '', title: '' });
+    document.body.style.overflow = '';
+  }, []);
+
   return (
     <div className={styles.container}>
       {/* Header con contador */}
@@ -317,10 +337,7 @@ export default function PortfolioUploader({
                 <div
                   key={item.key}
                   className={`${styles.imageCard} ${draggedIndex === index ? styles.dragging : ''} ${isVideo ? styles.videoCard : ''}`}
-                  draggable
-                  onDragStart={(e) => handleItemDragStart(e, index)}
                   onDragOver={(e) => handleItemDragOver(e, index)}
-                  onDragEnd={handleItemDragEnd}
                 >
                   {isVideo ? (
                     <div className={styles.videoThumbnail}>
@@ -330,9 +347,15 @@ export default function PortfolioUploader({
                         muted
                         preload="metadata"
                       />
-                      <div className={styles.videoPlayIcon}>
+                      {/* Botón de reproducir video */}
+                      <button
+                        type="button"
+                        className={styles.videoPlayIcon}
+                        onClick={() => openVideoPreview(item.url, index)}
+                        aria-label="Reproducir video"
+                      >
                         <Play size={24} />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                     <img
@@ -346,19 +369,32 @@ export default function PortfolioUploader({
                       {isVideo && <Film size={12} />}
                       {index + 1}
                     </span>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => handleDelete(item.key)}
-                      disabled={deletingKey === item.key}
-                      aria-label="Eliminar elemento"
-                    >
-                      {deletingKey === item.key ? (
-                        <Loader2 size={16} className={styles.spinner} />
-                      ) : (
-                        <X size={16} />
-                      )}
-                    </button>
+                    <div className={styles.cardActions}>
+                      {/* Handle para arrastrar */}
+                      <div
+                        className={styles.dragHandle}
+                        draggable
+                        onDragStart={(e) => handleItemDragStart(e, index)}
+                        onDragEnd={handleItemDragEnd}
+                        aria-label="Arrastrar para reordenar"
+                      >
+                        <GripVertical size={16} />
+                      </div>
+                      {/* Botón eliminar */}
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => handleDelete(item.key)}
+                        disabled={deletingKey === item.key}
+                        aria-label="Eliminar elemento"
+                      >
+                        {deletingKey === item.key ? (
+                          <Loader2 size={16} className={styles.spinner} />
+                        ) : (
+                          <X size={16} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -462,8 +498,39 @@ export default function PortfolioUploader({
       {/* Tip para reordenar */}
       {currentImages.length > 1 && (
         <p className={styles.reorderTip}>
-          💡 Arrastra los elementos para reordenarlos. El primero será el principal.
+          💡 Usa el ícono ⋮⋮ para arrastrar y reordenar. El primero será el principal.
         </p>
+      )}
+
+      {/* Modal de preview de video */}
+      {videoPreview.isOpen && (
+        <div 
+          className={styles.videoModal}
+          onClick={closeVideoPreview}
+        >
+          <div 
+            className={styles.videoModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.videoModalHeader}>
+              <span>{videoPreview.title}</span>
+              <button
+                type="button"
+                className={styles.videoModalClose}
+                onClick={closeVideoPreview}
+                aria-label="Cerrar"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <video
+              src={videoPreview.url}
+              className={styles.videoModalPlayer}
+              controls
+              autoPlay
+            />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 /* ===========================
    PortfolioGallery Styles
+   Paleta: Dorado (#D4AF37, #B8860B) + Negro elegante
    =========================== */
 
 .container {
@@ -15,10 +16,10 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: rgba(212, 175, 55, 0.03);
+  border: 1px dashed rgba(212, 175, 55, 0.2);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(212, 175, 55, 0.5);
 }
 
 .emptyState p {
@@ -26,15 +27,11 @@
   font-size: 0.875rem;
 }
 
-/* Grid */
+/* Grid - muestra TODOS los elementos, ligeramente más compacto */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.75rem;
-}
-
-.grid.compact {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 0.5rem;
 }
 
 /* Image Button */
@@ -42,27 +39,28 @@
   position: relative;
   aspect-ratio: 1;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(212, 175, 55, 0.1);
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
   background: rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .imageButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
 .imageButton:focus-visible {
-  outline: 2px solid #a855f7;
+  outline: 2px solid #D4AF37;
   outline-offset: 2px;
 }
 
 /* Video button specific styles */
 .videoButton {
-  border: 2px solid rgba(168, 85, 247, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.3);
 }
 
 .videoIndicator {
@@ -73,18 +71,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(168, 85, 247, 0.9);
+  width: 32px;
+  height: 32px;
+  background: rgba(212, 175, 55, 0.9);
   border-radius: 50%;
-  color: #fff;
+  color: #000;
   pointer-events: none;
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .imageButton:hover .videoIndicator {
   transform: translate(-50%, -50%) scale(1.1);
-  background: #a855f7;
+  background: #D4AF37;
 }
 
 .thumbnail {
@@ -107,48 +105,11 @@
   background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.2s ease;
-  color: #fff;
+  color: #D4AF37;
 }
 
 .imageButton:hover .imageOverlay {
   opacity: 1;
-}
-
-/* More Button */
-.moreButton {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  aspect-ratio: 1;
-  padding: 0;
-  border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.moreButton:hover {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(139, 92, 246, 0.5) 100%);
-  transform: translateY(-2px);
-}
-
-.moreButton:focus-visible {
-  outline: 2px solid #a855f7;
-  outline-offset: 2px;
-}
-
-.moreCount {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.moreText {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Modal */
@@ -198,7 +159,7 @@
   gap: 0.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: #D4AF37;
 }
 
 .closeButton {
@@ -210,14 +171,14 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(212, 175, 55, 0.1);
+  color: #D4AF37;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(212, 175, 55, 0.2);
 }
 
 /* Modal Image */
@@ -259,6 +220,7 @@
   overflow: hidden;
   background: #000;
   animation: zoomIn 0.2s ease;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .modalVideo {
@@ -285,15 +247,15 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: rgba(168, 85, 247, 0.9);
+  background: rgba(212, 175, 55, 0.9);
   border-radius: 50%;
-  color: #fff;
+  color: #000;
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .playButtonLarge:hover {
   transform: scale(1.1);
-  background: #a855f7;
+  background: #D4AF37;
 }
 
 /* Video Controls */
@@ -306,7 +268,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -324,14 +286,14 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .videoControlBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(212, 175, 55, 0.4);
 }
 
 .progressBar {
@@ -345,7 +307,7 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #a855f7 0%, #c084fc 100%);
+  background: linear-gradient(90deg, #B8860B 0%, #D4AF37 100%);
   border-radius: 3px;
   transition: width 0.1s linear;
 }
@@ -363,15 +325,15 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(212, 175, 55, 0.15);
+  color: #D4AF37;
   cursor: pointer;
   transition: all 0.2s ease;
   z-index: 10;
 }
 
 .navButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(212, 175, 55, 0.3);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -391,7 +353,7 @@
   padding-top: 1rem;
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
 }
 
 .thumbnailStrip::-webkit-scrollbar {
@@ -403,7 +365,7 @@
 }
 
 .thumbnailStrip::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(212, 175, 55, 0.3);
   border-radius: 3px;
 }
 
@@ -426,7 +388,7 @@
 }
 
 .stripThumbnail.active {
-  border-color: #a855f7;
+  border-color: #D4AF37;
   opacity: 1;
 }
 
@@ -438,11 +400,11 @@
 }
 
 .stripVideoThumbnail {
-  border-color: rgba(168, 85, 247, 0.3);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .stripVideoThumbnail.active {
-  border-color: #a855f7;
+  border-color: #D4AF37;
 }
 
 .stripVideoIcon {
@@ -455,20 +417,16 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: rgba(168, 85, 247, 0.9);
+  background: rgba(212, 175, 55, 0.9);
   border-radius: 50%;
-  color: #fff;
+  color: #000;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .grid.compact {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
   }
 
   .modalContent {
@@ -520,24 +478,17 @@
 
 @media (max-width: 480px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .grid.compact {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .moreCount {
-    font-size: 1.25rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
   }
 
   .videoIndicator {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .videoIndicator svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 }

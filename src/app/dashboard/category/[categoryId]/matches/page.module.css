@@ -1121,14 +1121,21 @@
   flex: 1;
   overflow-y: auto;
   padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .detailsSection {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
 }
 
-.detailsSection:last-child {
-  margin-bottom: 0;
+/* Sección de portafolio ocupa todo el ancho y tiene separación visual */
+.detailsPortfolioSection {
+  padding: 1rem 0;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  margin: 0.5rem 0;
 }
 
 .detailsSection h3 {
@@ -1139,6 +1146,16 @@
   letter-spacing: 0.06em;
   color: var(--color-primary);
   margin-bottom: 0.6rem;
+}
+
+.detailsPortfolioSection h3 {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primary);
+  margin-bottom: 0.75rem;
 }
 
 .detailsDescription {

@@ -1287,7 +1287,7 @@ export default function UserDashboardPage() {
 
                 {/* Contenido del modal */}
                 <div className={styles.providerModalBody}>
-                  {/* Descripción */}
+                  {/* Descripción - Arriba */}
                   {providers[selectedMatch.providerId]?.description && (
                     <div className={styles.providerModalSection}>
                       <h4>Sobre este proveedor</h4>
@@ -1297,21 +1297,7 @@ export default function UserDashboardPage() {
                     </div>
                   )}
 
-                  {/* Portafolio de fotos */}
-                  {providers[selectedMatch.providerId]?.portfolioImages && 
-                   providers[selectedMatch.providerId].portfolioImages.length > 0 && (
-                    <div className={styles.providerModalSection}>
-                      <h4>Portafolio</h4>
-                      <PortfolioGallery
-                        images={providers[selectedMatch.providerId].portfolioImages}
-                        providerName={selectedMatch.providerInfo.providerName}
-                        compact={true}
-                        maxPreviewImages={4}
-                      />
-                    </div>
-                  )}
-
-                  {/* Información */}
+                  {/* Información básica - Arriba */}
                   <div className={styles.providerModalSection}>
                     <h4>Información</h4>
                     <div className={styles.providerModalInfoGrid}>
@@ -1360,6 +1346,18 @@ export default function UserDashboardPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Portafolio - Sección separada que usa todo el ancho */}
+                  {providers[selectedMatch.providerId]?.portfolioImages && 
+                   providers[selectedMatch.providerId].portfolioImages.length > 0 && (
+                    <div className={styles.providerModalPortfolioSection}>
+                      <h4>Portafolio</h4>
+                      <PortfolioGallery
+                        images={providers[selectedMatch.providerId].portfolioImages}
+                        providerName={selectedMatch.providerInfo.providerName}
+                      />
+                    </div>
+                  )}
 
                   {/* Contacto - Solo visible si está aprobado */}
                   {selectedMatch.status === 'approved' && (

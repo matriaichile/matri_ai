@@ -611,7 +611,7 @@ export default function CategoryMatchesPage() {
 
                 {/* Información del proveedor */}
                 <div className={styles.detailsContent}>
-                  {/* Descripción */}
+                  {/* Descripción - Arriba */}
                   {selectedMatch.providerDetails?.description && (
                     <div className={styles.detailsSection}>
                       <h3>Sobre este proveedor</h3>
@@ -621,21 +621,7 @@ export default function CategoryMatchesPage() {
                     </div>
                   )}
 
-                  {/* Portafolio de fotos */}
-                  {selectedMatch.providerDetails?.portfolioImages && 
-                   selectedMatch.providerDetails.portfolioImages.length > 0 && (
-                    <div className={styles.detailsSection}>
-                      <h3>Portafolio</h3>
-                      <PortfolioGallery
-                        images={selectedMatch.providerDetails.portfolioImages}
-                        providerName={selectedMatch.providerInfo.providerName}
-                        compact={true}
-                        maxPreviewImages={4}
-                      />
-                    </div>
-                  )}
-
-                  {/* Información básica */}
+                  {/* Información básica - Arriba */}
                   <div className={styles.detailsSection}>
                     <h3>Información</h3>
                     <div className={styles.detailsGrid}>
@@ -681,6 +667,18 @@ export default function CategoryMatchesPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Portafolio - Sección separada que usa todo el ancho */}
+                  {selectedMatch.providerDetails?.portfolioImages && 
+                   selectedMatch.providerDetails.portfolioImages.length > 0 && (
+                    <div className={styles.detailsPortfolioSection}>
+                      <h3>Portafolio</h3>
+                      <PortfolioGallery
+                        images={selectedMatch.providerDetails.portfolioImages}
+                        providerName={selectedMatch.providerInfo.providerName}
+                      />
+                    </div>
+                  )}
 
                   {/* Contacto - Solo visible si está aprobado */}
                   {selectedMatch.status === 'approved' && (

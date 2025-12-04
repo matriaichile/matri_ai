@@ -20,8 +20,6 @@ interface PortfolioMedia {
 interface PortfolioGalleryProps {
   images: PortfolioMedia[];
   providerName?: string;
-  compact?: boolean;
-  maxPreviewImages?: number;
 }
 
 // Determinar si un item es video
@@ -36,8 +34,6 @@ function isItemVideo(item: PortfolioMedia): boolean {
 export default function PortfolioGallery({
   images,
   providerName = 'Proveedor',
-  compact = false,
-  maxPreviewImages = 4,
 }: PortfolioGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,12 +42,8 @@ export default function PortfolioGallery({
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Ordenar medios
+  // Ordenar medios - mostrar TODOS (es su carta de presentación)
   const sortedMedia = [...images].sort((a, b) => a.order - b.order);
-
-  // Medios a mostrar en preview
-  const previewMedia = compact ? sortedMedia.slice(0, maxPreviewImages) : sortedMedia;
-  const remainingCount = sortedMedia.length - maxPreviewImages;
 
   // Resetear estado del video cuando cambia el índice
   useEffect(() => {
@@ -191,9 +183,9 @@ export default function PortfolioGallery({
 
   return (
     <div className={styles.container} onKeyDown={handleKeyDown} tabIndex={0}>
-      {/* Grid de preview */}
-      <div className={`${styles.grid} ${compact ? styles.compact : ''}`}>
-        {previewMedia.map((item, index) => {
+      {/* Grid mostrando TODOS los elementos - es su carta de presentación */}
+      <div className={styles.grid}>
+        {sortedMedia.map((item, index) => {
           const isVideo = isItemVideo(item);
           return (
             <button
@@ -229,19 +221,6 @@ export default function PortfolioGallery({
             </button>
           );
         })}
-
-        {/* Indicador de más medios */}
-        {compact && remainingCount > 0 && (
-          <button
-            type="button"
-            className={styles.moreButton}
-            onClick={() => openModal(maxPreviewImages)}
-            aria-label={`Ver ${remainingCount} elementos más`}
-          >
-            <span className={styles.moreCount}>+{remainingCount}</span>
-            <span className={styles.moreText}>más</span>
-          </button>
-        )}
       </div>
 
       {/* Modal de galería */}
