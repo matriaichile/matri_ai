@@ -20,6 +20,9 @@ interface PortfolioMedia {
 interface PortfolioGalleryProps {
   images: PortfolioMedia[];
   providerName?: string;
+  initialIndex?: number; // Índice inicial para abrir la galería (opcional)
+  autoOpen?: boolean; // Si debe abrir automáticamente al montar
+  onClose?: () => void; // Callback cuando se cierra la galería
 }
 
 // Determinar si un item es video
@@ -34,9 +37,12 @@ function isItemVideo(item: PortfolioMedia): boolean {
 export default function PortfolioGallery({
   images,
   providerName = 'Proveedor',
+  initialIndex = 0,
+  autoOpen = false,
+  onClose,
 }: PortfolioGalleryProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(autoOpen ? initialIndex : null);
+  const [isModalOpen, setIsModalOpen] = useState(autoOpen);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -44,6 +50,15 @@ export default function PortfolioGallery({
 
   // Ordenar medios - mostrar TODOS (es su carta de presentación)
   const sortedMedia = [...images].sort((a, b) => a.order - b.order);
+  
+  // Efecto para abrir automáticamente si autoOpen cambia
+  useEffect(() => {
+    if (autoOpen) {
+      setSelectedIndex(initialIndex);
+      setIsModalOpen(true);
+      document.body.style.overflow = 'hidden';
+    }
+  }, [autoOpen, initialIndex]);
 
   // Resetear estado del video cuando cambia el índice
   useEffect(() => {
@@ -70,7 +85,9 @@ export default function PortfolioGallery({
     if (videoRef.current) {
       videoRef.current.pause();
     }
-  }, []);
+    // Notificar al padre si hay callback
+    onClose?.();
+  }, [onClose]);
 
   // Navegar a medio anterior
   const goToPrevious = useCallback(() => {

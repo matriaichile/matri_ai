@@ -245,6 +245,18 @@
   transform: scale(1.05);
 }
 
+/* Imagen de perfil personalizada del proveedor */
+.matchProfileImage {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  transition: transform 0.3s ease;
+}
+
+.matchCard:hover .matchProfileImage {
+  transform: scale(1.05);
+}
+
 /* Score badge */
 /* ====================================
    MATCH BADGES - Diseño Premium Flotante

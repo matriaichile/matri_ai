@@ -1,0 +1,280 @@
+/* ====================================
+   TOAST NOTIFICATIONS - Dark Gold Theme
+   Matri.AI - Elegant Dark Premium
+   Notificaciones elegantes y compactas
+   ==================================== */
+
+.container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 380px;
+  width: calc(100% - 2rem);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.toast.exiting {
+  animation: slideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+}
+
+/* Icono container */
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* Contenido */
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text, #F5F5F5);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.message {
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+/* Botón cerrar */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Barra de progreso */
+.progressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: shrink linear forwards;
+  transform-origin: left;
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* ====================================
+   VARIANTES POR TIPO
+   ==================================== */
+
+/* Success - Dorado elegante */
+.success {
+  border-color: rgba(212, 175, 55, 0.2);
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(212, 175, 55, 0.1),
+    0 0 20px rgba(212, 175, 55, 0.05);
+}
+
+.success .iconContainer {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--color-primary, #D4AF37);
+}
+
+.success .progressBar {
+  background: linear-gradient(90deg, var(--color-primary, #D4AF37), var(--color-primary-light, #E8D090));
+}
+
+/* Error - Rojo elegante */
+.error {
+  border-color: rgba(239, 68, 68, 0.2);
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(239, 68, 68, 0.1),
+    0 0 20px rgba(239, 68, 68, 0.05);
+}
+
+.error .iconContainer {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.error .progressBar {
+  background: linear-gradient(90deg, #EF4444, #F87171);
+}
+
+/* Warning - Ámbar */
+.warning {
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(245, 158, 11, 0.1),
+    0 0 20px rgba(245, 158, 11, 0.05);
+}
+
+.warning .iconContainer {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.warning .progressBar {
+  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+}
+
+/* Info - Azul elegante */
+.info {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+.info .iconContainer {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.info .progressBar {
+  background: linear-gradient(90deg, #3B82F6, #60A5FA);
+}
+
+/* ====================================
+   RESPONSIVE
+   ==================================== */
+
+@media (max-width: 480px) {
+  .container {
+    top: auto;
+    bottom: 1rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-width: none;
+  }
+
+  .toast {
+    padding: 0.875rem 1rem;
+  }
+
+  .title {
+    font-size: 0.8125rem;
+  }
+
+  .message {
+    font-size: 0.75rem;
+  }
+
+  .iconContainer {
+    width: 28px;
+    height: 28px;
+  }
+
+  .iconContainer svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ====================================
+   REDUCIR MOVIMIENTO
+   ==================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: fadeIn 0.2s ease;
+  }
+
+  .toast.exiting {
+    animation: fadeOut 0.2s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  .progressBar {
+    animation: none;
+    width: 100%;
+  }
+}
+

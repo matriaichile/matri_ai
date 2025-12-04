@@ -1027,6 +1027,20 @@
   line-height: 1.5;
 }
 
+.portfolioDivider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.2) 20%,
+    rgba(212, 175, 55, 0.3) 50%,
+    rgba(212, 175, 55, 0.2) 80%,
+    transparent
+  );
+  margin: 1.5rem 0;
+}
+
 /* ====================================
    PROFILE SECTION
    ==================================== */

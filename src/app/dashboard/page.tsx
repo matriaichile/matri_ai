@@ -43,7 +43,7 @@ import {
   Shirt,
   BadgeCheck
 } from 'lucide-react';
-import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES, PortfolioImage } from '@/store/authStore';
+import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES, PortfolioImage, ProfileImageData } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { updateUserProfile, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics } from '@/lib/firebase/firestore';
 import { RejectReasonModal } from '@/components/matches';
@@ -89,6 +89,7 @@ interface Provider {
   email?: string;
   phone?: string;
   portfolioImages: PortfolioImage[];
+  profileImage?: ProfileImageData; // Imagen de perfil personalizada
   isVerified?: boolean;
 }
 
@@ -148,6 +149,9 @@ export default function UserDashboardPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [matchToReject, setMatchToReject] = useState<LeadMatch | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
+  
+  // Estado para la galería de portafolio (al hacer click en imagen de tarjeta)
+  const [galleryProviderId, setGalleryProviderId] = useState<string | null>(null);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -512,19 +516,45 @@ export default function UserDashboardPage() {
                       {pendingMatches.map((match) => {
                         const provider = providers[match.providerId];
                         const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
+                        const hasProfileImage = provider?.profileImage?.url;
                         const isProcessing = processingMatchId === match.id;
+                        
+                        // Verificar si tiene portafolio para abrir galería
+                        const hasPortfolio = provider?.portfolioImages && provider.portfolioImages.length > 0;
                         
                         return (
                           <div 
                             key={match.id} 
                             className={styles.matchCard}
                           >
-                            <div className={styles.matchImage}>
+                            <div 
+                              className={styles.matchImage}
+                              onClick={() => {
+                                // Si tiene portafolio, abrir galería; si no, abrir detalles
+                                if (hasPortfolio) {
+                                  setGalleryProviderId(match.providerId);
+                                } else {
+                                  handleViewProviderDetails(match);
+                                }
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            >
                               <div className={styles.matchImageWrapper}>
-                                <img 
-                                  src={categoryImage} 
-                                  alt={match.providerInfo.providerName}
-                                />
+                                {hasProfileImage ? (
+                                  <div 
+                                    className={styles.matchProfileImage}
+                                    style={{
+                                      backgroundImage: `url(${provider.profileImage!.url})`,
+                                      backgroundPosition: `${provider.profileImage!.cropData.x}% ${provider.profileImage!.cropData.y}%`,
+                                      backgroundSize: `${100 * provider.profileImage!.cropData.zoom}%`,
+                                    }}
+                                  />
+                                ) : (
+                                  <img 
+                                    src={categoryImage} 
+                                    alt={match.providerInfo.providerName}
+                                  />
+                                )}
                               </div>
                               <div 
                                 className={styles.matchBadgeFloating}
@@ -625,6 +655,8 @@ export default function UserDashboardPage() {
                       {approvedMatches.map((match) => {
                         const provider = providers[match.providerId];
                         const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
+                        const hasProfileImage = provider?.profileImage?.url;
+                        const hasPortfolio = provider?.portfolioImages && provider.portfolioImages.length > 0;
                         const isProcessing = processingMatchId === match.id;
                         
                         return (
@@ -632,12 +664,34 @@ export default function UserDashboardPage() {
                             key={match.id} 
                             className={`${styles.matchCard} ${styles.matchCardApproved}`}
                           >
-                            <div className={styles.matchImage}>
+                            <div 
+                              className={styles.matchImage}
+                              onClick={() => {
+                                // Si tiene portafolio, abrir galería; si no, abrir detalles
+                                if (hasPortfolio) {
+                                  setGalleryProviderId(match.providerId);
+                                } else {
+                                  handleViewProviderDetails(match);
+                                }
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            >
                               <div className={styles.matchImageWrapper}>
-                                <img 
-                                  src={categoryImage} 
-                                  alt={match.providerInfo.providerName}
-                                />
+                                {hasProfileImage ? (
+                                  <div 
+                                    className={styles.matchProfileImage}
+                                    style={{
+                                      backgroundImage: `url(${provider.profileImage!.url})`,
+                                      backgroundPosition: `${provider.profileImage!.cropData.x}% ${provider.profileImage!.cropData.y}%`,
+                                      backgroundSize: `${100 * provider.profileImage!.cropData.zoom}%`,
+                                    }}
+                                  />
+                                ) : (
+                                  <img 
+                                    src={categoryImage} 
+                                    alt={match.providerInfo.providerName}
+                                  />
+                                )}
                               </div>
                               <div 
                                 className={styles.matchBadgeFloating}
@@ -1365,12 +1419,11 @@ export default function UserDashboardPage() {
                   </div>
 
                   {/* Portafolio - Sección separada que usa todo el ancho */}
-                  {providers[selectedMatch.providerId]?.portfolioImages && 
-                   providers[selectedMatch.providerId].portfolioImages.length > 0 && (
+                  {(providers[selectedMatch.providerId]?.portfolioImages?.length ?? 0) > 0 && (
                     <div className={styles.providerModalPortfolioSection}>
                       <h4>Portafolio</h4>
                       <PortfolioGallery
-                        images={providers[selectedMatch.providerId].portfolioImages}
+                        images={providers[selectedMatch.providerId]?.portfolioImages || []}
                         providerName={selectedMatch.providerInfo.providerName}
                       />
                     </div>
@@ -1516,6 +1569,16 @@ export default function UserDashboardPage() {
         onConfirm={handleConfirmReject}
         isLoading={isRejecting}
       />
+      
+      {/* Galería de portafolio (abre al hacer click en imagen de tarjeta) */}
+      {galleryProviderId && providers[galleryProviderId]?.portfolioImages && (
+        <PortfolioGallery
+          images={providers[galleryProviderId].portfolioImages}
+          providerName={providers[galleryProviderId]?.providerName || 'Proveedor'}
+          autoOpen={true}
+          onClose={() => setGalleryProviderId(null)}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -25,7 +25,7 @@ import {
   XCircle,
   BadgeCheck
 } from 'lucide-react';
-import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/authStore';
+import { useAuthStore, CategoryId, UserProfile, ProviderProfile, ProfileImageData } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
@@ -77,6 +77,9 @@ export default function CategoryMatchesPage() {
   
   // Estado para generar nuevos matches
   const [isGeneratingNew, setIsGeneratingNew] = useState(false);
+  
+  // Estado para la galería de portafolio (al hacer click en imagen de tarjeta)
+  const [galleryMatch, setGalleryMatch] = useState<ExtendedLead | null>(null);
 
   // Verificar autenticación
   useEffect(() => {
@@ -336,6 +339,7 @@ export default function CategoryMatchesPage() {
                 <div className={styles.matchesGridCentered}>
                   {pendingMatches.map((match, index) => {
                     const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
+                    const hasProfileImage = match.providerDetails?.profileImage?.url;
                     
                     return (
                       <div 
@@ -353,12 +357,35 @@ export default function CategoryMatchesPage() {
                         
                         <div className={styles.matchCard}>
                           {/* Imagen del proveedor */}
-                          <div className={styles.matchImage}>
+                          <div 
+                            className={styles.matchImage}
+                            onClick={() => {
+                              // Si tiene portafolio, abrir galería; si no, abrir detalles
+                              const hasPortfolio = match.providerDetails?.portfolioImages && match.providerDetails.portfolioImages.length > 0;
+                              if (hasPortfolio) {
+                                setGalleryMatch(match);
+                              } else {
+                                handleViewDetails(match);
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
                             <div className={styles.matchImageWrapper}>
-                              <img 
-                                src={categoryImage} 
-                                alt={match.providerInfo.providerName}
-                              />
+                              {hasProfileImage ? (
+                                <div 
+                                  className={styles.matchProfileImage}
+                                  style={{
+                                    backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
+                                    backgroundPosition: `${match.providerDetails!.profileImage!.cropData.x}% ${match.providerDetails!.profileImage!.cropData.y}%`,
+                                    backgroundSize: `${100 * match.providerDetails!.profileImage!.cropData.zoom}%`,
+                                  }}
+                                />
+                              ) : (
+                                <img 
+                                  src={categoryImage} 
+                                  alt={match.providerInfo.providerName}
+                                />
+                              )}
                             </div>
                             <div className={styles.matchCategory}>
                               <span>{categoryInfo?.name}</span>
@@ -458,6 +485,8 @@ export default function CategoryMatchesPage() {
                 <div className={styles.matchesGrid}>
                   {approvedMatches.map((match) => {
                     const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
+                    const hasProfileImage = match.providerDetails?.profileImage?.url;
+                    const hasPortfolio = match.providerDetails?.portfolioImages && match.providerDetails.portfolioImages.length > 0;
                     
                     return (
                       <div 
@@ -465,12 +494,34 @@ export default function CategoryMatchesPage() {
                         className={`${styles.matchCard} ${styles.matchCardApproved}`}
                       >
                         {/* Imagen del proveedor */}
-                        <div className={styles.matchImage}>
+                        <div 
+                          className={styles.matchImage}
+                          onClick={() => {
+                            // Si tiene portafolio, abrir galería; si no, abrir detalles
+                            if (hasPortfolio) {
+                              setGalleryMatch(match);
+                            } else {
+                              handleViewDetails(match);
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <div className={styles.matchImageWrapper}>
-                            <img 
-                              src={categoryImage} 
-                              alt={match.providerInfo.providerName}
-                            />
+                            {hasProfileImage ? (
+                              <div 
+                                className={styles.matchProfileImage}
+                                style={{
+                                  backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
+                                  backgroundPosition: `${match.providerDetails!.profileImage!.cropData.x}% ${match.providerDetails!.profileImage!.cropData.y}%`,
+                                  backgroundSize: `${100 * match.providerDetails!.profileImage!.cropData.zoom}%`,
+                                }}
+                              />
+                            ) : (
+                              <img 
+                                src={categoryImage} 
+                                alt={match.providerInfo.providerName}
+                              />
+                            )}
                           </div>
                           <div 
                             className={styles.matchBadgeSmall}
@@ -685,12 +736,11 @@ export default function CategoryMatchesPage() {
                   </div>
 
                   {/* Portafolio - Sección separada que usa todo el ancho */}
-                  {selectedMatch.providerDetails?.portfolioImages && 
-                   selectedMatch.providerDetails.portfolioImages.length > 0 && (
+                  {(selectedMatch.providerDetails?.portfolioImages?.length ?? 0) > 0 && (
                     <div className={styles.detailsPortfolioSection}>
                       <h3>Portafolio</h3>
                       <PortfolioGallery
-                        images={selectedMatch.providerDetails.portfolioImages}
+                        images={selectedMatch.providerDetails?.portfolioImages || []}
                         providerName={selectedMatch.providerInfo.providerName}
                       />
                     </div>
@@ -836,6 +886,16 @@ export default function CategoryMatchesPage() {
         onConfirm={handleConfirmReject}
         isLoading={isRejecting}
       />
+      
+      {/* Galería de portafolio (abre al hacer click en imagen de tarjeta) */}
+      {galleryMatch && galleryMatch.providerDetails?.portfolioImages && (
+        <PortfolioGallery
+          images={galleryMatch.providerDetails.portfolioImages}
+          providerName={galleryMatch.providerInfo.providerName}
+          autoOpen={true}
+          onClose={() => setGalleryMatch(null)}
+        />
+      )}
     </div>
   );
 }

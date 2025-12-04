@@ -14,6 +14,7 @@ import {
   ALLOWED_MEDIA_TYPES,
   MAX_FILE_SIZE,
 } from '@/lib/cloudflare/r2.client';
+import { useToast } from '@/components/ui/Toast';
 import styles from './PortfolioUploader.module.css';
 
 // Constantes de configuración
@@ -54,6 +55,7 @@ export default function PortfolioUploader({
   onImagesReordered,
   disabled = false,
 }: PortfolioUploaderProps) {
+  const toast = useToast();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [videoPreview, setVideoPreview] = useState<VideoPreviewState>({ isOpen: false, url: '', title: '' });
   const [isDragging, setIsDragging] = useState(false);
@@ -88,7 +90,7 @@ export default function PortfolioUploader({
     const availableSlots = remainingSlots - uploadingFiles.filter(f => f.status === 'uploading').length;
 
     if (availableSlots <= 0) {
-      alert(`Has alcanzado el límite de ${MAX_ITEMS} elementos.`);
+      toast.warning('Límite alcanzado', `Has alcanzado el límite de ${MAX_ITEMS} elementos en tu portafolio.`);
       return;
     }
 
@@ -245,7 +247,7 @@ export default function PortfolioUploader({
       onImageDeleted(key);
     } catch (error) {
       console.error('Error al eliminar elemento:', error);
-      alert('Error al eliminar el elemento. Intenta de nuevo.');
+      toast.error('Error al eliminar', 'No se pudo eliminar el elemento. Intenta de nuevo.');
     } finally {
       setDeletingKey(null);
     }

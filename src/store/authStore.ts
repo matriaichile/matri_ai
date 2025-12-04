@@ -98,6 +98,20 @@ export interface PortfolioImage {
   size?: number;            // Tamaño en bytes
 }
 
+// Imagen de perfil del proveedor (para tarjetas de matches)
+export interface ProfileImageData {
+  key: string;              // Clave del objeto en R2
+  url: string;              // URL pública de la imagen
+  cropData: {               // Datos del recorte para las tarjetas
+    x: number;              // Posición X del recorte (%)
+    y: number;              // Posición Y del recorte (%)
+    width: number;          // Ancho del recorte (%)
+    height: number;         // Alto del recorte (%)
+    zoom: number;           // Nivel de zoom aplicado
+  };
+  uploadedAt: string;       // Fecha de carga (ISO string)
+}
+
 // Datos del perfil de proveedor
 export interface ProviderProfile {
   id: string;
@@ -118,6 +132,7 @@ export interface ProviderProfile {
   facebook: string;
   tiktok: string;
   portfolioImages: PortfolioImage[];
+  profileImage?: ProfileImageData; // Imagen de perfil personalizada para tarjetas
   status: ProviderStatus;
   isVerified: boolean; // Badge de verificación (solo super admin puede modificar)
   // Sistema de leads POR CATEGORÍA - NUEVO

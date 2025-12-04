@@ -45,9 +45,10 @@ import {
   Filter,
   Plus
 } from 'lucide-react';
-import { useAuthStore, ProviderProfile, CategoryId, UserProfile, PortfolioImage } from '@/store/authStore';
+import { useAuthStore, ProviderProfile, CategoryId, UserProfile, PortfolioImage, ProfileImageData } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { PROVIDER_CATEGORIES, REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
+import { useToast } from '@/components/ui/Toast';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
@@ -55,7 +56,7 @@ import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, S
 import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 import { CATEGORY_MATCHING_CRITERIA, calculateCriterionMatch } from '@/lib/matching/comparisonUtils';
-import { PortfolioUploader } from '@/components/portfolio';
+import { PortfolioUploader, ProfileImageEditor } from '@/components/portfolio';
 import { updateProviderPortfolioImages } from '@/lib/firebase/firestore';
 import styles from './page.module.css';
 
@@ -136,6 +137,7 @@ const EVENT_STYLE_LABELS: Record<string, string> = {
  */
 export default function ProviderDashboardPage() {
   const router = useRouter();
+  const toast = useToast();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'profile'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -382,13 +384,15 @@ export default function ProviderDashboardPage() {
       // Mostrar mensaje de éxito si se agregaron nuevas categorías
       if (newCategories.length > 0) {
         const newCatLabels = newCategories.map(c => PROVIDER_CATEGORIES.find(pc => pc.id === c)?.label || c).join(', ');
-        alert(`¡Categorías agregadas! Ahora debes completar las encuestas de: ${newCatLabels}`);
+        toast.success('¡Categorías agregadas!', `Ahora debes completar las encuestas de: ${newCatLabels}`, 6000);
+      } else {
+        toast.success('¡Perfil actualizado!', 'Los cambios se han guardado correctamente');
       }
       
       setIsEditing(false);
     } catch (error) {
       console.error('Error guardando perfil:', error);
-      alert('Error al guardar el perfil. Por favor, intenta de nuevo.');
+      toast.error('Error al guardar', 'No se pudo guardar el perfil. Por favor, intenta de nuevo.');
     } finally {
       setSavingProfile(false);
     }
@@ -457,6 +461,24 @@ export default function ProviderDashboardPage() {
       await updateProviderPortfolioImages(firebaseUser.uid, reorderedImages);
     } catch (error) {
       console.error('Error al guardar el orden de las imágenes:', error);
+    }
+  }, [userProfile, setUserProfile, firebaseUser?.uid]);
+
+  // Handler para guardar la imagen de perfil
+  const handleProfileImageSaved = useCallback(async (imageData: ProfileImageData) => {
+    if (!userProfile || userProfile.type !== 'provider' || !firebaseUser?.uid) return;
+    
+    // Actualizar el store local inmediatamente
+    setUserProfile({
+      ...userProfile,
+      profileImage: imageData,
+    } as ProviderProfile);
+    
+    // Guardar en Firestore
+    try {
+      await updateProviderProfile(firebaseUser.uid, { profileImage: imageData });
+    } catch (error) {
+      console.error('Error al guardar la imagen de perfil:', error);
     }
   }, [userProfile, setUserProfile, firebaseUser?.uid]);
 
@@ -979,10 +1001,22 @@ export default function ProviderDashboardPage() {
           <div className={styles.portfolioSection}>
             <div className={styles.portfolioIntro}>
               <p>
-                Tu portafolio es tu carta de presentación. Sube entre 5 y 10 fotos de tu mejor trabajo 
-                para que las parejas puedan ver la calidad de tus servicios.
+                Tu portafolio es tu carta de presentación. Configura tu foto de perfil y sube entre 5 y 10 fotos 
+                de tu mejor trabajo para que las parejas puedan ver la calidad de tus servicios.
               </p>
             </div>
+            
+            {/* Editor de foto de perfil */}
+            <ProfileImageEditor
+              providerId={firebaseUser?.uid || ''}
+              currentImage={profile?.profileImage}
+              portfolioImages={profile?.portfolioImages || []}
+              onImageSaved={handleProfileImageSaved}
+              disabled={!firebaseUser?.uid}
+            />
+            
+            {/* Separador visual */}
+            <div className={styles.portfolioDivider} />
             
             <PortfolioUploader
               providerId={firebaseUser?.uid || ''}
