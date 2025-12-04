@@ -40,7 +40,8 @@ import {
   MapPinned,
   Filter,
   PartyPopper,
-  Shirt
+  Shirt,
+  BadgeCheck
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES, PortfolioImage } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -88,6 +89,7 @@ interface Provider {
   email?: string;
   phone?: string;
   portfolioImages: PortfolioImage[];
+  isVerified?: boolean;
 }
 
 // Iconos por categoría
@@ -539,6 +541,11 @@ export default function UserDashboardPage() {
                             <div className={styles.matchInfo}>
                               <h3 className={styles.matchName}>
                                 {match.providerInfo.providerName}
+                                {provider?.isVerified && (
+                                  <span className={styles.verifiedBadge} title="Proveedor verificado">
+                                    <BadgeCheck size={16} />
+                                  </span>
+                                )}
                               </h3>
                               
                               <p className={styles.matchDescription}>
@@ -651,6 +658,11 @@ export default function UserDashboardPage() {
                             <div className={styles.matchInfo}>
                               <h3 className={styles.matchName}>
                                 {match.providerInfo.providerName}
+                                {provider?.isVerified && (
+                                  <span className={styles.verifiedBadge} title="Proveedor verificado">
+                                    <BadgeCheck size={16} />
+                                  </span>
+                                )}
                               </h3>
                               
                               <p className={styles.matchDescription}>
@@ -1279,6 +1291,11 @@ export default function UserDashboardPage() {
                   </div>
                   <h2 className={styles.providerModalTitle}>
                     {selectedMatch.providerInfo.providerName}
+                    {providers[selectedMatch.providerId]?.isVerified && (
+                      <span className={styles.verifiedBadgeLarge} title="Proveedor verificado">
+                        <BadgeCheck size={20} />
+                      </span>
+                    )}
                   </h2>
                   <p className={styles.providerModalCategory}>
                     {getCategoryLabel(selectedMatch.category)}

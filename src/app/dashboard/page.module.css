@@ -339,9 +339,27 @@
   color: var(--color-text);
   margin: 0;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Badge de verificación */
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #D4AF37;
+  flex-shrink: 0;
+}
+
+.verifiedBadgeLarge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #D4AF37;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
 }
 
 .matchDescription {
@@ -1404,6 +1422,9 @@
   font-weight: 500;
   color: var(--color-text);
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .providerModalCategory {

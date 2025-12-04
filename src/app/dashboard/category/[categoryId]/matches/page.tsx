@@ -22,7 +22,8 @@ import {
   RotateCcw,
   ChevronRight,
   Heart,
-  XCircle
+  XCircle,
+  BadgeCheck
 } from 'lucide-react';
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
@@ -367,6 +368,11 @@ export default function CategoryMatchesPage() {
                         <div className={styles.matchBody}>
                           <h3 className={styles.providerName}>
                             {match.providerInfo.providerName}
+                            {match.providerDetails?.isVerified && (
+                              <span className={styles.verifiedBadge} title="Proveedor verificado">
+                                <BadgeCheck size={16} />
+                              </span>
+                            )}
                           </h3>
 
                           <div className={styles.matchMeta}>
@@ -484,6 +490,11 @@ export default function CategoryMatchesPage() {
                         <div className={styles.matchBody}>
                           <h3 className={styles.providerName}>
                             {match.providerInfo.providerName}
+                            {match.providerDetails?.isVerified && (
+                              <span className={styles.verifiedBadge} title="Proveedor verificado">
+                                <BadgeCheck size={16} />
+                              </span>
+                            )}
                           </h3>
 
                           <div className={styles.matchMeta}>
@@ -603,6 +614,11 @@ export default function CategoryMatchesPage() {
                   </div>
                   <h2 className={styles.detailsTitle}>
                     {selectedMatch.providerInfo.providerName}
+                    {selectedMatch.providerDetails?.isVerified && (
+                      <span className={styles.verifiedBadgeLarge} title="Proveedor verificado">
+                        <BadgeCheck size={20} />
+                      </span>
+                    )}
                   </h2>
                   <p className={styles.detailsSubtitle}>
                     {categoryInfo?.name}

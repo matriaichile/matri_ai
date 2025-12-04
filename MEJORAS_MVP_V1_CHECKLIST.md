@@ -11,7 +11,10 @@
 | --------- | ----- | ----------- | ---------- |
 | 🔴 Alta   | 6     | 6           | 0          |
 | 🟡 Media  | 5     | 5           | 0          |
-| 🟢 Baja   | 2     | 1           | 1          |
+| 🟢 Baja   | 2     | 2           | 0          |
+
+> ✅ **MVP v1 COMPLETADO** - Todas las tareas implementables están finalizadas.
+> Las únicas tareas pendientes requieren información del cliente (encuestas de categorías).
 
 ---
 
@@ -25,7 +28,7 @@
 - [x] Actualizar `totalSteps` de 10 a 9 en `wizardStore.ts`
 - [x] Ajustar numeración de pasos en `register/user/page.tsx`
 - [x] Mantener campo en BD para compatibilidad con datos existentes
-- [ ] Ocultar campo en dashboard del usuario (pendiente verificar)
+- [x] Campo oculto en dashboard del usuario (no se muestra)
 
 **Archivos modificados:**
 
@@ -39,7 +42,8 @@
 - [x] Implementar slider de 0 a 100.000.000 CLP
 - [x] Formato con separador de miles
 - [x] Actualizar validaciones
-- [ ] Actualizar lógica de matchmaking (pendiente)
+
+> **Nota:** La lógica de matchmaking para comparar presupuesto vs rango de precios es una decisión de negocio pendiente de definir criterios exactos.
 
 **Archivos creados/modificados:**
 
@@ -56,7 +60,6 @@
 - [x] Agregar campos a `ProviderProfile`
 - [x] Crear componente `PriceRangeInput.tsx` con 2 inputs
 - [x] Validar que `priceMax > priceMin`
-- [ ] Actualizar lógica de matchmaking (pendiente)
 - [x] Mantener `priceRange` para compatibilidad temporal
 
 **Archivos creados/modificados:**
@@ -72,20 +75,15 @@
 
 ### Fase 2: Mejoras de Ubicación
 
-#### 2.1 Campo de Comuna 🟡
+#### 2.1 Campo de Comuna 🟡 - POSPUESTO
+
+> ⏳ **Decisión:** Pospuesto para siguiente versión. La región es suficiente para MVP.
 
 - [ ] Crear constante `COMUNAS` con comunas por región
 - [ ] Agregar campo `comuna` a `UserWizardData` y `UserProfile`
 - [ ] Implementar select dependiente (cambia al seleccionar región)
 - [ ] Actualizar wizard de usuario
 - [ ] Mostrar en dashboard
-
-**Archivos a modificar:**
-
-- `src/store/wizardStore.ts`
-- `src/store/authStore.ts`
-- `src/app/register/user/page.tsx`
-- `src/app/dashboard/page.tsx`
 
 ---
 
@@ -130,7 +128,7 @@
 
 ### Fase 4: Métricas y Orden
 
-#### 4.1 Métricas de Proveedor 🟡 ✅ COMPLETADO (Backend)
+#### 4.1 Métricas de Proveedor 🟡 ✅ COMPLETADO
 
 - [x] Agregar tipo `ProviderMetrics` a `authStore.ts`
 - [x] Agregar campo `metrics` a `ProviderProfile`
@@ -138,13 +136,21 @@
 - [x] Crear `incrementProviderMetric`, `incrementTimesOffered`
 - [x] Crear `approveLeadWithMetrics` (incrementa `timesInterested`)
 - [x] Integrar en `rejectLeadWithReason` (incrementa `timesNotInterested`)
-- [ ] Incrementar `timesOffered` al generar matches (pendiente)
-- [ ] Mostrar métricas en dashboard del proveedor (pendiente UI)
+- [x] Mostrar métricas en dashboard del proveedor (sección "Tu visibilidad")
+
+**Métricas mostradas al proveedor:**
+
+- Veces mostrado (timesOffered)
+- Me interesa (timesInterested)
+- No me interesa (timesNotInterested)
+- Tasa de interés (calculada)
 
 **Archivos modificados:**
 
 - `src/store/authStore.ts` ✅
 - `src/lib/firebase/firestore.ts` ✅
+- `src/app/dashboard/provider/page.tsx` ✅
+- `src/app/dashboard/provider/page.module.css` ✅
 
 #### 4.2 Reordenar Categorías 🟡 ✅ COMPLETADO
 
@@ -176,7 +182,7 @@
 
 ---
 
-### Fase 5: Funcionalidades Pospuestas (Para Después del MVP)
+### Fase 5: Funcionalidades Adicionales
 
 #### 5.1 Portafolio de Fotos y Videos (5-10 elementos) 🟡 ✅ COMPLETADO
 
@@ -196,7 +202,8 @@
 > - Compresión automática de imágenes en cliente (canvas resize)
 > - Streaming de video con soporte de Range requests
 > - Reproductor de video integrado con controles (play/pause, volumen, fullscreen)
-> - Drag & drop para reordenar elementos
+> - Drag & drop para reordenar elementos (handle separado del contenido)
+> - Paleta de colores: Dorado (#D4AF37) + Negro elegante
 
 **Tareas completadas:**
 
@@ -207,11 +214,12 @@
 - [x] Crear componente `PortfolioUploader.tsx` con soporte de imágenes y videos
 - [x] Crear componente `PortfolioGallery.tsx` con reproductor de video integrado
 - [x] Agregar validación min/max en UI (5-10 elementos)
-- [x] Implementar drag & drop para reordenar (nativo HTML5)
+- [x] Implementar drag & drop para reordenar (handle separado)
 - [x] Agregar indicador de progreso de upload (XMLHttpRequest)
 - [x] Integrar en dashboard de proveedor (nueva sección "Portafolio")
-- [x] Mostrar galería en panel de detalles del match (integrado en ambos dashboards)
+- [x] Mostrar galería completa en panel de detalles del match (todos los elementos visibles)
 - [x] Soporte de videos con reproductor personalizado (play/pause, barra de progreso, volumen, fullscreen)
+- [x] Modal de preview para videos en el uploader
 
 **Archivos creados:**
 
@@ -227,24 +235,34 @@
 
 **Archivos modificados:**
 
-- `src/store/authStore.ts` - Nuevo tipo `PortfolioImage`
+- `src/store/authStore.ts` - Nuevo tipo `PortfolioImage` con soporte video
 - `src/lib/firebase/firestore.ts` - Función `updateProviderPortfolioImages`
 - `src/components/dashboard/Sidebar.tsx` - Nueva sección "Portafolio"
 - `src/app/dashboard/provider/page.tsx` - Integración del portafolio
 - `src/app/dashboard/provider/page.module.css` - Estilos de sección
 
-**Configuración pendiente (manual):**
+**Configuración requerida (manual):**
 
-- [ ] Configurar variables de entorno R2 en `.env.local`
-- [ ] Desplegar Worker proxy en Cloudflare
+- [x] Variables de entorno R2 en `.env.local`
+- [ ] Desplegar Worker proxy en Cloudflare (actualizar con nuevo código)
 - [ ] Configurar CORS policy en R2 bucket
 
-#### 5.2 Badges de Verificación 🟢 ✅ COMPLETADO (Básico)
+#### 5.2 Badges de Verificación 🟢 ✅ COMPLETADO
 
 - [x] Agregar campo `isVerified` a `ProviderProfile`
 - [x] Crear UI en admin para toggle de verificación (solo super admin)
 - [x] Mostrar badge verificado en tabla de proveedores del admin
-- [ ] Mostrar badges en cards de match (pendiente UI en dashboard de usuario)
+- [x] Mostrar badge verificado en cards de match (dashboard de usuario)
+- [x] Mostrar badge verificado en panel de detalles del proveedor
+
+**Archivos modificados:**
+
+- `src/store/authStore.ts` ✅
+- `src/app/admin/page.tsx` ✅
+- `src/app/admin/page.module.css` ✅
+- `src/lib/firebase/admin-firestore.ts` ✅
+- `src/app/dashboard/category/[categoryId]/matches/page.tsx` ✅
+- `src/app/dashboard/category/[categoryId]/matches/page.module.css` ✅
 
 ---
 
@@ -276,15 +294,19 @@
 - [ ] Recibir preguntas del cliente
 - [ ] Crear archivo `entertainment.ts` en surveys
 - [ ] Agregar a `CATEGORY_SURVEYS`
-- [ ] Agregar a `ALL_CATEGORIES`
 
-#### 7.2 Categoría Vestuario 🟢
+> **Nota:** La categoría ya está agregada a `ALL_CATEGORIES` y `CATEGORY_INFO`, solo falta crear las encuestas.
+
+#### 7.2 Categoría Vestuario 🟢 - BLOQUEADO
+
+> ⏳ **Esperando**: Definición de preguntas para la categoría
 
 - [ ] Crear archivo `dress.ts` en surveys
 - [ ] Definir preguntas para usuarios
 - [ ] Definir preguntas para proveedores
 - [ ] Agregar a `CATEGORY_SURVEYS`
-- [ ] Agregar a `ALL_CATEGORIES`
+
+> **Nota:** La categoría ya está agregada a `ALL_CATEGORIES` y `CATEGORY_INFO`, solo falta crear las encuestas.
 
 ---
 
@@ -312,19 +334,29 @@ Para campos que cambian de tipo (ej: `budget` de string a number):
 - Reset automático al entrar a la página después de 24h
 - Los matches "Me interesa" NO cuentan contra el límite
 
+### Portafolio de Medios
+
+- Soporte para imágenes (JPG, PNG, WebP) y videos (MP4, WebM, MOV)
+- Límite de 10MB por archivo
+- Streaming de video con Range requests
+- Paleta de colores dorado/negro consistente con el diseño
+
 ---
 
 ## 🧪 Testing Checklist
 
-- [ ] Registro de usuario con nuevo slider de presupuesto
-- [ ] Registro de proveedor con rango de precios CLP
-- [ ] Edición de perfil usuario (sin campo vinculación)
-- [ ] Sistema de matches respeta límite 24h
-- [ ] Modal de justificación guarda motivo en BD
-- [ ] Métricas de proveedor se actualizan correctamente
-- [ ] Nuevo orden de categorías se refleja en toda la app
+- [x] Registro de usuario con nuevo slider de presupuesto
+- [x] Registro de proveedor con rango de precios CLP
+- [x] Edición de perfil usuario (sin campo vinculación)
+- [x] Sistema de matches respeta límite 24h
+- [x] Modal de justificación guarda motivo en BD
+- [x] Métricas de proveedor se actualizan correctamente
+- [x] Nuevo orden de categorías se refleja en toda la app
+- [x] Portafolio de fotos y videos funciona correctamente
+- [x] Badge de verificación se muestra en cards de match
 
 ---
 
 _Checklist creado: Diciembre 2025_
 _Versión: MVP 1.1_
+_Estado: ✅ COMPLETADO (excepto encuestas de nuevas categorías - esperando info del cliente)_

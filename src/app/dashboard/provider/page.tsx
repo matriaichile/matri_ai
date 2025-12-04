@@ -618,6 +618,58 @@ export default function ProviderDashboardPage() {
               </div>
             </div>
 
+            {/* Métricas de visibilidad */}
+            {profile?.metrics && (
+              <div className={styles.metricsSection}>
+                <div className={styles.sectionHeader}>
+                  <h2>Tu visibilidad</h2>
+                  <span className={styles.sectionSubtitle}>Estadísticas de cómo te ven las parejas</span>
+                </div>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricIcon}>
+                      <Eye size={20} />
+                    </div>
+                    <div className={styles.metricInfo}>
+                      <span className={styles.metricValue}>{profile.metrics.timesOffered || 0}</span>
+                      <span className={styles.metricLabel}>Veces mostrado</span>
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={`${styles.metricIcon} ${styles.metricIconSuccess}`}>
+                      <Heart size={20} />
+                    </div>
+                    <div className={styles.metricInfo}>
+                      <span className={styles.metricValue}>{profile.metrics.timesInterested || 0}</span>
+                      <span className={styles.metricLabel}>Me interesa</span>
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={`${styles.metricIcon} ${styles.metricIconDanger}`}>
+                      <XCircle size={20} />
+                    </div>
+                    <div className={styles.metricInfo}>
+                      <span className={styles.metricValue}>{profile.metrics.timesNotInterested || 0}</span>
+                      <span className={styles.metricLabel}>No me interesa</span>
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={`${styles.metricIcon} ${styles.metricIconPrimary}`}>
+                      <BarChart3 size={20} />
+                    </div>
+                    <div className={styles.metricInfo}>
+                      <span className={styles.metricValue}>
+                        {profile.metrics.timesOffered > 0 
+                          ? Math.round((profile.metrics.timesInterested / profile.metrics.timesOffered) * 100) 
+                          : 0}%
+                      </span>
+                      <span className={styles.metricLabel}>Tasa de interés</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Leads por categoría */}
             {profile?.categories && profile.categories.length > 1 && (
               <div className={styles.categoryStatsSection}>
