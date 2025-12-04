@@ -1,6 +1,6 @@
 // SOLO PARA SERVIDOR - NO IMPORTAR EN COMPONENTES CLIENTE
-// Configuración y operaciones de Cloudflare R2 para almacenamiento de imágenes del portafolio
-// Todas las imágenes del portafolio son PÚBLICAS (sin firma)
+// Configuración y operaciones de Cloudflare R2 para almacenamiento de medios del portafolio
+// Todos los medios del portafolio son PÚBLICOS (sin firma)
 
 import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 
@@ -13,9 +13,17 @@ const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'matrimatch-media';
 
-// URL pública del proxy de Cloudflare Workers para servir imágenes
-// Esta URL se usa para acceder a las imágenes públicamente sin firma
+// URL pública del proxy de Cloudflare Workers para servir medios
+// Esta URL se usa para acceder a los medios públicamente sin firma
 export const PUBLIC_MEDIA_URL = process.env.R2_PUBLIC_URL || 'https://r2-public-proxy.matriaichile.workers.dev';
+
+// Límite de tamaño máximo por archivo (10MB para imágenes y videos)
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+// Tipos de archivo permitidos
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+export const ALLOWED_MEDIA_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
 // Verificar credenciales en desarrollo
 if (process.env.NODE_ENV === 'development') {
@@ -44,27 +52,43 @@ export const r2Client = R2_ACCOUNT_ID ? new S3Client({
 // Tipos
 // ===========================
 
+export type MediaType = 'image' | 'video';
+
 export interface UploadResult {
   key: string;
   url: string;
   size: number;
   contentType: string;
+  mediaType: MediaType;
 }
 
-export interface PortfolioImage {
+export interface PortfolioMedia {
   key: string;
   url: string;
   order: number;
   uploadedAt: string;
+  type: MediaType;
+  mimeType: string;
+  size: number;
 }
+
+// Alias para compatibilidad
+export type PortfolioImage = PortfolioMedia;
 
 // ===========================
 // Funciones de utilidad
 // ===========================
 
 /**
- * Construye la ruta de almacenamiento para una imagen de portafolio
- * Todas las imágenes de portafolio son públicas y se almacenan bajo /portfolios/
+ * Determina el tipo de medio basado en el contentType
+ */
+export function getMediaType(contentType: string): MediaType {
+  return ALLOWED_VIDEO_TYPES.includes(contentType) ? 'video' : 'image';
+}
+
+/**
+ * Construye la ruta de almacenamiento para un medio de portafolio
+ * Todos los medios de portafolio son públicos y se almacenan bajo /portfolios/
  * @param providerId - ID del proveedor
  * @param fileName - Nombre original del archivo
  * @returns Ruta completa en el bucket
@@ -80,7 +104,7 @@ export function buildPortfolioPath(providerId: string, fileName: string): string
 }
 
 /**
- * Construye la URL pública para acceder a una imagen
+ * Construye la URL pública para acceder a un medio
  * @param key - Clave del objeto en R2
  * @returns URL pública completa
  */
@@ -89,14 +113,14 @@ export function getPublicUrl(key: string): string {
 }
 
 /**
- * Sube una imagen de portafolio a R2
+ * Sube un medio (imagen o video) de portafolio a R2
  * @param providerId - ID del proveedor
  * @param file - Buffer del archivo
  * @param fileName - Nombre original del archivo
  * @param contentType - Tipo MIME del archivo
  * @returns Resultado de la carga con key y URL pública
  */
-export async function uploadPortfolioImage(
+export async function uploadPortfolioMedia(
   providerId: string,
   file: Buffer,
   fileName: string,
@@ -107,18 +131,17 @@ export async function uploadPortfolioImage(
   }
 
   // Validar tipo de archivo
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(contentType)) {
-    throw new Error(`Tipo de archivo no permitido: ${contentType}. Solo se permiten: ${allowedTypes.join(', ')}`);
+  if (!ALLOWED_MEDIA_TYPES.includes(contentType)) {
+    throw new Error(`Tipo de archivo no permitido: ${contentType}. Solo se permiten imágenes (JPG, PNG, WebP) y videos (MP4, WebM, MOV)`);
   }
 
-  // Validar tamaño (máximo 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.length > maxSize) {
-    throw new Error(`El archivo excede el tamaño máximo de 5MB. Tamaño actual: ${(file.length / 1024 / 1024).toFixed(2)}MB`);
+  // Validar tamaño (máximo 10MB)
+  if (file.length > MAX_FILE_SIZE) {
+    throw new Error(`El archivo excede el tamaño máximo de 10MB. Tamaño actual: ${(file.length / 1024 / 1024).toFixed(2)}MB`);
   }
 
   const key = buildPortfolioPath(providerId, fileName);
+  const mediaType = getMediaType(contentType);
 
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET_NAME,
@@ -130,9 +153,12 @@ export async function uploadPortfolioImage(
       'provider-id': providerId,
       'original-name': fileName,
       'uploaded-at': new Date().toISOString(),
+      'media-type': mediaType,
     },
-    // Cache headers para mejor rendimiento
-    CacheControl: 'public, max-age=31536000, immutable',
+    // Cache headers - videos tienen cache más corto
+    CacheControl: mediaType === 'video' 
+      ? 'public, max-age=3600' 
+      : 'public, max-age=31536000, immutable',
   });
 
   await r2Client.send(command);
@@ -142,21 +168,25 @@ export async function uploadPortfolioImage(
     url: getPublicUrl(key),
     size: file.length,
     contentType,
+    mediaType,
   };
 }
 
+// Alias para compatibilidad
+export const uploadPortfolioImage = uploadPortfolioMedia;
+
 /**
- * Elimina una imagen de portafolio de R2
+ * Elimina un medio de portafolio de R2
  * @param key - Clave del objeto a eliminar
  */
-export async function deletePortfolioImage(key: string): Promise<void> {
+export async function deletePortfolioMedia(key: string): Promise<void> {
   if (!r2Client) {
     throw new Error('R2 no está configurado. Verifica las variables de entorno.');
   }
 
   // Validar que la key pertenece a portfolios (seguridad)
   if (!key.startsWith('portfolios/')) {
-    throw new Error('Solo se pueden eliminar imágenes de portafolio.');
+    throw new Error('Solo se pueden eliminar medios de portafolio.');
   }
 
   const command = new DeleteObjectCommand({
@@ -167,12 +197,15 @@ export async function deletePortfolioImage(key: string): Promise<void> {
   await r2Client.send(command);
 }
 
+// Alias para compatibilidad
+export const deletePortfolioImage = deletePortfolioMedia;
+
 /**
- * Verifica si una imagen existe en R2
+ * Verifica si un medio existe en R2
  * @param key - Clave del objeto
  * @returns true si existe, false si no
  */
-export async function portfolioImageExists(key: string): Promise<boolean> {
+export async function portfolioMediaExists(key: string): Promise<boolean> {
   if (!r2Client) {
     return false;
   }
@@ -189,11 +222,14 @@ export async function portfolioImageExists(key: string): Promise<boolean> {
   }
 }
 
+// Alias para compatibilidad
+export const portfolioImageExists = portfolioMediaExists;
+
 /**
- * Elimina múltiples imágenes de portafolio
+ * Elimina múltiples medios de portafolio
  * @param keys - Array de claves a eliminar
  */
-export async function deleteMultiplePortfolioImages(keys: string[]): Promise<void> {
+export async function deleteMultiplePortfolioMedia(keys: string[]): Promise<void> {
   if (!r2Client || keys.length === 0) {
     return;
   }
@@ -202,7 +238,10 @@ export async function deleteMultiplePortfolioImages(keys: string[]): Promise<voi
   const batchSize = 10;
   for (let i = 0; i < keys.length; i += batchSize) {
     const batch = keys.slice(i, i + batchSize);
-    await Promise.all(batch.map(key => deletePortfolioImage(key)));
+    await Promise.all(batch.map(key => deletePortfolioMedia(key)));
   }
 }
+
+// Alias para compatibilidad
+export const deleteMultiplePortfolioImages = deleteMultiplePortfolioMedia;
 

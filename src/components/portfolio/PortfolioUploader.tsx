@@ -1,15 +1,24 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { uploadPortfolioImage, compressImage, blobToFile, type UploadProgress, type PortfolioImage } from '@/lib/cloudflare/r2.client';
+import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Film, Play } from 'lucide-react';
+import { 
+  uploadPortfolioMedia, 
+  compressImage, 
+  blobToFile, 
+  isVideoFile,
+  isImageFile,
+  getMediaTypeFromMime,
+  type UploadProgress, 
+  type PortfolioImage,
+  ALLOWED_MEDIA_TYPES,
+  MAX_FILE_SIZE,
+} from '@/lib/cloudflare/r2.client';
 import styles from './PortfolioUploader.module.css';
 
 // Constantes de configuración
-const MAX_IMAGES = 10;
-const MIN_IMAGES = 5;
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_ITEMS = 10;
+const MIN_ITEMS = 5;
 
 interface PortfolioUploaderProps {
   providerId: string;
@@ -27,6 +36,7 @@ interface UploadingFile {
   progress: number;
   status: 'pending' | 'uploading' | 'success' | 'error';
   error?: string;
+  isVideo: boolean;
 }
 
 export default function PortfolioUploader({
@@ -43,18 +53,23 @@ export default function PortfolioUploader({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const remainingSlots = MAX_IMAGES - currentImages.length;
-  const hasMinimumImages = currentImages.length >= MIN_IMAGES;
+  const remainingSlots = MAX_ITEMS - currentImages.length;
+  const hasMinimumItems = currentImages.length >= MIN_ITEMS;
 
   // Validar archivo
   const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return 'Tipo de archivo no permitido. Solo JPG, PNG y WebP.';
+    if (!ALLOWED_MEDIA_TYPES.includes(file.type)) {
+      return 'Tipo de archivo no permitido. Solo imágenes (JPG, PNG, WebP) y videos (MP4, WebM, MOV).';
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `El archivo es muy grande (máx. 5MB). Tamaño: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+      return `El archivo es muy grande (máx. 10MB). Tamaño: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
     }
     return null;
+  };
+
+  // Crear preview para video
+  const createVideoPreview = (file: File): string => {
+    return URL.createObjectURL(file);
   };
 
   // Procesar archivos seleccionados
@@ -65,7 +80,7 @@ export default function PortfolioUploader({
     const availableSlots = remainingSlots - uploadingFiles.filter(f => f.status === 'uploading').length;
 
     if (availableSlots <= 0) {
-      alert(`Has alcanzado el límite de ${MAX_IMAGES} imágenes.`);
+      alert(`Has alcanzado el límite de ${MAX_ITEMS} elementos.`);
       return;
     }
 
@@ -75,13 +90,15 @@ export default function PortfolioUploader({
     // Crear entradas de carga
     const newUploads: UploadingFile[] = filesToProcess.map((file) => {
       const error = validateFile(file);
+      const isVideo = isVideoFile(file);
       return {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         file,
-        preview: URL.createObjectURL(file),
+        preview: isVideo ? createVideoPreview(file) : URL.createObjectURL(file),
         progress: 0,
         status: error ? 'error' : 'pending',
         error: error || undefined,
+        isVideo,
       };
     });
 
@@ -97,20 +114,22 @@ export default function PortfolioUploader({
           prev.map((u) => (u.id === upload.id ? { ...u, status: 'uploading' } : u))
         );
 
-        // Comprimir imagen antes de subir
+        // Comprimir imagen antes de subir (solo imágenes, no videos)
         let fileToUpload = upload.file;
-        try {
-          const compressed = await compressImage(upload.file, 1920, 0.85);
-          if (compressed.size < upload.file.size) {
-            fileToUpload = blobToFile(compressed, upload.file.name);
+        if (!upload.isVideo) {
+          try {
+            const compressed = await compressImage(upload.file, 1920, 0.85);
+            if (compressed.size < upload.file.size) {
+              fileToUpload = blobToFile(compressed, upload.file.name);
+            }
+          } catch {
+            // Si falla la compresión, usar archivo original
+            console.warn('No se pudo comprimir la imagen, usando original');
           }
-        } catch {
-          // Si falla la compresión, usar archivo original
-          console.warn('No se pudo comprimir la imagen, usando original');
         }
 
         // Subir a R2
-        const result = await uploadPortfolioImage(
+        const result = await uploadPortfolioMedia(
           fileToUpload,
           providerId,
           (progress: UploadProgress) => {
@@ -122,16 +141,19 @@ export default function PortfolioUploader({
           }
         );
 
-        // Crear objeto de imagen
-        const newImage: PortfolioImage = {
+        // Crear objeto de medio
+        const newMedia: PortfolioImage = {
           key: result.key,
           url: result.url,
           order: currentImages.length,
           uploadedAt: new Date().toISOString(),
+          type: result.mediaType,
+          mimeType: result.contentType,
+          size: result.size,
         };
 
         // Notificar éxito
-        onImageUploaded(newImage);
+        onImageUploaded(newMedia);
 
         // Actualizar estado a success
         setUploadingFiles((prev) =>
@@ -201,21 +223,21 @@ export default function PortfolioUploader({
     e.target.value = '';
   }, [processFiles]);
 
-  // Eliminar imagen
+  // Eliminar medio
   const handleDelete = useCallback(async (key: string) => {
     if (deletingKey) return;
 
-    const confirmDelete = window.confirm('¿Estás seguro de que quieres eliminar esta imagen?');
+    const confirmDelete = window.confirm('¿Estás seguro de que quieres eliminar este elemento?');
     if (!confirmDelete) return;
 
     setDeletingKey(key);
     try {
-      const { deletePortfolioImage } = await import('@/lib/cloudflare/r2.client');
-      await deletePortfolioImage(key, providerId);
+      const { deletePortfolioMedia } = await import('@/lib/cloudflare/r2.client');
+      await deletePortfolioMedia(key, providerId);
       onImageDeleted(key);
     } catch (error) {
-      console.error('Error al eliminar imagen:', error);
-      alert('Error al eliminar la imagen. Intenta de nuevo.');
+      console.error('Error al eliminar elemento:', error);
+      alert('Error al eliminar el elemento. Intenta de nuevo.');
     } finally {
       setDeletingKey(null);
     }
@@ -233,29 +255,36 @@ export default function PortfolioUploader({
   }, []);
 
   // Drag & Drop para reordenar
-  const handleImageDragStart = useCallback((e: React.DragEvent, index: number) => {
+  const handleItemDragStart = useCallback((e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
   }, []);
 
-  const handleImageDragOver = useCallback((e: React.DragEvent, index: number) => {
+  const handleItemDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
 
     // Reordenar temporalmente para mostrar preview
-    const newImages = [...currentImages];
-    const [draggedImage] = newImages.splice(draggedIndex, 1);
-    newImages.splice(index, 0, draggedImage);
+    const newItems = [...currentImages];
+    const [draggedItem] = newItems.splice(draggedIndex, 1);
+    newItems.splice(index, 0, draggedItem);
     
     // Actualizar orden
-    const reorderedImages = newImages.map((img, i) => ({ ...img, order: i }));
-    onImagesReordered(reorderedImages);
+    const reorderedItems = newItems.map((item, i) => ({ ...item, order: i }));
+    onImagesReordered(reorderedItems);
     setDraggedIndex(index);
   }, [draggedIndex, currentImages, onImagesReordered]);
 
-  const handleImageDragEnd = useCallback(() => {
+  const handleItemDragEnd = useCallback(() => {
     setDraggedIndex(null);
   }, []);
+
+  // Determinar si un item es video
+  const isItemVideo = (item: PortfolioImage): boolean => {
+    if (item.type === 'video') return true;
+    if (item.mimeType?.startsWith('video/')) return true;
+    return getMediaTypeFromMime(item.mimeType) === 'video';
+  };
 
   return (
     <div className={styles.container}>
@@ -263,57 +292,77 @@ export default function PortfolioUploader({
       <div className={styles.header}>
         <h3 className={styles.title}>
           <ImageIcon size={20} />
-          Portafolio de Fotos
+          Portafolio
         </h3>
         <div className={styles.counter}>
-          <span className={currentImages.length >= MIN_IMAGES ? styles.counterOk : styles.counterWarning}>
-            {currentImages.length}/{MAX_IMAGES}
+          <span className={currentImages.length >= MIN_ITEMS ? styles.counterOk : styles.counterWarning}>
+            {currentImages.length}/{MAX_ITEMS}
           </span>
-          {!hasMinimumImages && (
+          {!hasMinimumItems && (
             <span className={styles.minWarning}>
-              (mínimo {MIN_IMAGES} fotos)
+              (mínimo {MIN_ITEMS})
             </span>
           )}
         </div>
       </div>
 
-      {/* Grid de imágenes existentes */}
+      {/* Grid de medios existentes */}
       {currentImages.length > 0 && (
         <div className={styles.imageGrid}>
           {currentImages
             .sort((a, b) => a.order - b.order)
-            .map((image, index) => (
-              <div
-                key={image.key}
-                className={`${styles.imageCard} ${draggedIndex === index ? styles.dragging : ''}`}
-                draggable
-                onDragStart={(e) => handleImageDragStart(e, index)}
-                onDragOver={(e) => handleImageDragOver(e, index)}
-                onDragEnd={handleImageDragEnd}
-              >
-                <img
-                  src={image.url}
-                  alt={`Portafolio ${index + 1}`}
-                  className={styles.image}
-                />
-                <div className={styles.imageOverlay}>
-                  <span className={styles.imageOrder}>{index + 1}</span>
-                  <button
-                    type="button"
-                    className={styles.deleteButton}
-                    onClick={() => handleDelete(image.key)}
-                    disabled={deletingKey === image.key}
-                    aria-label="Eliminar imagen"
-                  >
-                    {deletingKey === image.key ? (
-                      <Loader2 size={16} className={styles.spinner} />
-                    ) : (
-                      <X size={16} />
-                    )}
-                  </button>
+            .map((item, index) => {
+              const isVideo = isItemVideo(item);
+              return (
+                <div
+                  key={item.key}
+                  className={`${styles.imageCard} ${draggedIndex === index ? styles.dragging : ''} ${isVideo ? styles.videoCard : ''}`}
+                  draggable
+                  onDragStart={(e) => handleItemDragStart(e, index)}
+                  onDragOver={(e) => handleItemDragOver(e, index)}
+                  onDragEnd={handleItemDragEnd}
+                >
+                  {isVideo ? (
+                    <div className={styles.videoThumbnail}>
+                      <video
+                        src={item.url}
+                        className={styles.video}
+                        muted
+                        preload="metadata"
+                      />
+                      <div className={styles.videoPlayIcon}>
+                        <Play size={24} />
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={`Portafolio ${index + 1}`}
+                      className={styles.image}
+                    />
+                  )}
+                  <div className={styles.imageOverlay}>
+                    <span className={styles.imageOrder}>
+                      {isVideo && <Film size={12} />}
+                      {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => handleDelete(item.key)}
+                      disabled={deletingKey === item.key}
+                      aria-label="Eliminar elemento"
+                    >
+                      {deletingKey === item.key ? (
+                        <Loader2 size={16} className={styles.spinner} />
+                      ) : (
+                        <X size={16} />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
 
@@ -321,12 +370,20 @@ export default function PortfolioUploader({
       {uploadingFiles.length > 0 && (
         <div className={styles.uploadingGrid}>
           {uploadingFiles.map((upload) => (
-            <div key={upload.id} className={styles.uploadingCard}>
-              <img
-                src={upload.preview}
-                alt="Subiendo..."
-                className={styles.uploadingImage}
-              />
+            <div key={upload.id} className={`${styles.uploadingCard} ${upload.isVideo ? styles.videoCard : ''}`}>
+              {upload.isVideo ? (
+                <video
+                  src={upload.preview}
+                  className={styles.uploadingImage}
+                  muted
+                />
+              ) : (
+                <img
+                  src={upload.preview}
+                  alt="Subiendo..."
+                  className={styles.uploadingImage}
+                />
+              )}
               <div className={styles.uploadingOverlay}>
                 {upload.status === 'uploading' && (
                   <>
@@ -375,18 +432,21 @@ export default function PortfolioUploader({
           <input
             ref={fileInputRef}
             type="file"
-            accept={ALLOWED_TYPES.join(',')}
+            accept={ALLOWED_MEDIA_TYPES.join(',')}
             multiple
             onChange={handleFileChange}
             className={styles.fileInput}
             disabled={disabled}
           />
-          <Upload size={32} className={styles.uploadIcon} />
+          <div className={styles.uploadIcons}>
+            <Upload size={28} className={styles.uploadIcon} />
+            <Film size={24} className={styles.uploadIconVideo} />
+          </div>
           <p className={styles.dropText}>
-            {isDragging ? 'Suelta las imágenes aquí' : 'Arrastra imágenes o haz clic para seleccionar'}
+            {isDragging ? 'Suelta los archivos aquí' : 'Arrastra imágenes o videos, o haz clic para seleccionar'}
           </p>
           <p className={styles.dropHint}>
-            JPG, PNG o WebP • Máximo 5MB por imagen • {remainingSlots} {remainingSlots === 1 ? 'espacio disponible' : 'espacios disponibles'}
+            Imágenes: JPG, PNG, WebP • Videos: MP4, WebM, MOV • Máximo 10MB • {remainingSlots} {remainingSlots === 1 ? 'espacio disponible' : 'espacios disponibles'}
           </p>
         </div>
       )}
@@ -395,17 +455,16 @@ export default function PortfolioUploader({
       {remainingSlots <= 0 && (
         <div className={styles.fullMessage}>
           <CheckCircle size={20} />
-          Has alcanzado el límite de {MAX_IMAGES} imágenes
+          Has alcanzado el límite de {MAX_ITEMS} elementos
         </div>
       )}
 
       {/* Tip para reordenar */}
       {currentImages.length > 1 && (
         <p className={styles.reorderTip}>
-          💡 Arrastra las imágenes para reordenarlas. La primera imagen será la principal.
+          💡 Arrastra los elementos para reordenarlos. El primero será el principal.
         </p>
       )}
     </div>
   );
 }
-

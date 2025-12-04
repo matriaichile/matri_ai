@@ -1,8 +1,8 @@
 /**
  * Cloudflare Worker - Proxy público para R2 (MatriMatch)
  * 
- * Este worker sirve las imágenes del bucket R2 de forma pública.
- * Todas las imágenes bajo /portfolios/ son públicas y no requieren autenticación.
+ * Este worker sirve los medios (imágenes y videos) del bucket R2 de forma pública.
+ * Todos los medios bajo /portfolios/ son públicos y no requieren autenticación.
  * 
  * CONFIGURACIÓN:
  * 1. Crear un nuevo Worker en Cloudflare Dashboard
@@ -14,6 +14,9 @@
  * 
  * CORS Policy:
  * Permite requests desde los orígenes configurados en allowedOrigins
+ * 
+ * VIDEO STREAMING:
+ * Soporta Range requests para streaming de video eficiente
  */
 
 export default {
@@ -24,7 +27,7 @@ export default {
     // Remover el slash inicial para obtener la key del objeto
     const key = path.startsWith('/') ? path.slice(1) : path;
     
-    // Rutas públicas permitidas (todas las imágenes de portafolio)
+    // Rutas públicas permitidas (todos los medios de portafolio)
     const publicPaths = ['/portfolios/'];
     const isPublicPath = publicPaths.some(p => path.startsWith(p));
     
@@ -42,15 +45,18 @@ export default {
     const origin = request.headers.get('Origin') || '';
     const isAllowedOrigin = allowedOrigins.includes(origin) || origin === '';
     
+    // Tipos MIME de video soportados
+    const videoMimeTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    
     // Función helper para crear respuestas con CORS
     const corsResponse = (status = 200, body = null, extra = {}) => {
       const headers = {
         // CORS headers
         'Access-Control-Allow-Origin': isAllowedOrigin ? (origin || '*') : allowedOrigins[0],
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Range',
         'Access-Control-Max-Age': '86400',
-        'Access-Control-Expose-Headers': 'Content-Length, Content-Type, ETag, Last-Modified',
+        'Access-Control-Expose-Headers': 'Content-Length, Content-Type, ETag, Last-Modified, Accept-Ranges, Content-Range',
         // Security headers
         'Content-Disposition': 'inline',
         'Vary': 'Origin',
@@ -74,7 +80,7 @@ export default {
 
     // Verificar que la ruta sea pública
     if (!isPublicPath) {
-      return corsResponse(403, 'Forbidden - Only portfolio images are accessible', { 
+      return corsResponse(403, 'Forbidden - Only portfolio media is accessible', { 
         'Content-Type': 'text/plain' 
       });
     }
@@ -93,30 +99,105 @@ export default {
           return corsResponse(404, null, { 'Content-Type': 'text/plain' });
         }
         
+        const contentType = head.httpMetadata?.contentType || 'application/octet-stream';
+        const isVideo = videoMimeTypes.includes(contentType);
+        
         return corsResponse(200, null, {
-          'Content-Type': head.httpMetadata?.contentType || 'application/octet-stream',
+          'Content-Type': contentType,
           'Content-Length': String(head.size),
           'ETag': head.etag || '',
           'Last-Modified': head.uploaded?.toUTCString() || '',
-          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Accept-Ranges': 'bytes',
+          // Videos tienen cache más corto para permitir actualizaciones
+          'Cache-Control': isVideo ? 'public, max-age=3600' : 'public, max-age=31536000, immutable',
         });
       }
 
-      // Obtener el objeto de R2
+      // Verificar si hay Range header (para streaming de video)
+      const rangeHeader = request.headers.get('Range');
+      
+      // Si hay Range header, manejar como streaming parcial
+      if (rangeHeader) {
+        // Primero obtener metadata del objeto
+        const head = await env.MATRIMATCH_BUCKET.head(key);
+        
+        if (!head) {
+          return corsResponse(404, 'Media not found', { 'Content-Type': 'text/plain' });
+        }
+        
+        const totalSize = head.size;
+        const contentType = head.httpMetadata?.contentType || 'application/octet-stream';
+        const isVideo = videoMimeTypes.includes(contentType);
+        
+        // Parsear Range header (formato: bytes=start-end)
+        const rangeMatch = rangeHeader.match(/bytes=(\d*)-(\d*)/);
+        
+        if (!rangeMatch) {
+          return corsResponse(416, 'Invalid Range', { 
+            'Content-Type': 'text/plain',
+            'Content-Range': `bytes */${totalSize}`
+          });
+        }
+        
+        let start = rangeMatch[1] ? parseInt(rangeMatch[1], 10) : 0;
+        let end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
+        
+        // Validar rango
+        if (start >= totalSize || end >= totalSize || start > end) {
+          return corsResponse(416, 'Range Not Satisfiable', { 
+            'Content-Type': 'text/plain',
+            'Content-Range': `bytes */${totalSize}`
+          });
+        }
+        
+        // Limitar el tamaño del chunk para videos (máximo 2MB por request)
+        const maxChunkSize = 2 * 1024 * 1024; // 2MB
+        if (isVideo && (end - start + 1) > maxChunkSize) {
+          end = start + maxChunkSize - 1;
+        }
+        
+        const contentLength = end - start + 1;
+        
+        // Obtener el rango específico del objeto
+        const object = await env.MATRIMATCH_BUCKET.get(key, {
+          range: { offset: start, length: contentLength }
+        });
+        
+        if (!object || !object.body) {
+          return corsResponse(404, 'Media not found', { 'Content-Type': 'text/plain' });
+        }
+        
+        // Retornar respuesta parcial (206)
+        return corsResponse(206, object.body, {
+          'Content-Type': contentType,
+          'Content-Length': String(contentLength),
+          'Content-Range': `bytes ${start}-${end}/${totalSize}`,
+          'Accept-Ranges': 'bytes',
+          'ETag': head.etag || '',
+          'Last-Modified': head.uploaded?.toUTCString() || '',
+          'Cache-Control': isVideo ? 'public, max-age=3600' : 'public, max-age=31536000, immutable',
+        });
+      }
+
+      // Sin Range header - retornar objeto completo
       const object = await env.MATRIMATCH_BUCKET.get(key);
       
       if (!object || !object.body) {
-        return corsResponse(404, 'Image not found', { 'Content-Type': 'text/plain' });
+        return corsResponse(404, 'Media not found', { 'Content-Type': 'text/plain' });
       }
+      
+      const contentType = object.httpMetadata?.contentType || 'application/octet-stream';
+      const isVideo = videoMimeTypes.includes(contentType);
 
-      // Retornar la imagen con headers de cache agresivos
+      // Retornar el medio con headers apropiados
       return corsResponse(200, object.body, {
-        'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+        'Content-Type': contentType,
         'Content-Length': String(object.size),
         'ETag': object.etag || '',
         'Last-Modified': object.uploaded?.toUTCString() || '',
-        // Cache por 1 año (imágenes inmutables - el nombre incluye timestamp)
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Accept-Ranges': 'bytes',
+        // Videos tienen cache más corto, imágenes cache agresivo
+        'Cache-Control': isVideo ? 'public, max-age=3600' : 'public, max-age=31536000, immutable',
       });
 
     } catch (err) {
@@ -127,4 +208,3 @@ export default {
     }
   }
 };
-

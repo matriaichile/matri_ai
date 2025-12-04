@@ -84,12 +84,18 @@ export interface ProviderMetrics {
   timesNotInterested: number; // Veces que marcaron "No me interesa"
 }
 
-// Imagen del portafolio (almacenada en R2)
+// Tipo de medio del portafolio
+export type PortfolioMediaType = 'image' | 'video';
+
+// Medio del portafolio (imagen o video, almacenado en R2)
 export interface PortfolioImage {
-  key: string;          // Clave del objeto en R2
-  url: string;          // URL pública de la imagen
-  order: number;        // Orden de la imagen (0 = principal)
-  uploadedAt: string;   // Fecha de carga (ISO string)
+  key: string;              // Clave del objeto en R2
+  url: string;              // URL pública del medio
+  order: number;            // Orden del medio (0 = principal)
+  uploadedAt: string;       // Fecha de carga (ISO string)
+  type?: PortfolioMediaType; // Tipo de medio (default: 'image' para compatibilidad)
+  mimeType?: string;        // Tipo MIME del archivo (ej: 'video/mp4')
+  size?: number;            // Tamaño en bytes
 }
 
 // Datos del perfil de proveedor

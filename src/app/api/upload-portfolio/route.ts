@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth, getAdminFirestore } from '@/lib/firebase/admin-config';
 import { 
-  uploadPortfolioImage, 
-  deletePortfolioImage,
+  uploadPortfolioMedia, 
+  deletePortfolioMedia,
+  getMediaType,
+  ALLOWED_MEDIA_TYPES,
+  MAX_FILE_SIZE,
 } from '@/lib/cloudflare/r2.server';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -11,8 +14,8 @@ const adminAuth = getAdminAuth();
 const adminDb = getAdminFirestore();
 
 // Configuración de límites
-const MAX_PORTFOLIO_IMAGES = 10;
-const MIN_PORTFOLIO_IMAGES = 5; // Mínimo recomendado, no bloqueante
+const MAX_PORTFOLIO_ITEMS = 10;
+const MIN_PORTFOLIO_ITEMS = 5; // Mínimo recomendado, no bloqueante
 
 /**
  * POST /api/upload-portfolio
@@ -84,11 +87,11 @@ export async function POST(request: NextRequest) {
 
     const providerData = providerDoc.data();
 
-    // Verificar límite de imágenes
-    const currentImages = providerData?.portfolioImages || [];
-    if (currentImages.length >= MAX_PORTFOLIO_IMAGES) {
+    // Verificar límite de medios
+    const currentMedia = providerData?.portfolioImages || [];
+    if (currentMedia.length >= MAX_PORTFOLIO_ITEMS) {
       return NextResponse.json(
-        { error: `Has alcanzado el límite de ${MAX_PORTFOLIO_IMAGES} imágenes en tu portafolio` },
+        { error: `Has alcanzado el límite de ${MAX_PORTFOLIO_ITEMS} elementos en tu portafolio` },
         { status: 400 }
       );
     }
@@ -98,24 +101,27 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Subir a R2
-    const result = await uploadPortfolioImage(
+    const result = await uploadPortfolioMedia(
       providerId,
       buffer,
       file.name,
       file.type
     );
 
-    // Crear objeto de imagen para guardar en Firestore
-    const newImage = {
+    // Crear objeto de medio para guardar en Firestore
+    const newMedia = {
       key: result.key,
       url: result.url,
-      order: currentImages.length, // Agregar al final
+      order: currentMedia.length, // Agregar al final
       uploadedAt: new Date().toISOString(),
+      type: result.mediaType, // 'image' o 'video'
+      mimeType: result.contentType,
+      size: result.size,
     };
 
-    // Actualizar Firestore con la nueva imagen
+    // Actualizar Firestore con el nuevo medio
     await adminDb.collection('providers').doc(providerId).update({
-      portfolioImages: FieldValue.arrayUnion(newImage),
+      portfolioImages: FieldValue.arrayUnion(newMedia),
       updatedAt: FieldValue.serverTimestamp(),
     });
 
@@ -126,9 +132,10 @@ export async function POST(request: NextRequest) {
       url: result.url,
       size: result.size,
       contentType: result.contentType,
-      image: newImage,
-      totalImages: currentImages.length + 1,
-      remainingSlots: MAX_PORTFOLIO_IMAGES - currentImages.length - 1,
+      mediaType: result.mediaType,
+      media: newMedia,
+      totalItems: currentMedia.length + 1,
+      remainingSlots: MAX_PORTFOLIO_ITEMS - currentMedia.length - 1,
     });
 
   } catch (error) {
@@ -210,38 +217,38 @@ export async function DELETE(request: NextRequest) {
 
     const providerData = providerDoc.data();
 
-    // Buscar la imagen en el array de portfolioImages
-    const currentImages = providerData?.portfolioImages || [];
-    const imageToDelete = currentImages.find((img: { key: string }) => img.key === key);
+    // Buscar el medio en el array de portfolioImages
+    const currentMedia = providerData?.portfolioImages || [];
+    const mediaToDelete = currentMedia.find((item: { key: string }) => item.key === key);
     
-    if (!imageToDelete) {
+    if (!mediaToDelete) {
       return NextResponse.json(
-        { error: 'Imagen no encontrada en el portafolio' },
+        { error: 'Elemento no encontrado en el portafolio' },
         { status: 404 }
       );
     }
 
     // Eliminar de R2
-    await deletePortfolioImage(key);
+    await deletePortfolioMedia(key);
 
-    // Actualizar Firestore - remover la imagen y reordenar
-    const updatedImages = currentImages
-      .filter((img: { key: string }) => img.key !== key)
-      .map((img: { key: string; url: string; uploadedAt: string }, index: number) => ({
-        ...img,
+    // Actualizar Firestore - remover el medio y reordenar
+    const updatedMedia = currentMedia
+      .filter((item: { key: string }) => item.key !== key)
+      .map((item: { key: string; url: string; uploadedAt: string; type?: string; mimeType?: string; size?: number }, index: number) => ({
+        ...item,
         order: index, // Reordenar
       }));
 
     await adminDb.collection('providers').doc(providerId).update({
-      portfolioImages: updatedImages,
+      portfolioImages: updatedMedia,
       updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Imagen eliminada correctamente',
-      totalImages: updatedImages.length,
-      remainingSlots: MAX_PORTFOLIO_IMAGES - updatedImages.length,
+      message: 'Elemento eliminado correctamente',
+      totalItems: updatedMedia.length,
+      remainingSlots: MAX_PORTFOLIO_ITEMS - updatedMedia.length,
     });
 
   } catch (error) {
@@ -382,5 +389,5 @@ export const config = {
 };
 
 // Exportar info sobre límites para usar en el cliente
-export { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES };
+export { MAX_PORTFOLIO_ITEMS, MIN_PORTFOLIO_ITEMS };
 

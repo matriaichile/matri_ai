@@ -178,36 +178,40 @@
 
 ### Fase 5: Funcionalidades Pospuestas (Para Después del MVP)
 
-#### 5.1 Portafolio de Fotos (5-10 imágenes) 🟡 ✅ COMPLETADO
+#### 5.1 Portafolio de Fotos y Videos (5-10 elementos) 🟡 ✅ COMPLETADO
 
 > **Decisión técnica implementada:**
 >
 > - ✅ Usar **Cloudflare R2** (bucket S3-compatible, sin egress fees)
-> - ✅ Servir imágenes públicamente a través de **Cloudflare Workers Proxy**
+> - ✅ Servir medios públicamente a través de **Cloudflare Workers Proxy**
 > - ✅ Bucket creado: `matrimatch-media`
 > - ✅ Custom domain configurado: `www.matrimatch.cl`
 >
 > **Especificaciones implementadas:**
 >
-> - Límite de peso por imagen: **5MB máximo**
-> - Mínimo 5 fotos recomendado, máximo 10 fotos por proveedor
-> - Formatos permitidos: JPG, PNG, WebP
-> - Compresión automática en cliente (canvas resize)
-> - Drag & drop para reordenar imágenes
+> - Límite de peso por archivo: **10MB máximo** (imágenes y videos)
+> - Mínimo 5 elementos recomendado, máximo 10 por proveedor
+> - Formatos de imagen permitidos: JPG, PNG, WebP
+> - Formatos de video permitidos: MP4, WebM, MOV
+> - Compresión automática de imágenes en cliente (canvas resize)
+> - Streaming de video con soporte de Range requests
+> - Reproductor de video integrado con controles (play/pause, volumen, fullscreen)
+> - Drag & drop para reordenar elementos
 
 **Tareas completadas:**
 
 - [x] Crear cuenta/bucket en Cloudflare R2 (`matrimatch-media`)
-- [x] Crear Cloudflare Worker proxy (`cloudflare-worker/r2-proxy.js`)
+- [x] Crear Cloudflare Worker proxy con soporte de video streaming (`cloudflare-worker/r2-proxy.js`)
 - [x] Crear API route para upload (`/api/upload-portfolio`)
 - [x] Implementar compresión de imágenes en cliente (canvas API)
-- [x] Crear componente `PortfolioUploader.tsx` con drag & drop
-- [x] Crear componente `PortfolioGallery.tsx` con modal de visualización
-- [x] Agregar validación min/max en UI (5-10 imágenes)
+- [x] Crear componente `PortfolioUploader.tsx` con soporte de imágenes y videos
+- [x] Crear componente `PortfolioGallery.tsx` con reproductor de video integrado
+- [x] Agregar validación min/max en UI (5-10 elementos)
 - [x] Implementar drag & drop para reordenar (nativo HTML5)
 - [x] Agregar indicador de progreso de upload (XMLHttpRequest)
 - [x] Integrar en dashboard de proveedor (nueva sección "Portafolio")
 - [x] Mostrar galería en panel de detalles del match (integrado en ambos dashboards)
+- [x] Soporte de videos con reproductor personalizado (play/pause, barra de progreso, volumen, fullscreen)
 
 **Archivos creados:**
 
