@@ -281,6 +281,7 @@ export const createProviderProfile = async (
       tiktok: providerData.tiktok,
       portfolioImages: providerData.portfolioImages,
       status: 'active' as const, // Los proveedores empiezan como activos por defecto
+      isVerified: false, // Los proveedores nuevos no están verificados (solo super admin puede cambiar)
       // Sistema de leads POR CATEGORÍA
       categoryLeadLimits,
       categoryLeadsUsed,
