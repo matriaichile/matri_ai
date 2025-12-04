@@ -4,7 +4,8 @@
   --slider-thumb: #a855f7;
   
   width: 100%;
-  padding: 0.5rem 0;
+  /* Padding lateral para que el thumb del slider no se corte */
+  padding: 0.5rem 1rem;
 }
 
 .label {
@@ -41,7 +42,8 @@
 .sliderContainer {
   position: relative;
   width: 100%;
-  padding: 0.25rem 0;
+  /* Padding vertical para que el thumb no se corte arriba/abajo */
+  padding: 0.5rem 0;
 }
 
 .slider {

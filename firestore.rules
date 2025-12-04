@@ -58,15 +58,23 @@ service cloud.firestore {
     }
     
     // Verificar que el proveedor no modifica sus propios campos de leads críticos
-    // Solo admin puede modificar leadLimit, leadsUsed y status
+    // Solo admin puede modificar leadLimit, leadsUsed, status e isVerified
     // categoryLeadLimits y categoryLeadsUsed pueden ser modificados al agregar nuevas categorías
     // pero no se pueden reducir los límites existentes ni resetear los contadores de uso
+    // metrics puede ser actualizado por el sistema cuando usuarios interactúan con leads
     function providerCannotModifyLeadFields() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
         'leadLimit', 
         'leadsUsed', 
-        'status'
+        'status',
+        'isVerified'
       ]);
+    }
+    
+    // Verificar si solo se están actualizando métricas del proveedor
+    // Esto permite que el sistema actualice métricas cuando usuarios aprueban/rechazan leads
+    function isOnlyMetricsUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['metrics', 'updatedAt']);
     }
     
     // Verificar que al agregar categorías, solo se inicializan nuevas (no se modifican existentes)
@@ -113,16 +121,20 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(providerId);
       
       // Actualización: 
-      // - El propio proveedor puede actualizar EXCEPTO campos de leads críticos y status
+      // - El propio proveedor puede actualizar EXCEPTO campos de leads críticos, status e isVerified
       // - El proveedor puede agregar nuevas categorías y sus campos asociados
-      // - Admins pueden actualizar cualquier campo
+      // - Admins pueden actualizar cualquier campo (incluyendo isVerified)
       // - Sistema puede actualizar categoryLeadsUsed cuando se crea un lead (via el usuario que crea el lead)
+      // - Sistema puede actualizar metrics cuando un usuario aprueba/rechaza un lead
       allow update: if isAuthenticated() && (
         (isOwner(providerId) && providerCannotModifyLeadFields() && isValidCategoryUpdate()) || 
         hasAdminAccess() ||
         // Permitir actualización de leadsUsed/categoryLeadsUsed cuando un usuario crea un lead
         // Esto es necesario para el sistema de matching
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['categoryLeadsUsed', 'leadsUsed', 'updatedAt']))
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['categoryLeadsUsed', 'leadsUsed', 'updatedAt'])) ||
+        // Permitir actualización de métricas cuando un usuario aprueba/rechaza un lead
+        // Esto es necesario para el tracking de conversiones
+        isOnlyMetricsUpdate()
       );
       
       // Eliminación: Solo super_admin puede eliminar

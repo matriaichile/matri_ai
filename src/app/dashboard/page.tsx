@@ -38,7 +38,9 @@ import {
   Instagram,
   CheckCircle,
   MapPinned,
-  Filter
+  Filter,
+  PartyPopper,
+  Shirt
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, CategoryId, ALL_CATEGORIES } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -97,6 +99,8 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   decoration: <Flower2 size={20} />,
   wedding_planner: <ClipboardList size={20} />,
   makeup: <Palette size={20} />,
+  entertainment: <PartyPopper size={20} />,
+  dress: <Shirt size={20} />,
 };
 
 // Imágenes placeholder para categorías
