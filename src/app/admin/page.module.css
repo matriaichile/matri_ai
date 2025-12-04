@@ -825,6 +825,105 @@
   color: var(--admin-accent);
 }
 
+.leadItemRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Lead Section Titles */
+.leadSection {
+  margin-bottom: 1.5rem;
+}
+
+.leadSection:last-child {
+  margin-bottom: 0;
+}
+
+.leadSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.leadSectionIconActive {
+  color: var(--admin-success);
+}
+
+.leadSectionIconRejected {
+  color: var(--admin-danger);
+}
+
+/* Lead Status Badge */
+.leadStatusBadge {
+  display: inline-flex;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.leadStatusBadge.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--admin-warning);
+}
+
+.leadStatusBadge.approved {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--admin-success);
+}
+
+.leadStatusBadge.contacted {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--admin-accent);
+}
+
+/* Rejected Lead Item */
+.leadItemRejected {
+  background: rgba(239, 68, 68, 0.05);
+  border-left: 3px solid var(--admin-danger);
+}
+
+/* Rejection Reason Box */
+.rejectionReasonBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--admin-danger);
+}
+
+.rejectionReasonBox svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  opacity: 0.7;
+}
+
+/* Modal Large (for leads view) */
+.modalLarge {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ====================================
    EMPTY STATE
    ==================================== */

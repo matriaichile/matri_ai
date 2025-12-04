@@ -145,10 +145,10 @@ export default function Sidebar(props: SidebarProps) {
           <button 
             className={`${styles.navItem} ${activeSection === 'surveys' ? styles.navItemActive : ''}`}
             onClick={() => onSectionChange('surveys')}
-            title={!showExpanded ? 'Mini Encuestas' : undefined}
+            title={!showExpanded ? 'Categorías' : undefined}
           >
             <FileText size={18} />
-            {showExpanded && <span>Encuestas</span>}
+            {showExpanded && <span>Categorías</span>}
             {profile?.priorityCategories && showExpanded && (
               <span className={styles.navBadge}>
                 {completedSurveysCount}/{profile.priorityCategories.length}

@@ -426,8 +426,8 @@ export default function UserDashboardPage() {
 
   // Configuración del header según la sección activa
   const headerConfig = {
-    matches: { title: 'Tus Matches', subtitle: 'Proveedores recomendados para tu boda' },
-    surveys: { title: 'Mini Encuestas', subtitle: 'Personaliza tus preferencias por categoría' },
+    matches: { title: 'Mis Matches', subtitle: 'Proveedores recomendados para tu boda' },
+    surveys: { title: 'Categorías', subtitle: 'Personaliza tus preferencias' },
     profile: { title: 'Tu Perfil', subtitle: 'Información de tu evento' },
   };
 
@@ -462,9 +462,9 @@ export default function UserDashboardPage() {
               <EmptyState
                 icon={<Sparkles size={48} />}
                 title="Aún no tienes matches"
-                description="Completa las mini encuestas para obtener recomendaciones personalizadas"
+                description="Completa las categorías para obtener recomendaciones personalizadas"
                 action={{
-                  label: 'Completar encuestas',
+                  label: 'Completar categorías',
                   onClick: () => setActiveSection('surveys'),
                 }}
               />
@@ -818,7 +818,7 @@ export default function UserDashboardPage() {
           </div>
         )}
 
-        {/* Sección de Mini Encuestas */}
+        {/* Sección de Categorías */}
         {activeSection === 'surveys' && (
           <div className={styles.surveysSection}>
             {/* Categorías prioritarias */}

@@ -17,10 +17,9 @@ import {
   AlertTriangle,
   Info,
   CheckCircle,
-  TrendingUp,
   Heart,
   XCircle,
-  BarChart3,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -425,10 +424,7 @@ export default function AdminDashboardPage() {
                       const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
                       
                       // Métricas del proveedor
-                      const metrics = provider.metrics || { timesOffered: 0, timesInterested: 0, timesNotInterested: 0 };
-                      const conversionRate = metrics.timesOffered > 0 
-                        ? Math.round((metrics.timesInterested / metrics.timesOffered) * 100) 
-                        : 0;
+                      const metrics = provider.metrics || { timesInterested: 0, timesNotInterested: 0 };
 
                       return (
                         <tr key={provider.id}>
@@ -463,10 +459,6 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>
                             <div className={styles.metricsCell}>
-                              <div className={styles.metricItem} title="Veces ofrecido">
-                                <TrendingUp size={12} />
-                                <span>{metrics.timesOffered}</span>
-                              </div>
                               <div className={styles.metricItem} title="Me interesa">
                                 <Heart size={12} className={styles.metricInterested} />
                                 <span>{metrics.timesInterested}</span>
@@ -474,10 +466,6 @@ export default function AdminDashboardPage() {
                               <div className={styles.metricItem} title="No me interesa">
                                 <XCircle size={12} className={styles.metricNotInterested} />
                                 <span>{metrics.timesNotInterested}</span>
-                              </div>
-                              <div className={`${styles.metricItem} ${styles.metricConversion}`} title="Tasa de conversión">
-                                <BarChart3 size={12} />
-                                <span>{conversionRate}%</span>
                               </div>
                             </div>
                           </td>
@@ -665,7 +653,7 @@ export default function AdminDashboardPage() {
       {/* Modal: Ver Leads del Proveedor */}
       {isViewLeadsModalOpen && selectedProvider && (
         <div className={styles.modalOverlay} onClick={() => setIsViewLeadsModalOpen(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modalLarge} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Leads de {selectedProvider.providerName}</h3>
               <button className={styles.modalClose} onClick={() => setIsViewLeadsModalOpen(false)}>
@@ -687,23 +675,72 @@ export default function AdminDashboardPage() {
                   <p>Este proveedor aún no tiene usuarios asignados como leads</p>
                 </div>
               ) : (
-                <div className={styles.leadList}>
-                  {providerLeads.map(lead => (
-                    <div key={lead.id} className={styles.leadItem}>
-                      <div className={styles.leadItemInfo}>
-                        <div className={styles.leadItemName}>
-                          {lead.userInfo?.coupleNames || 'Usuario'}
-                        </div>
-                        <div className={styles.leadItemMeta}>
-                          {lead.userInfo?.eventDate || 'Sin fecha'} • {getRegionLabel(lead.userInfo?.region || '')}
-                        </div>
-                      </div>
-                      <div className={styles.leadItemScore}>
-                        {lead.matchScore}%
+                <>
+                  {/* Leads activos (pendientes y aprobados) */}
+                  {providerLeads.filter(l => l.status !== 'rejected').length > 0 && (
+                    <div className={styles.leadSection}>
+                      <h4 className={styles.leadSectionTitle}>
+                        <Heart size={14} className={styles.leadSectionIconActive} />
+                        Leads Activos ({providerLeads.filter(l => l.status !== 'rejected').length})
+                      </h4>
+                      <div className={styles.leadList}>
+                        {providerLeads.filter(l => l.status !== 'rejected').map(lead => (
+                          <div key={lead.id} className={styles.leadItem}>
+                            <div className={styles.leadItemInfo}>
+                              <div className={styles.leadItemName}>
+                                {lead.userInfo?.coupleNames || 'Usuario'}
+                              </div>
+                              <div className={styles.leadItemMeta}>
+                                {lead.userInfo?.eventDate || 'Sin fecha'} • {getRegionLabel(lead.userInfo?.region || '')}
+                              </div>
+                            </div>
+                            <div className={styles.leadItemRight}>
+                              <span className={`${styles.leadStatusBadge} ${styles[lead.status]}`}>
+                                {lead.status === 'approved' ? 'Interesado' : lead.status === 'contacted' ? 'Contactado' : 'Pendiente'}
+                              </span>
+                              <div className={styles.leadItemScore}>
+                                {lead.matchScore}%
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* Leads rechazados con motivo */}
+                  {providerLeads.filter(l => l.status === 'rejected').length > 0 && (
+                    <div className={styles.leadSection}>
+                      <h4 className={styles.leadSectionTitle}>
+                        <XCircle size={14} className={styles.leadSectionIconRejected} />
+                        Descartados ({providerLeads.filter(l => l.status === 'rejected').length})
+                      </h4>
+                      <div className={styles.leadList}>
+                        {providerLeads.filter(l => l.status === 'rejected').map(lead => (
+                          <div key={lead.id} className={`${styles.leadItem} ${styles.leadItemRejected}`}>
+                            <div className={styles.leadItemInfo}>
+                              <div className={styles.leadItemName}>
+                                {lead.userInfo?.coupleNames || 'Usuario'}
+                              </div>
+                              <div className={styles.leadItemMeta}>
+                                {lead.userInfo?.eventDate || 'Sin fecha'} • {getRegionLabel(lead.userInfo?.region || '')}
+                              </div>
+                              {lead.rejectionReason && (
+                                <div className={styles.rejectionReasonBox}>
+                                  <MessageSquare size={12} />
+                                  <span>{lead.rejectionReason}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className={styles.leadItemScore}>
+                              {lead.matchScore}%
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className={styles.modalFooter}>
