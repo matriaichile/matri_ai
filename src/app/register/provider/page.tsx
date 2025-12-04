@@ -2,13 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { WizardContainer, WizardStep, SelectionGrid, WizardInput, CustomDropdown } from '@/components/wizard';
-import { useWizardStore, PROVIDER_CATEGORIES, SERVICE_STYLES, PRICE_RANGES_PROVIDER, REGIONS } from '@/store/wizardStore';
+import { WizardContainer, WizardStep, SelectionGrid, WizardInput, CustomDropdown, PriceRangeInput } from '@/components/wizard';
+import { useWizardStore, PROVIDER_CATEGORIES, SERVICE_STYLES, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
 import { registerProvider, getAuthErrorMessage } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
+
+/**
+ * Función helper para convertir el rango de precios numérico a una etiqueta legacy.
+ * Esto mantiene compatibilidad con el campo priceRange: string existente.
+ */
+function getPriceRangeLabel(min: number, max: number): string {
+  const avg = (min + max) / 2;
+  if (avg < 2_000_000) return 'budget';
+  if (avg < 5_000_000) return 'mid';
+  if (avg < 15_000_000) return 'premium';
+  return 'luxury';
+}
 
 /**
  * Wizard de registro para proveedores.
@@ -106,7 +118,12 @@ export default function ProviderRegisterPage() {
   
   const isStep2Valid = providerData.categories.length > 0; // Ahora múltiples categorías
   const isStep3Valid = providerData.serviceStyle.length > 0;
-  const isStep4Valid = providerData.priceRange.length > 0 && providerData.workRegion.length > 0;
+  // Validar rango de precios: ambos deben ser > 0 y max > min
+  const isStep4Valid = 
+    providerData.priceMin > 0 && 
+    providerData.priceMax > 0 && 
+    providerData.priceMax > providerData.priceMin && 
+    providerData.workRegion.length > 0;
   const isStep5Valid = providerData.description.trim().length >= 20;
   const isStep6Valid = true; // Redes sociales son opcionales
 
@@ -261,10 +278,10 @@ export default function ProviderRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 4: Precios y ubicación con dropdown personalizado */}
+        {/* Paso 4: Precios y ubicación con rango de precios en CLP */}
         <WizardStep
           title="Precios y ubicación"
-          subtitle="Define tu rango de precios y zona de trabajo"
+          subtitle="Define tu rango de precios en CLP y zona de trabajo"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 3}
@@ -274,13 +291,20 @@ export default function ProviderRegisterPage() {
         >
           <div className={styles.detailsSection}>
             <div className={styles.fieldSection}>
-              <h3 className={styles.fieldTitle}>Rango de precios</h3>
-              <SelectionGrid
-                options={PRICE_RANGES_PROVIDER}
-                selected={providerData.priceRange}
-                onSelect={(id) => handleSingleSelect('priceRange', id)}
-                columns={2}
-                cardSize="small"
+              <PriceRangeInput
+                priceMin={providerData.priceMin}
+                priceMax={providerData.priceMax}
+                onChangeMin={(value) => {
+                  // Actualizar priceMin y también priceRange (legacy) para compatibilidad
+                  const rangeLabel = getPriceRangeLabel(value, providerData.priceMax);
+                  updateProviderData({ priceMin: value, priceRange: rangeLabel });
+                }}
+                onChangeMax={(value) => {
+                  // Actualizar priceMax y también priceRange (legacy) para compatibilidad
+                  const rangeLabel = getPriceRangeLabel(providerData.priceMin, value);
+                  updateProviderData({ priceMax: value, priceRange: rangeLabel });
+                }}
+                label="Rango de precios de tus servicios"
               />
             </div>
 

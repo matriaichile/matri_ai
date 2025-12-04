@@ -2,13 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { WizardContainer, WizardStep, SelectionGrid, WizardInput, DatePicker, CustomDropdown } from '@/components/wizard';
-import { useWizardStore, CEREMONY_TYPES, EVENT_STYLES, PLANNING_PROGRESS, COMPLETED_ITEMS, PRIORITY_CATEGORIES, INVOLVEMENT_LEVELS, BUDGET_RANGES, GUEST_COUNTS, REGIONS } from '@/store/wizardStore';
+import { WizardContainer, WizardStep, SelectionGrid, WizardInput, DatePicker, CustomDropdown, BudgetSlider } from '@/components/wizard';
+import { useWizardStore, CEREMONY_TYPES, EVENT_STYLES, PLANNING_PROGRESS, COMPLETED_ITEMS, PRIORITY_CATEGORIES, GUEST_COUNTS, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
 import { registerUser, getAuthErrorMessage } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/store/authStore';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
+
+/**
+ * Función helper para convertir el valor numérico del presupuesto a una etiqueta legacy.
+ * Esto mantiene compatibilidad con el campo budget: string existente.
+ */
+function getBudgetLabel(amount: number): string {
+  if (amount < 5_000_000) return 'under_5m';
+  if (amount < 10_000_000) return '5m_10m';
+  if (amount < 15_000_000) return '10m_15m';
+  if (amount < 20_000_000) return '15m_20m';
+  if (amount < 30_000_000) return '20m_30m';
+  if (amount < 50_000_000) return '30m_50m';
+  return 'over_50m';
+}
 
 /**
  * Wizard de registro para usuarios (novios).
@@ -97,17 +111,16 @@ export default function UserRegisterPage() {
     }
   };
 
-  // Validaciones por paso (ahora son 10 pasos)
+  // Validaciones por paso (ahora son 9 pasos - se eliminó vinculación)
   const isStep1Valid = userData.coupleNames.trim().length >= 3 && userData.email.includes('@') && userData.password.length >= 6 && userData.phone.length >= 8;
   const isStep2Valid = userData.eventDate.length > 0;
-  const isStep3Valid = userData.budget.length > 0 && userData.guestCount.length > 0; // Presupuesto e invitados
+  const isStep3Valid = userData.budgetAmount > 0 && userData.guestCount.length > 0; // Presupuesto (slider) e invitados
   const isStep4Valid = userData.region.length > 0; // Ubicación separada
   const isStep5Valid = userData.ceremonyTypes.length > 0;
   const isStep6Valid = userData.eventStyle.length > 0;
   const isStep7Valid = userData.planningProgress.length > 0;
   const isStep8Valid = userData.priorityCategories.length > 0;
-  const isStep9Valid = userData.involvementLevel.length > 0;
-  const isStep10Valid = true; // Expectativas son opcionales
+  const isStep9Valid = true; // Expectativas son opcionales
 
   const displayError = registrationError || authError;
 
@@ -239,13 +252,14 @@ export default function UserRegisterPage() {
         >
           <div className={styles.detailsSection}>
             <div className={styles.fieldSection}>
-              <h3 className={styles.fieldTitle}>Presupuesto aproximado</h3>
-              <SelectionGrid
-                options={BUDGET_RANGES}
-                selected={userData.budget}
-                onSelect={(id) => handleSingleSelect('budget', id)}
-                columns={2}
-                cardSize="small"
+              <BudgetSlider
+                value={userData.budgetAmount}
+                onChange={(value) => {
+                  // Actualizar budgetAmount y también budget (legacy) para compatibilidad
+                  const budgetLabel = getBudgetLabel(value);
+                  updateUserData({ budgetAmount: value, budget: budgetLabel });
+                }}
+                label="Presupuesto aproximado"
               />
             </div>
             
@@ -386,35 +400,16 @@ export default function UserRegisterPage() {
           />
         </WizardStep>
 
-        {/* Paso 9: Nivel de vinculación */}
-        <WizardStep
-          title="¿Qué tan involucrados quieren estar?"
-          subtitle="Tu nivel de participación en el proceso"
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          isVisible={currentStep === 8}
-          onNext={handleNext}
-          onBack={handleBack}
-          nextDisabled={!isStep9Valid}
-        >
-          <SelectionGrid
-            options={INVOLVEMENT_LEVELS}
-            selected={userData.involvementLevel}
-            onSelect={(id) => handleSingleSelect('involvementLevel', id)}
-            columns={2}
-          />
-        </WizardStep>
-
-        {/* Paso 10: Expectativas y preferencias (para IA) */}
+        {/* Paso 9: Expectativas y preferencias (para IA) - Antes era paso 10, se eliminó vinculación */}
         <WizardStep
           title="Cuéntanos tus expectativas"
           subtitle="Opcional - Describe qué buscas para ayudarnos a encontrar proveedores perfectos"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 9}
+          isVisible={currentStep === 8}
           onNext={handleComplete}
           onBack={handleBack}
-          nextDisabled={!isStep10Valid}
+          nextDisabled={!isStep9Valid}
           nextLabel="Crear mi cuenta"
           showSkip
           onSkip={handleComplete}

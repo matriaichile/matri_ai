@@ -16,7 +16,8 @@ export interface UserWizardData {
   isDateTentative: boolean;
   
   // Paso 3: Detalles del evento
-  budget: string;
+  budget: string; // Campo legacy para compatibilidad
+  budgetAmount: number; // Nuevo: presupuesto numérico en CLP
   guestCount: string;
   region: string;
   
@@ -58,7 +59,9 @@ export interface ProviderWizardData {
   serviceStyle: string;
   
   // Paso 4: Precios y ubicación
-  priceRange: string;
+  priceRange: string; // Campo legacy para compatibilidad
+  priceMin: number; // Nuevo: precio mínimo en CLP
+  priceMax: number; // Nuevo: precio máximo en CLP
   workRegion: string;
   acceptsOutsideZone: boolean;
   
@@ -128,7 +131,8 @@ const initialUserData: UserWizardData = {
   phone: '',
   eventDate: '',
   isDateTentative: true,
-  budget: '',
+  budget: '', // Campo legacy
+  budgetAmount: 0, // Nuevo campo numérico
   guestCount: '',
   region: '',
   ceremonyTypes: [],
@@ -147,7 +151,9 @@ const initialProviderData: ProviderWizardData = {
   phone: '',
   categories: [],
   serviceStyle: '',
-  priceRange: '',
+  priceRange: '', // Campo legacy
+  priceMin: 0, // Nuevo campo numérico
+  priceMax: 0, // Nuevo campo numérico
   workRegion: '',
   acceptsOutsideZone: false,
   description: '',
@@ -165,7 +171,7 @@ const initialProviderData: ProviderWizardData = {
 export const useWizardStore = create<WizardState>((set, get) => ({
   wizardType: null,
   currentStep: 0,
-  totalSteps: 10, // Usuario ahora tiene 10 pasos (se separó ubicación)
+  totalSteps: 9, // Usuario tiene 9 pasos (se eliminó vinculación)
   
   userData: initialUserData,
   providerData: initialProviderData,
@@ -176,7 +182,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   
   setWizardType: (type) => set({ 
     wizardType: type,
-    totalSteps: type === 'user' ? 10 : 6, // 10 para usuarios, 6 para proveedores
+    totalSteps: type === 'user' ? 9 : 6, // 9 para usuarios (sin vinculación), 6 para proveedores
     currentStep: 0,
     showWelcome: true,
   }),
@@ -212,7 +218,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   resetWizard: () => set({
     wizardType: null,
     currentStep: 0,
-    totalSteps: 10,
+    totalSteps: 9, // 9 pasos para usuarios (sin vinculación)
     userData: initialUserData,
     providerData: initialProviderData,
     isLoading: false,
@@ -271,15 +277,18 @@ export const COMPLETED_ITEMS: WizardOption[] = [
   { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
 ];
 
+// Categorías prioritarias ordenadas por importancia (nuevo orden)
 export const PRIORITY_CATEGORIES: WizardOption[] = [
+  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
+  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
   { id: 'photography', label: 'Fotografía', iconType: 'camera' },
   { id: 'video', label: 'Video', iconType: 'video' },
   { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
-  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
-  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
   { id: 'decoration', label: 'Decoración', iconType: 'flower' },
-  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
+  { id: 'entertainment', label: 'Entretenimiento', iconType: 'party' },
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
+  { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
+  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
 ];
 
 export const INVOLVEMENT_LEVELS: WizardOption[] = [
@@ -329,16 +338,18 @@ export const REGIONS: WizardOption[] = [
   { id: 'nuble', label: 'Ñuble' },
 ];
 
+// Categorías de proveedores ordenadas por importancia (nuevo orden)
 export const PROVIDER_CATEGORIES: WizardOption[] = [
+  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
+  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
   { id: 'photography', label: 'Fotografía', iconType: 'camera' },
   { id: 'video', label: 'Videografía', iconType: 'video' },
   { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
-  { id: 'catering', label: 'Banquetería', iconType: 'utensils' },
-  { id: 'venue', label: 'Centro de Eventos', iconType: 'building' },
   { id: 'decoration', label: 'Decoración & Florería', iconType: 'flower' },
-  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
+  { id: 'entertainment', label: 'Entretenimiento', iconType: 'party' },
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
+  { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
   { id: 'cake', label: 'Tortas & Dulces', iconType: 'cake' },
   { id: 'transport', label: 'Transporte', iconType: 'car' },
   { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },

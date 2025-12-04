@@ -6,4 +6,6 @@ export { default as SelectionGrid } from './SelectionGrid';
 export { default as WizardInput } from './WizardInput';
 export { default as DatePicker } from './DatePicker';
 export { default as CustomDropdown } from './CustomDropdown';
+export { default as BudgetSlider } from './BudgetSlider';
+export { default as PriceRangeInput } from './PriceRangeInput';
 

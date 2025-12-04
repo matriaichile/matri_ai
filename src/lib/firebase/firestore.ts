@@ -77,6 +77,10 @@ export interface Lead {
     priceRange: string;
   };
   assignedByAdmin?: boolean;
+  // Campos para rechazo con justificación
+  rejectionReason?: string; // Motivo del rechazo (texto)
+  rejectionReasonId?: string; // ID del motivo predefinido
+  rejectedAt?: Date; // Fecha de rechazo
   createdAt: Date;
   updatedAt: Date;
 }
@@ -209,7 +213,8 @@ export const createUserProfile = async (
       phone: userData.phone,
       eventDate: userData.eventDate,
       isDateTentative: userData.isDateTentative,
-      budget: userData.budget,
+      budget: userData.budget, // Campo legacy
+      budgetAmount: userData.budgetAmount || 0, // Nuevo campo numérico en CLP
       guestCount: userData.guestCount,
       region: userData.region,
       ceremonyTypes: userData.ceremonyTypes,
@@ -264,7 +269,9 @@ export const createProviderProfile = async (
       phone: providerData.phone,
       categories: categories, // Usar la variable ya casteada a CategoryId[]
       serviceStyle: providerData.serviceStyle,
-      priceRange: providerData.priceRange,
+      priceRange: providerData.priceRange, // Campo legacy
+      priceMin: providerData.priceMin || 0, // Nuevo: precio mínimo en CLP
+      priceMax: providerData.priceMax || 0, // Nuevo: precio máximo en CLP
       workRegion: providerData.workRegion,
       acceptsOutsideZone: providerData.acceptsOutsideZone,
       description: providerData.description,
@@ -892,6 +899,134 @@ export const updateLeadStatus = async (
     console.error('Error al actualizar estado del lead:', error);
     throw error;
   }
+};
+
+/**
+ * Rechazar un lead con justificación
+ * También actualiza las métricas del proveedor
+ */
+export const rejectLeadWithReason = async (
+  leadId: string,
+  reason: string,
+  reasonId: string
+): Promise<void> => {
+  try {
+    const now = Timestamp.now();
+    
+    // Obtener el lead para saber el providerId
+    const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    if (!leadDoc.exists()) {
+      throw new Error('Lead no encontrado');
+    }
+    
+    const leadData = leadDoc.data();
+    const providerId = leadData.providerId;
+    
+    // Actualizar el lead con el motivo de rechazo
+    await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
+      status: 'rejected' as LeadStatus,
+      rejectionReason: reason,
+      rejectionReasonId: reasonId,
+      rejectedAt: now,
+      updatedAt: now,
+    });
+    
+    // Incrementar métrica de "no me interesa" del proveedor
+    await incrementProviderMetric(providerId, 'timesNotInterested');
+    
+    console.log(`✓ Lead ${leadId} rechazado con motivo: ${reason}`);
+  } catch (error) {
+    console.error('Error al rechazar lead:', error);
+    throw error;
+  }
+};
+
+/**
+ * Aprobar un lead (marcar como interesado)
+ * También actualiza las métricas del proveedor
+ */
+export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
+  try {
+    const now = Timestamp.now();
+    
+    // Obtener el lead para saber el providerId
+    const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    if (!leadDoc.exists()) {
+      throw new Error('Lead no encontrado');
+    }
+    
+    const leadData = leadDoc.data();
+    const providerId = leadData.providerId;
+    
+    // Actualizar el lead
+    await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
+      status: 'approved' as LeadStatus,
+      updatedAt: now,
+    });
+    
+    // Incrementar métrica de "me interesa" del proveedor
+    await incrementProviderMetric(providerId, 'timesInterested');
+    
+    console.log(`✓ Lead ${leadId} aprobado`);
+  } catch (error) {
+    console.error('Error al aprobar lead:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// MÉTRICAS DE PROVEEDORES
+// ============================================
+
+export interface ProviderMetrics {
+  timesOffered: number;      // Veces que apareció como match
+  timesInterested: number;   // Veces que marcaron "Me interesa"
+  timesNotInterested: number; // Veces que marcaron "No me interesa"
+}
+
+/**
+ * Incrementar una métrica específica del proveedor
+ */
+export const incrementProviderMetric = async (
+  providerId: string,
+  metric: keyof ProviderMetrics
+): Promise<void> => {
+  try {
+    const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+    const providerDoc = await getDoc(providerRef);
+    
+    if (!providerDoc.exists()) {
+      console.warn(`Proveedor ${providerId} no encontrado para actualizar métricas`);
+      return;
+    }
+    
+    const data = providerDoc.data();
+    const currentMetrics: ProviderMetrics = data.metrics || {
+      timesOffered: 0,
+      timesInterested: 0,
+      timesNotInterested: 0,
+    };
+    
+    // Incrementar la métrica específica
+    currentMetrics[metric] = (currentMetrics[metric] || 0) + 1;
+    
+    await updateDoc(providerRef, {
+      metrics: currentMetrics,
+      updatedAt: Timestamp.now(),
+    });
+    
+    console.log(`✓ Métrica ${metric} incrementada para proveedor ${providerId}`);
+  } catch (error) {
+    console.error('Error al incrementar métrica:', error);
+    // No lanzamos el error para no bloquear la operación principal
+  }
+};
+
+/**
+ * Incrementar timesOffered para un proveedor cuando aparece como match
+ */
+export const incrementTimesOffered = async (providerId: string): Promise<void> => {
+  await incrementProviderMetric(providerId, 'timesOffered');
 };
 
 /**

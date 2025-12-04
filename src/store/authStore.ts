@@ -6,16 +6,18 @@ import { User as FirebaseUser } from 'firebase/auth';
 // TIPOS PARA CATEGORÍAS
 // ============================================
 
-// Las 8 categorías del sistema
+// Las categorías del sistema (ordenadas por importancia)
 export type CategoryId = 
-  | 'photography' 
-  | 'video' 
-  | 'dj' 
-  | 'catering' 
-  | 'venue' 
-  | 'decoration' 
-  | 'wedding_planner' 
-  | 'makeup';
+  | 'catering'        // 1. Banquetera
+  | 'venue'           // 2. Centro de eventos
+  | 'photography'     // 3. Fotografía
+  | 'video'           // 4. Video
+  | 'dj'              // 5. DJ/VJ
+  | 'decoration'      // 6. Decoración
+  | 'entertainment'   // 7. Entretenimiento (NUEVA - pendiente encuestas)
+  | 'makeup'          // 8. Maquillaje
+  | 'dress'           // 9. Vestuario (NUEVA)
+  | 'wedding_planner';// 10. Wedding Planner
 
 // Estado de encuesta por categoría
 export type CategorySurveyStatus = 'not_started' | 'completed' | 'matches_generated';
@@ -58,7 +60,8 @@ export interface UserProfile {
   phone: string;
   eventDate: string;
   isDateTentative: boolean;
-  budget: string;
+  budget: string; // Campo legacy para compatibilidad
+  budgetAmount: number; // Nuevo: presupuesto numérico en CLP
   guestCount: string;
   region: string;
   ceremonyTypes: string[];
@@ -74,6 +77,13 @@ export interface UserProfile {
   updatedAt: Date;
 }
 
+// Métricas del proveedor
+export interface ProviderMetrics {
+  timesOffered: number;      // Veces que apareció como match
+  timesInterested: number;   // Veces que marcaron "Me interesa"
+  timesNotInterested: number; // Veces que marcaron "No me interesa"
+}
+
 // Datos del perfil de proveedor
 export interface ProviderProfile {
   id: string;
@@ -83,7 +93,9 @@ export interface ProviderProfile {
   phone: string;
   categories: CategoryId[]; // Categorías que ofrece
   serviceStyle: string;
-  priceRange: string;
+  priceRange: string; // Campo legacy para compatibilidad
+  priceMin: number; // Nuevo: precio mínimo en CLP
+  priceMax: number; // Nuevo: precio máximo en CLP
   workRegion: string;
   acceptsOutsideZone: boolean;
   description: string;
@@ -97,6 +109,8 @@ export interface ProviderProfile {
   categoryLeadLimits: CategoryLeadLimitsMap; // Límite máximo de leads por categoría
   categoryLeadsUsed: CategoryLeadLimitsMap; // Leads consumidos por categoría
   categorySurveyStatus: CategorySurveyStatusMap; // Estado de encuestas por categoría
+  // Métricas del proveedor
+  metrics?: ProviderMetrics; // Métricas de rendimiento
   // Campos legacy para compatibilidad
   leadLimit: number;
   leadsUsed: number;
@@ -248,23 +262,28 @@ export const useAuthStore = create<AuthState>()(
 // ============================================
 
 export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; icon: string }> = {
+  catering: { id: 'catering', name: 'Banquetería', icon: 'utensils' },
+  venue: { id: 'venue', name: 'Centro de Eventos', icon: 'building' },
   photography: { id: 'photography', name: 'Fotografía', icon: 'camera' },
   video: { id: 'video', name: 'Videografía', icon: 'video' },
   dj: { id: 'dj', name: 'DJ/VJ', icon: 'music' },
-  catering: { id: 'catering', name: 'Banquetería', icon: 'utensils' },
-  venue: { id: 'venue', name: 'Centro de Eventos', icon: 'building' },
   decoration: { id: 'decoration', name: 'Decoración', icon: 'flower' },
-  wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },
+  entertainment: { id: 'entertainment', name: 'Entretenimiento', icon: 'party' },
   makeup: { id: 'makeup', name: 'Maquillaje & Peinado', icon: 'sparkles' },
+  dress: { id: 'dress', name: 'Vestidos & Trajes', icon: 'dress' },
+  wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },
 };
 
+// Categorías ordenadas por importancia (nuevo orden solicitado)
 export const ALL_CATEGORIES: CategoryId[] = [
-  'photography',
-  'video',
-  'dj',
-  'catering',
-  'venue',
-  'decoration',
-  'wedding_planner',
-  'makeup',
+  'catering',        // 1. Banquetera
+  'venue',           // 2. Centro de eventos
+  'photography',     // 3. Fotografía
+  'video',           // 4. Video
+  'dj',              // 5. DJ/VJ
+  'decoration',      // 6. Decoración
+  'entertainment',   // 7. Entretenimiento (pendiente encuestas del cliente)
+  'makeup',          // 8. Maquillaje
+  'dress',           // 9. Vestuario
+  'wedding_planner', // 10. Wedding Planner
 ];
