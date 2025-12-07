@@ -95,7 +95,7 @@ export interface UserCategorySurvey {
   id: string;
   userId: string;
   category: CategoryId;
-  responses: Record<string, string | string[] | number | boolean>;
+  responses: Record<string, string | string[] | number | boolean | undefined>;
   completedAt: Date;
   matchesGenerated: boolean;
 }
@@ -104,7 +104,7 @@ export interface ProviderCategorySurvey {
   id: string;
   providerId: string;
   category: CategoryId;
-  responses: Record<string, string | string[] | number | boolean>;
+  responses: Record<string, string | string[] | number | boolean | undefined>;
   completedAt: Date;
 }
 
@@ -389,7 +389,7 @@ export const updateProviderPortfolioImages = async (
 export const saveUserCategorySurvey = async (
   userId: string,
   category: CategoryId,
-  responses: Record<string, string | string[] | number | boolean>
+  responses: Record<string, string | string[] | number | boolean | undefined>
 ): Promise<UserCategorySurvey> => {
   try {
     const now = Timestamp.now();
@@ -458,7 +458,7 @@ export const saveUserCategorySurvey = async (
 export const saveProviderCategorySurvey = async (
   providerId: string,
   category: CategoryId,
-  responses: Record<string, string | string[] | number | boolean>
+  responses: Record<string, string | string[] | number | boolean | undefined>
 ): Promise<ProviderCategorySurvey> => {
   try {
     const now = Timestamp.now();
