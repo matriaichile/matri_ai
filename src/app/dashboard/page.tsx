@@ -522,22 +522,24 @@ export default function UserDashboardPage() {
               </div>
             </div>
 
-            {/* Fila de estadísticas */}
+            {/* Fila de estadísticas - Corregida para usar referencias correctas */}
             <div className={styles.statsRow}>
               <div className={styles.statCard}>
-                <p className={styles.statCardTitle}>Servicios contratados</p>
-                <p className={styles.statCardValue}>{approvedMatches.length} de {profile?.priorityCategories?.length || 0}</p>
+                <p className={styles.statCardTitle}>Proveedores seleccionados</p>
+                {/* Muestra cuántos matches ha aprobado (le interesan) */}
+                <p className={styles.statCardValue}>{approvedMatches.length}</p>
               </div>
               <div className={styles.statCard}>
-                <p className={styles.statCardTitle}>Tareas completadas</p>
-                <p className={styles.statCardValue}>{completedSurveysCount} de {profile?.priorityCategories?.length || 0}</p>
+                <p className={styles.statCardTitle}>Encuestas completadas</p>
+                {/* Compara con el total de categorías disponibles */}
+                <p className={styles.statCardValue}>{completedSurveysCount} de {ALL_CATEGORIES.length}</p>
               </div>
               <div className={styles.statCard}>
-                <p className={styles.statCardTitle}>Categorías exploradas</p>
+                <p className={styles.statCardTitle}>Categorías con matches</p>
                 <p className={styles.statCardValue}>{uniqueCategories.length}</p>
               </div>
               <div className={styles.statCard}>
-                <p className={styles.statCardTitle}>Matches disponibles</p>
+                <p className={styles.statCardTitle}>Total matches</p>
                 <p className={styles.statCardValue}>{matches.length}</p>
               </div>
             </div>

@@ -141,49 +141,152 @@ export default function Features() {
                   </div>
                   <div className={styles.cardBody}>
                     {activeTab === 'couples' ? (
-                       <div className={styles.mockContentCouples}>
-                         <div className={styles.mockStat}>
-                           <span>Progreso del evento</span>
-                           <span>65%</span>
-                         </div>
-                         <div className={styles.progressBar}><div style={{width: '65%'}}></div></div>
-                         <div className={styles.mockRow}>
-                           <div className={styles.mockItem}>
-                             <span>Fotografía</span>
-                             <span className={styles.statusSuccess}>Contratado</span>
+                       /* ===== REPLICA EXACTA DEL DASHBOARD "MIS MATCHES" ===== */
+                       <div className={styles.mockDashboard}>
+                         {/* Profile Header - Replica del dashboard real */}
+                         <div className={styles.mockProfileHeader}>
+                           <div className={styles.mockProfileLeft}>
+                             <div className={styles.mockAvatar}>
+                               <span>MJ</span>
+                               {/* Countdown badge flotante */}
+                               <div className={styles.mockCountdownBadge}>
+                                 <span className={styles.mockCountdownNum}>98</span>
+                                 <span className={styles.mockCountdownLabel}>días</span>
+                               </div>
+                             </div>
+                             <div className={styles.mockProfileInfo}>
+                               <h3 className={styles.mockProfileGreeting}>Hola María & Juan</h3>
+                               <div className={styles.mockProfileDate}>
+                                 <span>15 de marzo de 2025</span>
+                                 <button className={styles.mockEditBtn}>✏️ Editar</button>
+                               </div>
+                             </div>
                            </div>
-                           <div className={styles.mockItem}>
-                             <span>Banquetería</span>
-                             <span className={styles.statusPending}>Pendiente <span className={styles.badge}>3 Matches</span></span>
+                         </div>
+                         
+                         {/* Stats Row - Replica exacta */}
+                         <div className={styles.mockStatsRow}>
+                           <div className={styles.mockStatCard}>
+                             <span className={styles.mockStatLabel}>PROVEEDORES SELECCIONADOS</span>
+                             <span className={styles.mockStatValue}>2</span>
+                           </div>
+                           <div className={styles.mockStatCard}>
+                             <span className={styles.mockStatLabel}>ENCUESTAS COMPLETADAS</span>
+                             <span className={styles.mockStatValue}>4 de 13</span>
+                           </div>
+                           <div className={styles.mockStatCard}>
+                             <span className={styles.mockStatLabel}>CATEGORÍAS CON MATCHES</span>
+                             <span className={styles.mockStatValue}>3</span>
+                           </div>
+                           <div className={styles.mockStatCard}>
+                             <span className={styles.mockStatLabel}>TOTAL MATCHES</span>
+                             <span className={styles.mockStatValue}>12</span>
+                           </div>
+                         </div>
+                         
+                         {/* Categories Grid - Replica exacta */}
+                         <div className={styles.mockCategoriesGrid}>
+                           <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
+                             <span className={styles.mockCategoryIcon}>🏛️</span>
+                             <span className={styles.mockCategoryName}>Centro de Eventos</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBadge}>3</span>
+                           </div>
+                           <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
+                             <span className={styles.mockCategoryIcon}>📷</span>
+                             <span className={styles.mockCategoryName}>Fotografía</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBadge}>5</span>
+                           </div>
+                           <div className={styles.mockCategoryCard}>
+                             <span className={styles.mockCategoryIcon}>🍽️</span>
+                             <span className={styles.mockCategoryName}>Banquetería</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                           </div>
+                           <div className={styles.mockCategoryCard}>
+                             <span className={styles.mockCategoryIcon}>🎵</span>
+                             <span className={styles.mockCategoryName}>DJ / Música</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                           </div>
+                           <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
+                             <span className={styles.mockCategoryIcon}>🎥</span>
+                             <span className={styles.mockCategoryName}>Video</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBadge}>4</span>
+                           </div>
+                           <div className={styles.mockCategoryCard}>
+                             <span className={styles.mockCategoryIcon}>🌸</span>
+                             <span className={styles.mockCategoryName}>Decoración</span>
+                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
                            </div>
                          </div>
                        </div>
                     ) : (
-                      <div className={styles.mockContentProviders}>
-                        <div className={styles.mockStatsGrid}>
-                          <div className={styles.mockStatBox}>
-                            <span className={styles.bigNum}>12</span>
-                            <span>Nuevos Leads</span>
+                      /* ===== REPLICA EXACTA DEL DASHBOARD "MIS LEADS" ===== */
+                      <div className={styles.mockDashboard}>
+                        {/* Header con título */}
+                        <div className={styles.mockLeadsHeader}>
+                          <h3>Mis Leads</h3>
+                          <span className={styles.mockSubtitle}>Parejas interesadas en tus servicios</span>
+                        </div>
+                        
+                        {/* Stats Row - Replica exacta del proveedor */}
+                        <div className={styles.mockStatsRowProvider}>
+                          <div className={styles.mockStatCard}>
+                            <span className={styles.mockStatLabel}>LEADS TOTALES</span>
+                            <span className={styles.mockStatValue}>12</span>
                           </div>
-                          <div className={styles.mockStatBox}>
-                            <span className={styles.bigNum}>4.8</span>
-                            <span>Calificación</span>
+                          <div className={styles.mockStatCard}>
+                            <span className={styles.mockStatLabel}>INTERESADOS</span>
+                            <span className={styles.mockStatValueGold}>8</span>
+                          </div>
+                          <div className={styles.mockStatCard}>
+                            <span className={styles.mockStatLabel}>CALIDAD DE LEADS</span>
+                            <span className={styles.mockStatValue}>92%</span>
                           </div>
                         </div>
-                        <div className={styles.mockList}>
-                          <div className={styles.mockListItem}>
-                            <div className={styles.avatar}>MJ</div>
-                            <div>
-                              <p>María & Juan</p>
-                              <small>15 Nov 2024</small>
-                            </div>
+                        
+                        {/* Leads List - Replica exacta */}
+                        <div className={styles.mockLeadsList}>
+                          <div className={styles.mockLeadsListHeader}>
+                            <span>Leads recientes</span>
+                            <button className={styles.mockViewAllBtn}>Ver todos →</button>
                           </div>
-                          <div className={styles.mockListItem}>
-                            <div className={styles.avatar}>CP</div>
-                            <div>
-                              <p>Cata & Pedro</p>
-                              <small>02 Ene 2025</small>
+                          
+                          <div className={styles.mockLeadCard}>
+                            <div className={styles.mockLeadCategory}>
+                              <span>📷</span>
+                              <span>Fotografía</span>
                             </div>
+                            <div className={styles.mockLeadInfo}>
+                              <p className={styles.mockLeadName}>María & Juan</p>
+                              <span className={styles.mockLeadDate}>15 Mar 2025 • Pendiente</span>
+                            </div>
+                            <div className={styles.mockLeadMatchBadge}>95%</div>
+                          </div>
+                          
+                          <div className={styles.mockLeadCard}>
+                            <div className={styles.mockLeadCategory}>
+                              <span>📷</span>
+                              <span>Fotografía</span>
+                            </div>
+                            <div className={styles.mockLeadInfo}>
+                              <p className={styles.mockLeadName}>Catalina & Pedro</p>
+                              <span className={styles.mockLeadDate}>02 Abr 2025 • Interesado</span>
+                            </div>
+                            <div className={`${styles.mockLeadMatchBadge} ${styles.mockLeadMatchExcellent}`}>87%</div>
+                          </div>
+                          
+                          <div className={styles.mockLeadCard}>
+                            <div className={styles.mockLeadCategory}>
+                              <span>🎥</span>
+                              <span>Video</span>
+                            </div>
+                            <div className={styles.mockLeadInfo}>
+                              <p className={styles.mockLeadName}>Andrea & Felipe</p>
+                              <span className={styles.mockLeadDate}>20 May 2025 • Pendiente</span>
+                            </div>
+                            <div className={styles.mockLeadMatchBadge}>91%</div>
                           </div>
                         </div>
                       </div>

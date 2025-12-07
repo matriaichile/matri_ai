@@ -23,11 +23,13 @@ import {
   ChevronRight,
   Heart,
   XCircle,
-  BadgeCheck
+  BadgeCheck,
+  RefreshCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile, ProfileImageData } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
-import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser } from '@/lib/firebase/firestore';
+import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
 import { registerProviderShown } from '@/utils/matchLimits';
@@ -80,6 +82,10 @@ export default function CategoryMatchesPage() {
   
   // Estado para la galería de portafolio (al hacer click en imagen de tarjeta)
   const [galleryMatch, setGalleryMatch] = useState<ExtendedLead | null>(null);
+  
+  // Estado para rehacer encuesta
+  const [showRedoConfirm, setShowRedoConfirm] = useState(false);
+  const [isRedoing, setIsRedoing] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
@@ -112,6 +118,28 @@ export default function CategoryMatchesPage() {
       loadMatches();
     }
   }, [firebaseUser?.uid, categoryId]);
+
+  // Rehacer encuesta - elimina leads y restaura créditos a proveedores
+  const handleRedoSurvey = async () => {
+    if (!firebaseUser?.uid) return;
+    
+    try {
+      setIsRedoing(true);
+      
+      // Llamar a la función que elimina leads y restaura créditos
+      const result = await resetCategorySurveyAndLeads(firebaseUser.uid, categoryId);
+      
+      console.log(`✅ Encuesta reiniciada: ${result.deletedLeadsCount} leads eliminados, ${result.restoredCreditsToProviders.length} proveedores con créditos restaurados`);
+      
+      // Redirigir a la encuesta
+      router.push(`/dashboard/category/${categoryId}/survey`);
+      
+    } catch (error) {
+      console.error('Error al rehacer encuesta:', error);
+      setIsRedoing(false);
+      setShowRedoConfirm(false);
+    }
+  };
 
   // Aprobar match - usa la función con métricas
   const handleApprove = async (leadId: string) => {
@@ -295,10 +323,59 @@ export default function CategoryMatchesPage() {
             </p>
           </div>
           
-          {/* Spacer para balancear el botón de la izquierda */}
-          <div className={styles.headerSpacer} />
+          {/* Botón para rehacer encuesta */}
+          <button 
+            className={styles.redoButton}
+            onClick={() => setShowRedoConfirm(true)}
+            disabled={isRedoing}
+          >
+            <RefreshCcw size={16} />
+            <span>Rehacer encuesta</span>
+          </button>
         </div>
       </header>
+      
+      {/* Modal de confirmación para rehacer encuesta */}
+      {showRedoConfirm && (
+        <div className={styles.confirmOverlay} onClick={() => !isRedoing && setShowRedoConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className={styles.confirmTitle}>¿Rehacer encuesta?</h3>
+            <p className={styles.confirmText}>
+              Al rehacer la encuesta, <strong>todos los matches actuales de {categoryInfo.name} serán eliminados</strong>. 
+              Tendrás que completar la encuesta nuevamente para recibir nuevos matches.
+            </p>
+            <div className={styles.confirmActions}>
+              <button 
+                className={styles.confirmCancel}
+                onClick={() => setShowRedoConfirm(false)}
+                disabled={isRedoing}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={styles.confirmProceed}
+                onClick={handleRedoSurvey}
+                disabled={isRedoing}
+              >
+                {isRedoing ? (
+                  <>
+                    <Loader2 size={16} className={styles.spinnerIcon} />
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw size={16} />
+                    <span>Sí, rehacer</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <main className={styles.main}>

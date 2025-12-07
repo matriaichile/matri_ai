@@ -12,6 +12,7 @@ import {
   orderBy,
   limit,
   deleteDoc,
+  arrayUnion,
 } from 'firebase/firestore';
 import { db } from './config';
 import { 
@@ -431,9 +432,12 @@ export const saveUserCategorySurvey = async (
     
     const docRef = await addDoc(collection(db, COLLECTIONS.USER_CATEGORY_SURVEYS), surveyData);
     
-    // Actualizar estado de encuesta del usuario
+    // Actualizar estado de encuesta del usuario Y agregar la categoría a priorityCategories
+    // Esto asegura que el contador de encuestas X/Y esté siempre correcto
     await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
       [`categorySurveyStatus.${category}`]: 'completed' as CategorySurveyStatus,
+      // Agregar categoría a priorityCategories si no existe (usando arrayUnion para evitar duplicados)
+      priorityCategories: arrayUnion(category),
       updatedAt: now,
     });
     
@@ -1649,6 +1653,119 @@ export const generateNewMatchForUser = async (
     return newLead;
   } catch (error) {
     console.error('Error generando nuevo match:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// REHACER ENCUESTA - ELIMINAR LEADS Y RESTAURAR CRÉDITOS
+// ============================================
+
+/**
+ * Permite al usuario rehacer una encuesta de categoría.
+ * Esta función:
+ * 1. Elimina todos los leads del usuario para esa categoría
+ * 2. Restaura los créditos (leadsUsed) de cada proveedor afectado
+ * 3. Elimina la encuesta del usuario
+ * 4. Resetea el estado de la categoría en el perfil del usuario
+ * 
+ * IMPORTANTE: Esta función "devuelve" los créditos a los proveedores
+ * como si los leads nunca hubieran existido.
+ */
+export const resetCategorySurveyAndLeads = async (
+  userId: string,
+  category: CategoryId
+): Promise<{ deletedLeadsCount: number; restoredCreditsToProviders: string[] }> => {
+  try {
+    console.log(`🔄 Iniciando reset de categoría ${category} para usuario ${userId}`);
+    
+    const now = Timestamp.now();
+    const result = {
+      deletedLeadsCount: 0,
+      restoredCreditsToProviders: [] as string[],
+    };
+    
+    // 1. Obtener todos los leads del usuario para esta categoría
+    const leadsQuery = query(
+      collection(db, COLLECTIONS.LEADS),
+      where('userId', '==', userId),
+      where('category', '==', category)
+    );
+    
+    const leadsSnapshot = await getDocs(leadsQuery);
+    console.log(`📋 Encontrados ${leadsSnapshot.size} leads para eliminar`);
+    
+    // 2. Para cada lead, restaurar crédito al proveedor y eliminar el lead
+    for (const leadDoc of leadsSnapshot.docs) {
+      const leadData = leadDoc.data();
+      const providerId = leadData.providerId;
+      
+      try {
+        // Obtener datos actuales del proveedor
+        const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+        const providerSnap = await getDoc(providerRef);
+        
+        if (providerSnap.exists()) {
+          const providerData = providerSnap.data();
+          
+          // Calcular nuevos valores (decrementar)
+          const currentCategoryLeadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
+          const currentTotalLeadsUsed = providerData.leadsUsed || 0;
+          
+          // Solo decrementar si hay leads usados (evitar negativos)
+          const newCategoryLeadsUsed = Math.max(0, currentCategoryLeadsUsed - 1);
+          const newTotalLeadsUsed = Math.max(0, currentTotalLeadsUsed - 1);
+          
+          // Actualizar proveedor - restaurar crédito
+          await updateDoc(providerRef, {
+            [`categoryLeadsUsed.${category}`]: newCategoryLeadsUsed,
+            leadsUsed: newTotalLeadsUsed,
+            updatedAt: now,
+          });
+          
+          console.log(`✅ Crédito restaurado a proveedor ${providerId} (${category}: ${currentCategoryLeadsUsed} → ${newCategoryLeadsUsed})`);
+          
+          if (!result.restoredCreditsToProviders.includes(providerId)) {
+            result.restoredCreditsToProviders.push(providerId);
+          }
+        }
+        
+        // Eliminar el lead
+        await deleteDoc(leadDoc.ref);
+        result.deletedLeadsCount++;
+        
+      } catch (providerError) {
+        console.warn(`⚠️ Error restaurando crédito a proveedor ${providerId}:`, providerError);
+        // Continuar con el siguiente lead aunque falle uno
+      }
+    }
+    
+    // 3. Eliminar la encuesta del usuario para esta categoría
+    const surveyQuery = query(
+      collection(db, COLLECTIONS.USER_CATEGORY_SURVEYS),
+      where('userId', '==', userId),
+      where('category', '==', category)
+    );
+    
+    const surveySnapshot = await getDocs(surveyQuery);
+    for (const surveyDoc of surveySnapshot.docs) {
+      await deleteDoc(surveyDoc.ref);
+      console.log(`🗑️ Encuesta eliminada: ${surveyDoc.id}`);
+    }
+    
+    // 4. Actualizar el estado de categoría en el perfil del usuario
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
+    await updateDoc(userRef, {
+      [`categorySurveyStatus.${category}`]: 'not_started',
+      updatedAt: now,
+    });
+    
+    console.log(`✅ Reset completo para ${category}: ${result.deletedLeadsCount} leads eliminados, ${result.restoredCreditsToProviders.length} proveedores con créditos restaurados`);
+    
+    return result;
+    
+  } catch (error) {
+    console.error('Error en resetCategorySurveyAndLeads:', error);
     throw error;
   }
 };

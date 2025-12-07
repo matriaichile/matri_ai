@@ -161,8 +161,9 @@ service cloud.firestore {
       // Actualización: Usuario, proveedor del lead, o admin pueden actualizar el estado
       allow update: if isAuthenticated() && (isLeadUser() || isLeadProvider() || hasAdminAccess());
       
-      // Eliminación: Solo admins pueden eliminar leads
-      allow delete: if hasAdminAccess();
+      // Eliminación: El usuario puede eliminar sus propios leads (para rehacer encuestas)
+      // Admins también pueden eliminar
+      allow delete: if isAuthenticated() && (isLeadUser() || hasAdminAccess());
     }
 
     // ENCUESTAS DE USUARIOS POR CATEGORÍA
@@ -200,8 +201,12 @@ service cloud.firestore {
         hasAdminAccess()
       );
       
-      // Eliminación: Solo admins pueden eliminar
-      allow delete: if hasAdminAccess();
+      // Eliminación: El propio usuario puede eliminar (para rehacer encuestas)
+      // Admins también pueden eliminar
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        hasAdminAccess()
+      );
     }
 
     // ENCUESTAS DE PROVEEDORES POR CATEGORÍA
