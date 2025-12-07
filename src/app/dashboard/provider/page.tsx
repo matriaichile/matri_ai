@@ -499,7 +499,9 @@ export default function ProviderDashboardPage() {
   const getStyleLabel = (id: string) => SERVICE_STYLES.find((s) => s.id === id)?.label || id;
 
   // Función para obtener label de una respuesta de encuesta
-  const getSurveyAnswerLabel = (questionId: string, answer: string | string[] | number | boolean, questions: SurveyQuestion[]): string => {
+  const getSurveyAnswerLabel = (questionId: string, answer: string | string[] | number | boolean | undefined, questions: SurveyQuestion[]): string => {
+    if (answer === undefined) return 'No especificado';
+    
     const question = questions.find(q => q.id === questionId);
     if (!question) return String(answer);
     
