@@ -42,7 +42,7 @@ interface SurveyState {
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
-  setResponse: (questionId: string, value: string | string[] | number | boolean) => void;
+  setResponse: (questionId: string, value: string | string[] | number | boolean | undefined) => void;
   setShowWelcome: (show: boolean) => void;
   setIsTransitioning: (transitioning: boolean) => void;
   setIsSubmitting: (submitting: boolean) => void;
@@ -118,7 +118,7 @@ export const useSurveyStore = create<SurveyState>((set, get) => ({
   },
   
   // Guardar respuesta
-  setResponse: (questionId: string, value: string | string[] | number | boolean) => {
+  setResponse: (questionId: string, value: string | string[] | number | boolean | undefined) => {
     set((state) => ({
       responses: {
         ...state.responses,

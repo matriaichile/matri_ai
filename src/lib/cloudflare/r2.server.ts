@@ -15,7 +15,8 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'matrimatch-media';
 
 // URL pública del proxy de Cloudflare Workers para servir medios
 // Esta URL se usa para acceder a los medios públicamente sin firma
-export const PUBLIC_MEDIA_URL = process.env.R2_PUBLIC_URL || 'https://r2-public-proxy.matriaichile.workers.dev';
+// Configurado con custom domain en Cloudflare: media.matrimatch.cl
+export const PUBLIC_MEDIA_URL = process.env.R2_PUBLIC_URL || 'https://media.matrimatch.cl';
 
 // Límite de tamaño máximo por archivo (10MB para imágenes y videos)
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

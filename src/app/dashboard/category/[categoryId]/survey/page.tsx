@@ -179,7 +179,7 @@ export default function UserCategorySurveyPage() {
   };
 
   // Manejar cambio de respuesta
-  const handleResponseChange = (value: string | string[] | number | boolean) => {
+  const handleResponseChange = (value: string | string[] | number | boolean | undefined) => {
     const currentQuestion = questions[currentStep];
     if (currentQuestion) {
       setResponse(currentQuestion.id, value);
