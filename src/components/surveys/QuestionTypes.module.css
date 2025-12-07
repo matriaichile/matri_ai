@@ -258,6 +258,17 @@
   text-align: center;
 }
 
+/* Estilos de error para inputs numéricos fuera de rango */
+.numberInputError {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.numberHintError {
+  color: #ef4444 !important;
+  font-weight: 500;
+}
+
 /* Contenedor de texto */
 .textContainer {
   width: 100%;

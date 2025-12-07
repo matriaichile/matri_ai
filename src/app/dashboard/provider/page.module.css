@@ -400,6 +400,32 @@
   height: 14px;
 }
 
+/* Badge de categoría más grande con nombre - para Leads recientes */
+.leadCategoryBadgeLarge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.leadCategoryBadgeLarge svg {
+  width: 18px;
+  height: 18px;
+}
+
+.leadCategoryName {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
 .leadPreviewHeader h4 {
   font-family: var(--font-display);
   font-size: 0.9rem;

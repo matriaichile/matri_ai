@@ -542,28 +542,34 @@ export default function UserDashboardPage() {
               </div>
             </div>
 
-            {/* Grid de Categorías - 8 categorías principales */}
+            {/* Grid de Categorías - TODAS las categorías usando ALL_CATEGORIES y CATEGORY_INFO */}
             <div className={styles.homeCategoriesGrid}>
-              {/* Categorías principales: Celebración, Banquete, Fotografía, Video, Música, Auto de Novios, Invitaciones, Recuerdos */}
-              {[
-                { id: 'venue', name: 'Celebración', icon: Building2 },
-                { id: 'catering', name: 'Banquete', icon: Utensils },
-                { id: 'photography', name: 'Fotografía', icon: Camera },
-                { id: 'video', name: 'Video', icon: Video },
-                { id: 'dj', name: 'Música', icon: Music },
-                { id: 'transport', name: 'Auto de matrimonio', icon: Car },
-                { id: 'invitations', name: 'Invitaciones', icon: Send },
-                { id: 'decoration', name: 'Recuerdos', icon: Flower2 },
-              ].map((cat) => {
-                const categoryId = cat.id as CategoryId;
+              {ALL_CATEGORIES.map((categoryId) => {
+                const categoryInfo = getCategoryInfo(categoryId);
                 const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
                 const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
                 const categoryMatches = matches.filter(m => m.category === categoryId);
-                const IconComponent = cat.icon;
+                
+                // Mapeo de iconos por categoría
+                const CATEGORY_ICON_MAP: Record<CategoryId, React.ReactNode> = {
+                  catering: <Utensils size={36} />,
+                  venue: <Building2 size={36} />,
+                  photography: <Camera size={36} />,
+                  video: <Video size={36} />,
+                  dj: <Music size={36} />,
+                  decoration: <Flower2 size={36} />,
+                  entertainment: <PartyPopper size={36} />,
+                  makeup: <Palette size={36} />,
+                  cakes: <Cake size={36} />,
+                  transport: <Car size={36} />,
+                  invitations: <Send size={36} />,
+                  dress: <Shirt size={36} />,
+                  wedding_planner: <ClipboardList size={36} />,
+                };
                 
                 return (
                   <Link 
-                    key={cat.id}
+                    key={categoryId}
                     href={isCompleted 
                       ? `/dashboard/category/${categoryId}/matches` 
                       : `/dashboard/category/${categoryId}/survey`
@@ -579,10 +585,12 @@ export default function UserDashboardPage() {
                     )}
                     
                     <div className={styles.homeCategoryIcon}>
-                      <IconComponent size={36} />
+                      {CATEGORY_ICON_MAP[categoryId]}
                     </div>
                     
-                    <span className={styles.homeCategoryName}>{cat.name}</span>
+                    <span className={styles.homeCategoryName}>
+                      {categoryInfo?.name || getCategoryLabel(categoryId)}
+                    </span>
                     
                     <span className={styles.homeCategorySearchBtn}>
                       <Search size={14} />

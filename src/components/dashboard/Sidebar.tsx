@@ -298,11 +298,11 @@ export default function Sidebar(props: SidebarProps) {
         </button>
       </nav>
 
-      {/* Leads disponibles - Solo visible cuando está expandido */}
+      {/* Créditos disponibles - Solo visible cuando está expandido */}
       {showExpanded && (
         <div className={styles.leadsQuota}>
           <div className={styles.quotaHeader}>
-            <span className={styles.quotaLabel}>Leads disponibles</span>
+            <span className={styles.quotaLabel}>Créditos disponibles</span>
             <span className={styles.quotaValue}>{leadsRemaining}/{profile?.leadLimit || 10}</span>
           </div>
           <div className={styles.quotaBar}>

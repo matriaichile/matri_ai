@@ -756,9 +756,11 @@ export default function ProviderDashboardPage() {
                     >
                       <div className={styles.leadPreviewHeader}>
                         <div className={styles.leadPreviewInfo}>
-                          <span className={styles.leadCategoryBadge}>
+                          {/* Icono de categoría más grande con nombre */}
+                          <div className={styles.leadCategoryBadgeLarge}>
                             {CATEGORY_ICONS[lead.category]}
-                          </span>
+                            <span className={styles.leadCategoryName}>{getCategoryLabel(lead.category)}</span>
+                          </div>
                           <h4>{lead.userInfo.coupleNames}</h4>
                         </div>
                         <span 
@@ -837,9 +839,11 @@ export default function ProviderDashboardPage() {
                     <div className={styles.leadCardHeader}>
                       <div className={styles.leadCardTitle}>
                         <div className={styles.leadCardNameRow}>
-                          <span className={styles.leadCategoryIcon}>
+                          {/* Icono de categoría más grande con nombre */}
+                          <div className={styles.leadCategoryBadgeLarge}>
                             {CATEGORY_ICONS[lead.category]}
-                          </span>
+                            <span className={styles.leadCategoryName}>{getCategoryLabel(lead.category)}</span>
+                          </div>
                           <h3>{lead.userInfo.coupleNames}</h3>
                         </div>
                         <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
@@ -863,7 +867,8 @@ export default function ProviderDashboardPage() {
                     <div className={styles.leadCardBody}>
                       <div className={styles.leadDetail}>
                         <Calendar size={14} />
-                        <span>{lead.userInfo.eventDate}</span>
+                        {/* Formato de fecha: DD-MM-AAAA */}
+                        <span>Evento: {new Date(lead.userInfo.eventDate).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')}</span>
                       </div>
                       <div className={styles.leadDetail}>
                         <MapPin size={14} />
@@ -878,8 +883,9 @@ export default function ProviderDashboardPage() {
                       >
                         {getMatchCategory(lead.matchScore).label}
                       </div>
+                      {/* Fecha de creación con etiqueta explícita - formato DD-MM-AAAA */}
                       <span className={styles.leadDate}>
-                        {lead.createdAt.toLocaleDateString('es-CL')}
+                        Creado: {lead.createdAt.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')}
                       </span>
                     </div>
                   </div>
@@ -916,12 +922,7 @@ export default function ProviderDashboardPage() {
                   
                   return (
                     <div key={category} className={styles.categoryIconCardWrapper}>
-                      {/* Badge de leads - fuera de la tarjeta */}
-                      {isCompleted && categoryLeads.length > 0 && (
-                        <span className={styles.categoryLeadCount}>
-                          {categoryLeads.length}
-                        </span>
-                      )}
+                      {/* Badge de leads ELIMINADO - no es útil en la sección de encuestas */}
                       <Link 
                         href={`/dashboard/provider/category/${categoryId}/survey`}
                         className={`${styles.categoryIconCard} ${isCompleted ? styles.categoryIconCardCompleted : ''}`}
@@ -1471,59 +1472,7 @@ export default function ProviderDashboardPage() {
                     )}
                   </div>
 
-                  {/* Sección expandible: Detalles adicionales */}
-                  {extendedUserInfo && (
-                    <div className={styles.expandableSection}>
-                      <button 
-                        className={styles.sectionToggle}
-                        onClick={() => toggleSection('eventDetails')}
-                      >
-                        <div className={styles.sectionToggleTitle}>
-                          <ClipboardList size={18} />
-                          <span>Detalles de planificación</span>
-                        </div>
-                        {expandedSections.eventDetails ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                      </button>
-                      
-                      {expandedSections.eventDetails && (
-                        <div className={styles.sectionContent}>
-                          <div className={styles.detailsList}>
-                            {extendedUserInfo.planningProgress && (
-                              <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Progreso de planificación</span>
-                                <span className={styles.detailValue}>{extendedUserInfo.planningProgress}</span>
-                              </div>
-                            )}
-                            {extendedUserInfo.involvementLevel && (
-                              <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Nivel de involucramiento</span>
-                                <span className={styles.detailValue}>{extendedUserInfo.involvementLevel}</span>
-                              </div>
-                            )}
-                            {extendedUserInfo.expectations && (
-                              <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Expectativas</span>
-                                <span className={styles.detailValue}>{extendedUserInfo.expectations}</span>
-                              </div>
-                            )}
-                            {extendedUserInfo.priorityCategories && extendedUserInfo.priorityCategories.length > 0 && (
-                              <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Categorías prioritarias</span>
-                                <div className={styles.priorityTags}>
-                                  {extendedUserInfo.priorityCategories.map(cat => (
-                                    <span key={cat} className={styles.priorityTag}>
-                                      {CATEGORY_ICONS[cat]}
-                                      <span>{getCategoryLabel(cat)}</span>
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Sección "Detalles de planificación" ELIMINADA - no aporta valor, siempre está vacía */}
 
                   {/* Sección expandible: Comparativa de encuestas */}
                   {extendedUserInfo?.categorySurvey && providerSurvey && (

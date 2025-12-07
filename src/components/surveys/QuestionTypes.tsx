@@ -180,47 +180,46 @@ export function BooleanQuestion({ question, value, onChange }: BaseQuestionProps
 
 /**
  * Pregunta numérica (number)
+ * NOTA: NO forzamos límites mientras el usuario escribe para mejor UX
+ * La validación del rango se hace al presionar "Siguiente"
  */
 export function NumberQuestion({ question, value, onChange }: BaseQuestionProps) {
-  const numValue = typeof value === 'number' ? value : '';
+  const numValue = typeof value === 'number' && value !== 0 ? value : '';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val === '') {
-      // Permitir campo vacío temporalmente
-      onChange(0);
+      // Campo vacío - usar undefined o 0 según contexto
+      onChange(undefined);
     } else {
       const num = parseInt(val, 10);
       if (!isNaN(num)) {
-        // Aplicar límites si existen
-        let finalNum = num;
-        if (question.min !== undefined && num < question.min) {
-          finalNum = question.min;
-        }
-        if (question.max !== undefined && num > question.max) {
-          finalNum = question.max;
-        }
-        onChange(finalNum);
+        // Permitir cualquier número - la validación del rango se hace en submit
+        onChange(num);
       }
     }
   };
+
+  // Verificar si el valor actual está fuera de rango (para mostrar alerta visual)
+  const isOutOfRange = typeof value === 'number' && value !== 0 && (
+    (question.min !== undefined && value < question.min) ||
+    (question.max !== undefined && value > question.max)
+  );
 
   return (
     <div className={styles.numberContainer}>
       <div className={styles.numberInputWrapper}>
         <input
           type="number"
-          className={styles.numberInput}
+          className={`${styles.numberInput} ${isOutOfRange ? styles.numberInputError : ''}`}
           value={numValue}
           onChange={handleChange}
-          min={question.min}
-          max={question.max}
           step={question.step || 1}
           placeholder={question.placeholder || 'Ingresa un número'}
         />
       </div>
       {(question.min !== undefined || question.max !== undefined) && (
-        <p className={styles.numberHint}>
+        <p className={`${styles.numberHint} ${isOutOfRange ? styles.numberHintError : ''}`}>
           {question.min !== undefined && question.max !== undefined
             ? `Rango: ${question.min.toLocaleString()} - ${question.max.toLocaleString()}`
             : question.min !== undefined

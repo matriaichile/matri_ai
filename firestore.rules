@@ -239,6 +239,18 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // CONFIGURACIÓN DE MATCHMAKING
+    // Solo super_admin puede leer/escribir la configuración de pesos del matchmaking
+    match /matchmaking_config/{configId} {
+      // Lectura: Super admin puede leer la configuración
+      allow read: if isSuperAdmin();
+      
+      // Escritura: Solo super_admin puede crear/actualizar/eliminar
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
     // REGLA POR DEFECTO: Denegar todo lo que no esté explícitamente permitido
     match /{document=**} {
       allow read, write: if false;

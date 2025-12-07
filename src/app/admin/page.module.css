@@ -3,17 +3,17 @@
    Moderno, Elegante, Minimalista
    ==================================== */
 
-/* Variables locales para el admin */
+/* Variables locales para el admin - Fondos más claros */
 :root {
   --admin-sidebar-width: 260px;
-  --admin-bg: #0a0a0a;
-  --admin-bg-card: #111111;
-  --admin-bg-hover: #1a1a1a;
-  --admin-border: #222222;
-  --admin-border-light: #333333;
+  --admin-bg: #141414;
+  --admin-bg-card: #1c1c1c;
+  --admin-bg-hover: #242424;
+  --admin-border: #2a2a2a;
+  --admin-border-light: #3a3a3a;
   --admin-text: #ffffff;
-  --admin-text-secondary: #a3a3a3;
-  --admin-text-muted: #666666;
+  --admin-text-secondary: #b0b0b0;
+  --admin-text-muted: #757575;
   --admin-accent: #d4af37;
   --admin-accent-hover: #c9a227;
   --admin-success: #22c55e;
