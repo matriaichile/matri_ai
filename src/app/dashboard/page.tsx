@@ -474,303 +474,124 @@ export default function UserDashboardPage() {
       />
 
       <div className={styles.content}>
-        {/* Sección de Matches */}
+        {/* Sección de Matches - NUEVO DISEÑO HOME */}
         {activeSection === 'matches' && (
-          <div className={styles.matchesSection}>
-            {loadingMatches ? (
-              <LoadingState message="Buscando los mejores proveedores..." />
-            ) : matches.length === 0 ? (
-              <EmptyState
-                icon={<Sparkles size={48} />}
-                title="Aún no tienes matches"
-                description="Completa las categorías para obtener recomendaciones personalizadas"
-                action={{
-                  label: 'Completar categorías',
-                  onClick: () => setActiveSection('surveys'),
-                }}
-              />
-            ) : (
-              <>
-                {/* Resumen de matches por categoría */}
-                <div className={styles.matchesSummary}>
-                  <div className={styles.matchesSummaryHeader}>
-                    <h2 className={styles.matchesSummaryTitle}>
-                      <Sparkles size={20} />
-                      <span>Resumen de tus matches</span>
-                    </h2>
-                    <p className={styles.matchesSummaryDesc}>
-                      {matches.length} proveedores en {uniqueCategories.length} categorías
-                    </p>
-                  </div>
-                  <div className={styles.matchesSummaryStats}>
-                    <div className={styles.matchesSummaryStat}>
-                      <span className={styles.statNumber}>{pendingMatches.length}</span>
-                      <span className={styles.statLabel}>Por revisar</span>
-                    </div>
-                    <div className={styles.matchesSummaryStatSuccess}>
-                      <span className={styles.statNumber}>{approvedMatches.length}</span>
-                      <span className={styles.statLabel}>Te interesan</span>
-                    </div>
-                  </div>
+          <div className={styles.homeSection}>
+            {/* Profile Header con saludo, fecha y cuenta regresiva */}
+            <div className={styles.profileHeader}>
+              <div className={styles.profilePhotoSection}>
+                <div className={styles.profilePhoto}>
+                  {/* Placeholder para foto de perfil */}
+                  <span className={styles.profilePhotoPlaceholder}>
+                    {profile?.coupleNames?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
                 </div>
+                {/* Cuenta regresiva hasta la boda */}
+                {profile?.eventDate && (
+                  <div className={styles.countdownBadge}>
+                    <span className={styles.countdownDays}>
+                      {Math.max(0, Math.ceil((new Date(profile.eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
+                    </span>
+                    <span className={styles.countdownLabel}>días</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className={styles.profileInfo}>
+                <h1 className={styles.profileGreeting}>
+                  Hola {profile?.coupleNames || 'Usuario'}
+                </h1>
+                <div className={styles.profileDateRow}>
+                  <span className={styles.profileDate}>
+                    {profile?.eventDate 
+                      ? new Date(profile.eventDate).toLocaleDateString('es-CL', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })
+                      : 'Fecha por definir'}
+                  </span>
+                  <button 
+                    className={styles.editDateLink}
+                    onClick={() => setActiveSection('profile')}
+                  >
+                    <Edit3 size={12} />
+                    <span>Editar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-                {/* Vista organizada por categoría */}
-                {uniqueCategories.map((category) => {
-                  const categoryData = matchesByCategory[category];
-                  const totalInCategory = categoryData.pending.length + categoryData.approved.length + categoryData.rejected.length;
-                  const categoryInfo = getCategoryInfo(category as CategoryId);
-                  
-                  // Aplicar filtro si está activo
-                  if (categoryFilter !== 'all' && categoryFilter !== category) return null;
-                  
-                  return (
-                    <div key={category} className={styles.categorySection}>
-                      {/* Header de categoría */}
-                      <div className={styles.categorySectionHeader}>
-                        <div className={styles.categorySectionIcon}>
-                          {CATEGORY_ICONS[category]}
-                        </div>
-                        <div className={styles.categorySectionInfo}>
-                          <h3 className={styles.categorySectionTitle}>
-                            {categoryInfo?.name || getCategoryLabel(category)}
-                          </h3>
-                          <p className={styles.categorySectionStats}>
-                            {totalInCategory} proveedores
-                            {categoryData.pending.length > 0 && (
-                              <span className={styles.pendingTag}>{categoryData.pending.length} nuevos</span>
-                            )}
-                            {categoryData.approved.length > 0 && (
-                              <span className={styles.approvedTag}>{categoryData.approved.length} favoritos</span>
-                            )}
-                          </p>
-                        </div>
-                        <Link 
-                          href={`/dashboard/category/${category}/matches`}
-                          className={styles.categorySectionLink}
-                        >
-                          <span>Ver todos</span>
-                          <ChevronRight size={14} />
-                        </Link>
-                      </div>
+            {/* Fila de estadísticas */}
+            <div className={styles.statsRow}>
+              <div className={styles.statCard}>
+                <p className={styles.statCardTitle}>Servicios contratados</p>
+                <p className={styles.statCardValue}>{approvedMatches.length} de {profile?.priorityCategories?.length || 0}</p>
+              </div>
+              <div className={styles.statCard}>
+                <p className={styles.statCardTitle}>Tareas completadas</p>
+                <p className={styles.statCardValue}>{completedSurveysCount} de {profile?.priorityCategories?.length || 0}</p>
+              </div>
+              <div className={styles.statCard}>
+                <p className={styles.statCardTitle}>Categorías exploradas</p>
+                <p className={styles.statCardValue}>{uniqueCategories.length}</p>
+              </div>
+              <div className={styles.statCard}>
+                <p className={styles.statCardTitle}>Matches disponibles</p>
+                <p className={styles.statCardValue}>{matches.length}</p>
+              </div>
+            </div>
 
-                      {/* Matches de esta categoría */}
-                      <div className={styles.categoryMatchesGrid}>
-                        {/* Matches pendientes primero */}
-                        {categoryData.pending.map((match) => {
-                          const provider = providers[match.providerId];
-                          const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
-                          const hasProfileImage = provider?.profileImage?.url;
-                          const isProcessing = processingMatchId === match.id;
-                          const hasPortfolio = provider?.portfolioImages && provider.portfolioImages.length > 0;
-                          
-                          return (
-                            <div 
-                              key={match.id} 
-                              className={styles.matchCardCompact}
-                            >
-                              <div 
-                                className={styles.matchImageCompact}
-                                onClick={() => {
-                                  if (hasPortfolio) {
-                                    setGalleryProviderId(match.providerId);
-                                  } else {
-                                    handleViewProviderDetails(match);
-                                  }
-                                }}
-                                style={{ cursor: 'pointer' }}
-                              >
-                                <div className={styles.matchImageWrapper}>
-                                  {hasProfileImage ? (
-                                    <div 
-                                      className={styles.matchProfileImage}
-                                      style={{
-                                        backgroundImage: `url(${provider.profileImage!.url})`,
-                                        backgroundPosition: `${provider.profileImage!.cropData.x}% ${provider.profileImage!.cropData.y}%`,
-                                        backgroundSize: `${100 * provider.profileImage!.cropData.zoom}%`,
-                                      }}
-                                    />
-                                  ) : (
-                                    <img 
-                                      src={categoryImage} 
-                                      alt={match.providerInfo.providerName}
-                                    />
-                                  )}
-                                </div>
-                                <div 
-                                  className={styles.matchBadgeCompactFloating}
-                                  style={getMatchCategoryStylesCompact(match.matchScore)}
-                                >
-                                  {getMatchCategory(match.matchScore).shortLabel}
-                                </div>
-                              </div>
-
-                              <div className={styles.matchInfoCompact}>
-                                <h4 className={styles.matchNameCompact}>
-                                  {match.providerInfo.providerName}
-                                  {provider?.isVerified && (
-                                    <BadgeCheck size={12} className={styles.verifiedIconSmall} />
-                                  )}
-                                </h4>
-                                <div className={styles.matchMetaCompact}>
-                                  <span><MapPin size={10} /> {provider?.workRegion ? getRegionLabel(provider.workRegion) : 'Chile'}</span>
-                                  <span><DollarSign size={10} /> {getPriceLabel(match.providerInfo.priceRange)}</span>
-                                </div>
-                              </div>
-
-                              <div className={styles.matchActionsCompact}>
-                                <button 
-                                  className={styles.rejectButtonCompact}
-                                  onClick={() => handleRejectClick(match)}
-                                  disabled={isProcessing}
-                                  title="Descartar"
-                                >
-                                  {isProcessing ? <Loader2 size={12} className={styles.spinnerIcon} /> : <X size={12} />}
-                                </button>
-                                <button 
-                                  className={styles.approveButtonCompact}
-                                  onClick={() => handleApproveMatch(match.id)}
-                                  disabled={isProcessing}
-                                  title="Me interesa"
-                                >
-                                  {isProcessing ? (
-                                    <Loader2 size={12} className={styles.spinnerIcon} />
-                                  ) : (
-                                    <>
-                                      <Heart size={10} />
-                                      <span>Me interesa</span>
-                                    </>
-                                  )}
-                                </button>
-                                <button 
-                                  className={styles.detailsButtonCompact}
-                                  onClick={() => handleViewProviderDetails(match)}
-                                  title="Ver detalles"
-                                >
-                                  <Eye size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {/* Matches aprobados después */}
-                        {categoryData.approved.map((match) => {
-                          const provider = providers[match.providerId];
-                          const categoryImage = CATEGORY_IMAGES[match.category] || CATEGORY_IMAGES.photography;
-                          const hasProfileImage = provider?.profileImage?.url;
-                          const isProcessing = processingMatchId === match.id;
-                          const hasPortfolio = provider?.portfolioImages && provider.portfolioImages.length > 0;
-                          
-                          return (
-                            <div 
-                              key={match.id} 
-                              className={`${styles.matchCardCompact} ${styles.matchCardCompactApproved}`}
-                            >
-                              <div 
-                                className={styles.matchImageCompact}
-                                onClick={() => {
-                                  if (hasPortfolio) {
-                                    setGalleryProviderId(match.providerId);
-                                  } else {
-                                    handleViewProviderDetails(match);
-                                  }
-                                }}
-                                style={{ cursor: 'pointer' }}
-                              >
-                                <div className={styles.matchImageWrapper}>
-                                  {hasProfileImage ? (
-                                    <div 
-                                      className={styles.matchProfileImage}
-                                      style={{
-                                        backgroundImage: `url(${provider.profileImage!.url})`,
-                                        backgroundPosition: `${provider.profileImage!.cropData.x}% ${provider.profileImage!.cropData.y}%`,
-                                        backgroundSize: `${100 * provider.profileImage!.cropData.zoom}%`,
-                                      }}
-                                    />
-                                  ) : (
-                                    <img 
-                                      src={categoryImage} 
-                                      alt={match.providerInfo.providerName}
-                                    />
-                                  )}
-                                </div>
-                                <div className={styles.approvedBadgeCompact}>
-                                  <Heart size={8} />
-                                </div>
-                              </div>
-
-                              <div className={styles.matchInfoCompact}>
-                                <h4 className={styles.matchNameCompact}>
-                                  {match.providerInfo.providerName}
-                                  {provider?.isVerified && (
-                                    <BadgeCheck size={12} className={styles.verifiedIconSmall} />
-                                  )}
-                                </h4>
-                                <div className={styles.matchMetaCompact}>
-                                  <span><MapPin size={10} /> {provider?.workRegion ? getRegionLabel(provider.workRegion) : 'Chile'}</span>
-                                  <span><DollarSign size={10} /> {getPriceLabel(match.providerInfo.priceRange)}</span>
-                                </div>
-                              </div>
-
-                              <div className={styles.matchActionsCompact}>
-                                <button 
-                                  className={styles.revertButtonCompactSmall}
-                                  onClick={() => handleRevertMatch(match.id)}
-                                  disabled={isProcessing}
-                                  title="Cambiar de opinión"
-                                >
-                                  {isProcessing ? <Loader2 size={12} className={styles.spinnerIcon} /> : <RotateCcw size={12} />}
-                                </button>
-                                <button 
-                                  className={styles.contactButtonCompact}
-                                  onClick={() => handleViewProviderDetails(match)}
-                                  title="Ver contacto"
-                                >
-                                  <Eye size={12} />
-                                  <span>Contacto</span>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Matches rechazados colapsados */}
-                      {categoryData.rejected.length > 0 && (
-                        <div className={styles.rejectedSection}>
-                          <span className={styles.rejectedLabel}>
-                            {categoryData.rejected.length} descartado{categoryData.rejected.length > 1 ? 's' : ''}
-                          </span>
-                          <div className={styles.rejectedList}>
-                            {categoryData.rejected.map((match) => {
-                              const isProcessing = processingMatchId === match.id;
-                              return (
-                                <button 
-                                  key={match.id}
-                                  className={styles.rejectedItem}
-                                  onClick={() => handleRevertMatch(match.id)}
-                                  disabled={isProcessing}
-                                  title={`Recuperar ${match.providerInfo.providerName}`}
-                                >
-                                  {isProcessing ? (
-                                    <Loader2 size={10} className={styles.spinnerIcon} />
-                                  ) : (
-                                    <>
-                                      <span>{match.providerInfo.providerName}</span>
-                                      <RotateCcw size={10} />
-                                    </>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+            {/* Grid de Categorías - 8 categorías principales */}
+            <div className={styles.homeCategoriesGrid}>
+              {/* Categorías principales: Celebración, Banquete, Fotografía, Video, Música, Auto de Novios, Invitaciones, Recuerdos */}
+              {[
+                { id: 'venue', name: 'Celebración', icon: Building2 },
+                { id: 'catering', name: 'Banquete', icon: Utensils },
+                { id: 'photography', name: 'Fotografía', icon: Camera },
+                { id: 'video', name: 'Video', icon: Video },
+                { id: 'dj', name: 'Música', icon: Music },
+                { id: 'transport', name: 'Auto de matrimonio', icon: Car },
+                { id: 'invitations', name: 'Invitaciones', icon: Send },
+                { id: 'decoration', name: 'Recuerdos', icon: Flower2 },
+              ].map((cat) => {
+                const categoryId = cat.id as CategoryId;
+                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+                const categoryMatches = matches.filter(m => m.category === categoryId);
+                const IconComponent = cat.icon;
+                
+                return (
+                  <Link 
+                    key={cat.id}
+                    href={isCompleted 
+                      ? `/dashboard/category/${categoryId}/matches` 
+                      : `/dashboard/category/${categoryId}/survey`
+                    }
+                    className={`${styles.homeCategoryCard} ${isCompleted ? styles.homeCategoryCardCompleted : ''}`}
+                    style={{ position: 'relative' }}
+                  >
+                    {/* Badge de matches si hay */}
+                    {categoryMatches.length > 0 && (
+                      <span className={styles.homeCategoryMatchesBadge}>
+                        {categoryMatches.length}
+                      </span>
+                    )}
+                    
+                    <div className={styles.homeCategoryIcon}>
+                      <IconComponent size={36} />
                     </div>
-                  );
-                })}
-              </>
-            )}
+                    
+                    <span className={styles.homeCategoryName}>{cat.name}</span>
+                    
+                    <span className={styles.homeCategorySearchBtn}>
+                      <Search size={14} />
+                      <span>Buscar</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
 import styles from './DashboardHeader.module.css';
 
 interface DashboardHeaderProps {
@@ -13,6 +12,8 @@ interface DashboardHeaderProps {
 /**
  * Header reutilizable para los dashboards.
  * Muestra el título de la sección y opcionalmente el nombre del usuario.
+ * La flecha fue eliminada ya que no tenía funcionalidad.
+ * El nombre del proveedor ahora destaca más en color morado/dorado.
  */
 export default function DashboardHeader({ 
   title, 
@@ -28,10 +29,8 @@ export default function DashboardHeader({
       </div>
       {showUserBadge && userName && (
         <div className={styles.headerRight}>
-          <div className={styles.userBadge}>
-            <span>{userName}</span>
-            <ChevronDown size={16} />
-          </div>
+          {/* Nombre destacado sin flecha - solo visual */}
+          <span className={styles.userNameHighlight}>{userName}</span>
         </div>
       )}
     </header>

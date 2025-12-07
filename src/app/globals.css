@@ -9,22 +9,22 @@
   --color-primary: #D4AF37;
   --color-primary-dark: #B8941E;
   --color-primary-light: #E8D090;
-  --color-secondary: #000000;
+  --color-secondary: #1a1a1a;
   
-  /* Fondos más refinados */
-  --color-background: #080808;
-  --color-background-elevated: #111111;
-  --color-background-glass: rgba(17, 17, 17, 0.8);
+  /* Fondos más claros - reducir fatiga visual */
+  --color-background: #141414;
+  --color-background-elevated: #1c1c1c;
+  --color-background-glass: rgba(28, 28, 28, 0.85);
   
   /* Texto con mejor contraste */
   --color-text: #F5F5F5;
-  --color-text-secondary: #B8B8B8;
-  --color-text-muted: #6B6B6B;
+  --color-text-secondary: #C0C0C0;
+  --color-text-muted: #808080;
   
   /* Bordes más sutiles */
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-subtle: rgba(255, 255, 255, 0.03);
-  --color-border-accent: rgba(212, 175, 55, 0.2);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-border-accent: rgba(212, 175, 55, 0.25);
 }
 
 * {
@@ -45,13 +45,14 @@ body {
   background-color: var(--color-background);
   line-height: 1.6;
   font-weight: 400;
+  font-size: 16px; /* Base aumentada de 14px a 16px */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 600; /* Títulos más bold (de 500 a 600) */
   color: var(--color-text);
   letter-spacing: -0.01em;
 }

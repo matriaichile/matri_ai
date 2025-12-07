@@ -696,7 +696,7 @@ export default function ProviderDashboardPage() {
                           ? Math.round((profile.metrics.timesInterested / profile.metrics.timesOffered) * 100) 
                           : 0}%
                       </span>
-                      <span className={styles.metricLabel}>Tasa de interés</span>
+                      <span className={styles.metricLabel}>Calidad de leads</span>
                     </div>
                   </div>
                 </div>
@@ -784,41 +784,7 @@ export default function ProviderDashboardPage() {
               )}
             </div>
 
-            {/* Quick profile */}
-            <div className={styles.quickProfile}>
-              <div className={styles.sectionHeader}>
-                <h2>Tu perfil</h2>
-                <button 
-                  className={styles.editButton}
-                  onClick={() => setActiveSection('profile')}
-                >
-                  <Edit3 size={14} />
-                  <span>Editar</span>
-                </button>
-              </div>
-
-              <div className={styles.profilePreview}>
-                <div className={styles.profilePreviewItem}>
-                  <span className={styles.previewLabel}>Servicios</span>
-                  <div className={styles.categoryTags}>
-                    {profile?.categories?.map((cat) => (
-                      <span key={cat} className={styles.categoryTag}>
-                        {CATEGORY_ICONS[cat]}
-                        <span>{getCategoryLabel(cat)}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.profilePreviewItem}>
-                  <span className={styles.previewLabel}>Rango de precios</span>
-                  <span className={styles.previewValue}>{getPriceLabel(profile?.priceRange || '')}</span>
-                </div>
-                <div className={styles.profilePreviewItem}>
-                  <span className={styles.previewLabel}>Región</span>
-                  <span className={styles.previewValue}>{getRegionLabel(profile?.workRegion || '')}</span>
-                </div>
-              </div>
-            </div>
+            {/* Bloque "Tu perfil" eliminado - la página Resumen debe enfocarse solo en leads */}
           </div>
         )}
 
@@ -878,15 +844,12 @@ export default function ProviderDashboardPage() {
                         </div>
                         <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
                           {lead.status === 'pending' ? 'Pendiente' : 
-                           lead.status === 'approved' ? 'Aprobado' : 
+                           lead.status === 'approved' ? 'Interesado' : 
                            lead.status === 'contacted' ? 'Contactado' : 'Rechazado'}
                         </span>
                       </div>
                       <div className={styles.leadCardActions}>
-                        <span className={styles.leadBudget}>
-                          <DollarSign size={14} />
-                          <span>{BUDGET_LABELS[lead.userInfo.budget] || lead.userInfo.budget}</span>
-                        </span>
+                        {/* Presupuesto total eliminado - los proveedores no deben ver el presupuesto total */}
                         <button 
                           className={styles.viewDetailsButton}
                           onClick={() => handleOpenLeadModal(lead)}
@@ -1330,7 +1293,7 @@ export default function ProviderDashboardPage() {
                 </div>
               </div>
 
-              {/* Estadísticas de cuenta */}
+              {/* Estadísticas de cuenta - Diferenciando créditos de leads */}
               <div className={styles.profileCard}>
                 <h3 className={styles.profileCardTitle}>
                   <BarChart3 size={20} />
@@ -1345,12 +1308,16 @@ export default function ProviderDashboardPage() {
                     </span>
                   </div>
                   <div className={styles.profileField}>
-                    <span className={styles.fieldLabel}>Límite de leads</span>
+                    <span className={styles.fieldLabel}>Créditos totales</span>
                     <span className={styles.fieldValue}>{profile?.leadLimit || 10}</span>
                   </div>
                   <div className={styles.profileField}>
-                    <span className={styles.fieldLabel}>Leads utilizados</span>
+                    <span className={styles.fieldLabel}>Créditos utilizados</span>
                     <span className={styles.fieldValue}>{profile?.leadsUsed || 0}</span>
+                  </div>
+                  <div className={styles.profileField}>
+                    <span className={styles.fieldLabel}>Créditos disponibles</span>
+                    <span className={styles.fieldValue}>{(profile?.leadLimit || 10) - (profile?.leadsUsed || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -1462,13 +1429,16 @@ export default function ProviderDashboardPage() {
                               <span className={styles.infoValue}>{getRegionLabel(selectedLead.userInfo.region)}</span>
                             </div>
                           </div>
-                          <div className={styles.infoItem}>
-                            <DollarSign size={16} />
-                            <div>
-                              <span className={styles.infoLabel}>Presupuesto total</span>
-                              <span className={styles.infoValue}>{BUDGET_LABELS[selectedLead.userInfo.budget]}</span>
+                          {/* Presupuesto total eliminado - solo mostrar si hay presupuesto de categoría */}
+                          {extendedUserInfo?.categorySurvey?.responses && (
+                            <div className={styles.infoItem}>
+                              <DollarSign size={16} />
+                              <div>
+                                <span className={styles.infoLabel}>Presupuesto para {getCategoryLabel(selectedLead.category)}</span>
+                                <span className={styles.infoValue}>Consultar en preferencias</span>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           {extendedUserInfo && (
                             <>
                               <div className={styles.infoItem}>

@@ -21,6 +21,8 @@ import {
   XCircle,
   MessageSquare,
   Calendar,
+  Settings,
+  Sliders,
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -344,6 +346,20 @@ export default function AdminDashboardPage() {
               <span>Usuarios</span>
             </button>
           </div>
+
+          {/* Sección de configuración solo para Super Admins */}
+          {isSuperAdmin && (
+            <div className={styles.navSection}>
+              <span className={styles.navSectionTitle}>Configuración</span>
+              <Link
+                href="/admin/matchmaking"
+                className={styles.navItem}
+              >
+                <Sliders />
+                <span>Matchmaking</span>
+              </Link>
+            </div>
+          )}
         </nav>
 
         <div className={styles.sidebarFooter}>

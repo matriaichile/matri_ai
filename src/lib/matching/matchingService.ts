@@ -1884,3 +1884,157 @@ export function getCombinedMatchSummary(
   
   return summary;
 }
+
+// ============================================
+// CONFIGURACIÓN DINÁMICA DE MATCHMAKING
+// Cargada desde Firestore por Super Admin
+// ============================================
+
+/**
+ * Interfaz para configuración de una pregunta en el matchmaking (desde admin panel)
+ */
+export interface QuestionMatchingConfig {
+  questionId: string;
+  questionLabel: string;
+  weight: number; // 0-100
+  isExcluding: boolean; // Si es true, no coincidencia = 0% automático
+}
+
+/**
+ * Caché local de la configuración de matchmaking
+ * Se actualiza periódicamente desde Firestore
+ */
+let matchingConfigCache: Record<CategoryId, QuestionMatchingConfig[]> | null = null;
+let configCacheTimestamp: number = 0;
+const CONFIG_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+/**
+ * Carga la configuración de matchmaking desde Firestore
+ * Usa caché para evitar llamadas repetidas
+ */
+export async function loadMatchingConfig(): Promise<Record<CategoryId, QuestionMatchingConfig[]> | null> {
+  // Verificar si el caché es válido
+  if (matchingConfigCache && Date.now() - configCacheTimestamp < CONFIG_CACHE_TTL) {
+    return matchingConfigCache;
+  }
+
+  try {
+    // Importación dinámica para evitar problemas de SSR
+    const { doc, getDoc } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase/config');
+    
+    const configRef = doc(db, 'matchmaking_config', 'weights');
+    const configSnap = await getDoc(configRef);
+    
+    if (configSnap.exists()) {
+      matchingConfigCache = configSnap.data() as Record<CategoryId, QuestionMatchingConfig[]>;
+      configCacheTimestamp = Date.now();
+      console.log('✅ Configuración de matchmaking cargada desde Firestore');
+      return matchingConfigCache;
+    }
+  } catch (error) {
+    console.error('Error cargando configuración de matchmaking:', error);
+  }
+
+  return null;
+}
+
+/**
+ * Aplica la configuración dinámica a los criterios de matchmaking
+ * Modifica los pesos y marca preguntas como excluyentes
+ */
+export function applyMatchingConfig(
+  score: number,
+  details: MatchDetail[],
+  categoryId: CategoryId,
+  config: Record<CategoryId, QuestionMatchingConfig[]>
+): { adjustedScore: number; isExcluded: boolean; excludingCriteria: string[] } {
+  const categoryConfig = config[categoryId];
+  
+  if (!categoryConfig || categoryConfig.length === 0) {
+    return { adjustedScore: score, isExcluded: false, excludingCriteria: [] };
+  }
+
+  const excludingCriteria: string[] = [];
+  let isExcluded = false;
+
+  // Buscar criterios excluyentes que no coincidieron
+  for (const configItem of categoryConfig) {
+    if (configItem.isExcluding) {
+      // Buscar el detalle correspondiente
+      const detail = details.find(d => 
+        d.userQuestionId === configItem.questionId || 
+        d.criterionId.includes(configItem.questionId)
+      );
+
+      // Si hay un criterio excluyente con score 0, marcar como excluido
+      if (detail && detail.score === 0) {
+        isExcluded = true;
+        excludingCriteria.push(configItem.questionLabel);
+      }
+    }
+  }
+
+  // Si hay exclusiones, el score es 0
+  const adjustedScore = isExcluded ? 0 : score;
+
+  return { adjustedScore, isExcluded, excludingCriteria };
+}
+
+/**
+ * Versión mejorada de calculateMatchScore que usa configuración dinámica
+ * Mantiene compatibilidad hacia atrás si no hay configuración
+ */
+export async function calculateMatchScoreWithConfig(
+  userResponses: SurveyResponses,
+  providerResponses: SurveyResponses,
+  category: CategoryId
+): Promise<{ 
+  score: number; 
+  details: MatchDetail[]; 
+  specificityBonus: number; 
+  coverageScore: number;
+  isExcluded: boolean;
+  excludingCriteria: string[];
+}> {
+  // Calcular score base
+  const baseResult = calculateMatchScore(userResponses, providerResponses, category);
+  
+  // Cargar configuración dinámica
+  const config = await loadMatchingConfig();
+  
+  if (!config) {
+    // Sin configuración, usar score base
+    return {
+      ...baseResult,
+      isExcluded: false,
+      excludingCriteria: [],
+    };
+  }
+
+  // Aplicar configuración dinámica (excluyentes, pesos ajustados)
+  const { adjustedScore, isExcluded, excludingCriteria } = applyMatchingConfig(
+    baseResult.score,
+    baseResult.details,
+    category,
+    config
+  );
+
+  return {
+    score: adjustedScore,
+    details: baseResult.details,
+    specificityBonus: baseResult.specificityBonus,
+    coverageScore: baseResult.coverageScore,
+    isExcluded,
+    excludingCriteria,
+  };
+}
+
+/**
+ * Invalidar caché de configuración (llamar cuando se guarden cambios)
+ */
+export function invalidateMatchingConfigCache(): void {
+  matchingConfigCache = null;
+  configCacheTimestamp = 0;
+  console.log('🔄 Caché de configuración de matchmaking invalidado');
+}

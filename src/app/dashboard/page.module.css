@@ -1,6 +1,6 @@
 /* ====================================
-   USER DASHBOARD - Ultra Compact Design
-   Matri.AI - Elegant Dark Theme
+   USER DASHBOARD - Nuevo Diseño Home v2
+   Matri.AI - Diseño limpio estilo matrimonios.cl
    ==================================== */
 
 /* ====================================
@@ -16,7 +16,335 @@
 }
 
 /* ====================================
-   MATCHES SECTION - Diseño Organizado por Categoría
+   NEW HOME SECTION - Nuevo diseño con header, stats y categorías
+   ==================================== */
+.homeSection {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ====================================
+   PROFILE HEADER - Foto, saludo, fecha y cuenta regresiva
+   ==================================== */
+.profileHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+}
+
+.profilePhotoSection {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profilePhoto {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.profilePhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profilePhotoPlaceholder {
+  color: var(--color-primary);
+}
+
+.countdownBadge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: 10px;
+  color: #000;
+  font-family: var(--font-body);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.countdownDays {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.countdownLabel {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.profileInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profileGreeting {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.profileDateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profileDate {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+}
+
+.editDateLink {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 6px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.editDateLink:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+/* ====================================
+   STATS ROW - Estadísticas horizontales
+   ==================================== */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  text-align: center;
+  position: relative;
+}
+
+.statCardTitle {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.statCardValue {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.statCardProgress {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+}
+
+.statCardProgress svg {
+  width: 100%;
+  height: 100%;
+}
+
+.statCardProgress circle {
+  fill: none;
+  stroke-width: 3;
+}
+
+.statCardProgress .progressBg {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.statCardProgress .progressFill {
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* ====================================
+   HOME CATEGORIES GRID - Grid de 8 categorías
+   ==================================== */
+.homeCategoriesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .homeCategoriesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .homeCategoriesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.homeCategoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.homeCategoryCard:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.04);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.homeCategoryCardCompleted {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.02);
+}
+
+.homeCategoryCardCompleted:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.homeCategoryIcon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.homeCategoryCard:hover .homeCategoryIcon {
+  color: var(--color-primary);
+}
+
+.homeCategoryCardCompleted .homeCategoryIcon {
+  color: #4ade80;
+}
+
+.homeCategoryIcon svg {
+  width: 36px;
+  height: 36px;
+  stroke-width: 1.5;
+}
+
+.homeCategoryName {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.homeCategorySearchBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.homeCategoryCard:hover .homeCategorySearchBtn {
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--color-primary);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.homeCategoryCardCompleted .homeCategorySearchBtn {
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.homeCategoryMatchesBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: 11px;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+}
+
+/* ====================================
+   MATCHES SECTION - Diseño Organizado por Categoría (Legacy)
    ==================================== */
 .matchesSection {
   width: 100%;

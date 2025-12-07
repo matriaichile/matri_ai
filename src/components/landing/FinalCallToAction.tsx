@@ -28,9 +28,8 @@ export default function FinalCallToAction() {
               onClick={() => setIsRegisterModalOpen(true)} 
               className={styles.button}
             >
-              Crea tu usuario <ArrowRight size={20} />
+              Empieza esta aventura <ArrowRight size={20} />
             </button>
-            <p className={styles.subtext}>o Empieza esta aventura</p>
           </div>
         </motion.div>
       </div>

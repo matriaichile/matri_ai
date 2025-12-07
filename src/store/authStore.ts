@@ -307,7 +307,7 @@ export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; i
   entertainment: { id: 'entertainment', name: 'Entretenimiento', icon: 'party' },
   makeup: { id: 'makeup', name: 'Maquillaje & Peinado', icon: 'sparkles' },
   cakes: { id: 'cakes', name: 'Tortas & Dulces', icon: 'cake' },           // NUEVA
-  transport: { id: 'transport', name: 'Transporte', icon: 'car' },         // NUEVA
+  transport: { id: 'transport', name: 'Auto de Novios', icon: 'car' },      // Renombrado
   invitations: { id: 'invitations', name: 'Invitaciones', icon: 'mail' },  // NUEVA
   dress: { id: 'dress', name: 'Vestidos & Trajes', icon: 'dress' },
   wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },

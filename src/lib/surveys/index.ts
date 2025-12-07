@@ -73,8 +73,8 @@ export const CATEGORY_INFO: Record<CategoryId, { name: string; description: stri
     icon: 'cake',
   },
   transport: {
-    name: 'Transporte',
-    description: 'Traslado para novios e invitados',
+    name: 'Auto de Novios',
+    description: 'El auto para tu llegada especial',
     icon: 'car',
   },
   invitations: {
@@ -161,8 +161,8 @@ export const CATEGORY_SURVEYS: Record<CategoryId, CategorySurveyConfig> = {
   },
   transport: {
     categoryId: 'transport',
-    categoryName: 'Transporte',
-    description: 'Cuéntanos sobre tus necesidades de transporte',
+    categoryName: 'Auto de Novios',
+    description: 'Cuéntanos sobre el auto para tu día especial',
     userQuestions: TRANSPORT_USER_QUESTIONS,
     providerQuestions: TRANSPORT_PROVIDER_QUESTIONS,
   },
