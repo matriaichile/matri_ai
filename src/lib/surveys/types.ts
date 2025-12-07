@@ -48,7 +48,7 @@ export interface CategorySurveyConfig {
 }
 
 // Respuestas de encuesta
-export type SurveyResponses = Record<string, string | string[] | number | boolean>;
+export type SurveyResponses = Record<string, string | string[] | number | boolean | undefined>;
 
 // Estado de la encuesta en el store
 export interface SurveyState {
