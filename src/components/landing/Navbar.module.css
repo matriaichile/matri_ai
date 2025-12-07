@@ -65,7 +65,7 @@
   /* La imagen es más grande pero el contenedor la recorta */
   height: 80px !important;
   width: auto !important;
-  margin-top: -6px; /* Ajuste para centrar verticalmente el contenido visible */
+  margin-top: 10px; /* Ajustar este valor para centrar verticalmente */
 }
 
 .desktopMenu {

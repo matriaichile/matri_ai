@@ -15,6 +15,7 @@ export default function Footer() {
               width={400} 
               height={100} 
               className={styles.logoImage}
+              unoptimized
             />
           </div>
         </div>
