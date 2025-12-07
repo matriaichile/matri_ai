@@ -640,3 +640,7 @@ El sistema de evaluaciones será viable cuando exista:
 *Documento creado: Diciembre 2025*
 *Versión: MVP 1.1 - Mejoras solicitadas por cliente*
 
+
+
+
+
