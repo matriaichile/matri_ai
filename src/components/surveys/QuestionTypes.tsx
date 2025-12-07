@@ -8,7 +8,7 @@ import styles from './QuestionTypes.module.css';
 interface BaseQuestionProps {
   question: SurveyQuestion;
   value: string | string[] | number | boolean | undefined;
-  onChange: (value: string | string[] | number | boolean) => void;
+  onChange: (value: string | string[] | number | boolean | undefined) => void;
 }
 
 /**
