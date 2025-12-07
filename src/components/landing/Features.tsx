@@ -3,7 +3,27 @@
 import styles from './Features.module.css';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  ArrowRight,
+  // Iconos del dashboard real
+  Building2,
+  Camera,
+  Utensils,
+  Music,
+  Video,
+  Flower2,
+  Search,
+  Edit3,
+  Home,
+  FileText,
+  User,
+  Heart,
+  Users,
+  Briefcase,
+  Star,
+  Sparkles
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default function Features() {
@@ -129,7 +149,7 @@ export default function Features() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* Placeholder for the dashboard image - styled as a card */}
+                {/* Dashboard elegante con sidebar comprimido */}
                 <div className={styles.dashboardCard}>
                   <div className={styles.cardHeader}>
                     <div className={styles.dots}>
@@ -137,9 +157,54 @@ export default function Features() {
                       <span className={styles.dot} style={{background: '#ffbd2e'}}></span>
                       <span className={styles.dot} style={{background: '#27c93f'}}></span>
                     </div>
-                    <span className={styles.addressBar}>dashboard.matri.ai</span>
+                    <span className={styles.addressBar}>Matrimatch.cl</span>
                   </div>
-                  <div className={styles.cardBody}>
+                  <div className={styles.cardBodyWithSidebar}>
+                    {/* Sidebar comprimido elegante */}
+                    <div className={styles.mockSidebar}>
+                      <div className={styles.mockSidebarLogo}>
+                        <Sparkles size={16} className={styles.mockSidebarLogoIcon} />
+                      </div>
+                      <div className={styles.mockSidebarNav}>
+                        {activeTab === 'couples' ? (
+                          <>
+                            <div className={`${styles.mockSidebarItem} ${styles.mockSidebarItemActive}`}>
+                              <Home size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <FileText size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <Heart size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <User size={14} />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className={styles.mockSidebarItem}>
+                              <Home size={14} />
+                            </div>
+                            <div className={`${styles.mockSidebarItem} ${styles.mockSidebarItemActive}`}>
+                              <Users size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <FileText size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <Briefcase size={14} />
+                            </div>
+                            <div className={styles.mockSidebarItem}>
+                              <User size={14} />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Contenido principal */}
+                    <div className={styles.mockMainContent}>
                     {activeTab === 'couples' ? (
                        /* ===== REPLICA EXACTA DEL DASHBOARD "MIS MATCHES" ===== */
                        <div className={styles.mockDashboard}>
@@ -158,7 +223,10 @@ export default function Features() {
                                <h3 className={styles.mockProfileGreeting}>Hola María & Juan</h3>
                                <div className={styles.mockProfileDate}>
                                  <span>15 de marzo de 2025</span>
-                                 <button className={styles.mockEditBtn}>✏️ Editar</button>
+                                 <button className={styles.mockEditBtn}>
+                                   <Edit3 size={8} />
+                                   <span>Editar</span>
+                                 </button>
                                </div>
                              </div>
                            </div>
@@ -167,57 +235,57 @@ export default function Features() {
                          {/* Stats Row - Replica exacta */}
                          <div className={styles.mockStatsRow}>
                            <div className={styles.mockStatCard}>
-                             <span className={styles.mockStatLabel}>PROVEEDORES SELECCIONADOS</span>
+                             <span className={styles.mockStatLabel}>PROVEEDORES</span>
                              <span className={styles.mockStatValue}>2</span>
                            </div>
                            <div className={styles.mockStatCard}>
-                             <span className={styles.mockStatLabel}>ENCUESTAS COMPLETADAS</span>
+                             <span className={styles.mockStatLabel}>ENCUESTAS</span>
                              <span className={styles.mockStatValue}>4 de 13</span>
                            </div>
                            <div className={styles.mockStatCard}>
-                             <span className={styles.mockStatLabel}>CATEGORÍAS CON MATCHES</span>
+                             <span className={styles.mockStatLabel}>CATEGORÍAS</span>
                              <span className={styles.mockStatValue}>3</span>
                            </div>
                            <div className={styles.mockStatCard}>
-                             <span className={styles.mockStatLabel}>TOTAL MATCHES</span>
+                             <span className={styles.mockStatLabel}>MATCHES</span>
                              <span className={styles.mockStatValue}>12</span>
                            </div>
                          </div>
                          
-                         {/* Categories Grid - Replica exacta */}
+                         {/* Categories Grid - Con iconos reales */}
                          <div className={styles.mockCategoriesGrid}>
                            <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
-                             <span className={styles.mockCategoryIcon}>🏛️</span>
+                             <div className={styles.mockCategoryIcon}><Building2 size={18} /></div>
                              <span className={styles.mockCategoryName}>Centro de Eventos</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                              <span className={styles.mockCategoryBadge}>3</span>
                            </div>
                            <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
-                             <span className={styles.mockCategoryIcon}>📷</span>
+                             <div className={styles.mockCategoryIcon}><Camera size={18} /></div>
                              <span className={styles.mockCategoryName}>Fotografía</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                              <span className={styles.mockCategoryBadge}>5</span>
                            </div>
                            <div className={styles.mockCategoryCard}>
-                             <span className={styles.mockCategoryIcon}>🍽️</span>
+                             <div className={styles.mockCategoryIcon}><Utensils size={18} /></div>
                              <span className={styles.mockCategoryName}>Banquetería</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                            </div>
                            <div className={styles.mockCategoryCard}>
-                             <span className={styles.mockCategoryIcon}>🎵</span>
+                             <div className={styles.mockCategoryIcon}><Music size={18} /></div>
                              <span className={styles.mockCategoryName}>DJ / Música</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                            </div>
                            <div className={`${styles.mockCategoryCard} ${styles.mockCategoryCompleted}`}>
-                             <span className={styles.mockCategoryIcon}>🎥</span>
+                             <div className={styles.mockCategoryIcon}><Video size={18} /></div>
                              <span className={styles.mockCategoryName}>Video</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                              <span className={styles.mockCategoryBadge}>4</span>
                            </div>
                            <div className={styles.mockCategoryCard}>
-                             <span className={styles.mockCategoryIcon}>🌸</span>
+                             <div className={styles.mockCategoryIcon}><Flower2 size={18} /></div>
                              <span className={styles.mockCategoryName}>Decoración</span>
-                             <span className={styles.mockCategoryBtn}>🔍 Buscar</span>
+                             <span className={styles.mockCategoryBtn}><Search size={8} /> Buscar</span>
                            </div>
                          </div>
                        </div>
@@ -241,12 +309,12 @@ export default function Features() {
                             <span className={styles.mockStatValueGold}>8</span>
                           </div>
                           <div className={styles.mockStatCard}>
-                            <span className={styles.mockStatLabel}>CALIDAD DE LEADS</span>
-                            <span className={styles.mockStatValue}>92%</span>
+                            <span className={styles.mockStatLabel}>CALIDAD</span>
+                            <span className={styles.mockStatValue}>Alta</span>
                           </div>
                         </div>
                         
-                        {/* Leads List - Replica exacta */}
+                        {/* Leads List - Con iconos reales */}
                         <div className={styles.mockLeadsList}>
                           <div className={styles.mockLeadsListHeader}>
                             <span>Leads recientes</span>
@@ -255,42 +323,52 @@ export default function Features() {
                           
                           <div className={styles.mockLeadCard}>
                             <div className={styles.mockLeadCategory}>
-                              <span>📷</span>
+                              <Camera size={12} />
                               <span>Fotografía</span>
                             </div>
                             <div className={styles.mockLeadInfo}>
                               <p className={styles.mockLeadName}>María & Juan</p>
                               <span className={styles.mockLeadDate}>15 Mar 2025 • Pendiente</span>
                             </div>
-                            <div className={styles.mockLeadMatchBadge}>95%</div>
+                            <div className={styles.mockLeadMatchBadge}>
+                              <Star size={8} />
+                              Excelente
+                            </div>
                           </div>
                           
                           <div className={styles.mockLeadCard}>
                             <div className={styles.mockLeadCategory}>
-                              <span>📷</span>
+                              <Camera size={12} />
                               <span>Fotografía</span>
                             </div>
                             <div className={styles.mockLeadInfo}>
                               <p className={styles.mockLeadName}>Catalina & Pedro</p>
                               <span className={styles.mockLeadDate}>02 Abr 2025 • Interesado</span>
                             </div>
-                            <div className={`${styles.mockLeadMatchBadge} ${styles.mockLeadMatchExcellent}`}>87%</div>
+                            <div className={`${styles.mockLeadMatchBadge} ${styles.mockLeadMatchGood}`}>
+                              <Star size={8} />
+                              Muy bueno
+                            </div>
                           </div>
                           
                           <div className={styles.mockLeadCard}>
                             <div className={styles.mockLeadCategory}>
-                              <span>🎥</span>
+                              <Video size={12} />
                               <span>Video</span>
                             </div>
                             <div className={styles.mockLeadInfo}>
                               <p className={styles.mockLeadName}>Andrea & Felipe</p>
                               <span className={styles.mockLeadDate}>20 May 2025 • Pendiente</span>
                             </div>
-                            <div className={styles.mockLeadMatchBadge}>91%</div>
+                            <div className={styles.mockLeadMatchBadge}>
+                              <Star size={8} />
+                              Excelente
+                            </div>
                           </div>
                         </div>
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
               </motion.div>
