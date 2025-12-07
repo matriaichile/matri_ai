@@ -33,6 +33,7 @@ import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, a
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
 import { registerProviderShown } from '@/utils/matchLimits';
+import { calculateBackgroundStyles } from '@/utils/profileImage';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 
@@ -453,8 +454,7 @@ export default function CategoryMatchesPage() {
                                   className={styles.matchProfileImage}
                                   style={{
                                     backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
-                                    backgroundPosition: `${match.providerDetails!.profileImage!.cropData.x}% ${match.providerDetails!.profileImage!.cropData.y}%`,
-                                    backgroundSize: `${100 * match.providerDetails!.profileImage!.cropData.zoom}%`,
+                                    ...calculateBackgroundStyles(match.providerDetails!.profileImage!.cropData),
                                   }}
                                 />
                               ) : (
@@ -589,8 +589,7 @@ export default function CategoryMatchesPage() {
                                 className={styles.matchProfileImage}
                                 style={{
                                   backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
-                                  backgroundPosition: `${match.providerDetails!.profileImage!.cropData.x}% ${match.providerDetails!.profileImage!.cropData.y}%`,
-                                  backgroundSize: `${100 * match.providerDetails!.profileImage!.cropData.zoom}%`,
+                                  ...calculateBackgroundStyles(match.providerDetails!.profileImage!.cropData),
                                 }}
                               />
                             ) : (

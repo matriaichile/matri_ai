@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ProfileImageData, PortfolioImage } from '@/store/authStore';
+import { calculateBackgroundStyles } from '@/utils/profileImage';
 import styles from './ProfileImageEditor.module.css';
 
 // Dimensiones de la tarjeta de match (parametrizadas para fácil ajuste)
@@ -161,10 +162,11 @@ export default function ProfileImageEditor({
     const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
     const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
     
+    // Corregido: al arrastrar hacia abajo/derecha, el crop area debe moverse en esa dirección
     setCropData(prev => ({
       ...prev,
-      x: Math.max(0, Math.min(100 - prev.width, prev.x - deltaX)),
-      y: Math.max(0, Math.min(100 - prev.height, prev.y - deltaY)),
+      x: Math.max(0, Math.min(100 - prev.width, prev.x + deltaX)),
+      y: Math.max(0, Math.min(100 - prev.height, prev.y + deltaY)),
     }));
     
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -192,10 +194,11 @@ export default function ProfileImageEditor({
     const deltaX = ((touch.clientX - dragStart.x) / rect.width) * 100;
     const deltaY = ((touch.clientY - dragStart.y) / rect.height) * 100;
     
+    // Corregido: al arrastrar hacia abajo/derecha, el crop area debe moverse en esa dirección
     setCropData(prev => ({
       ...prev,
-      x: Math.max(0, Math.min(100 - prev.width, prev.x - deltaX)),
-      y: Math.max(0, Math.min(100 - prev.height, prev.y - deltaY)),
+      x: Math.max(0, Math.min(100 - prev.width, prev.x + deltaX)),
+      y: Math.max(0, Math.min(100 - prev.height, prev.y + deltaY)),
     }));
     
     setDragStart({ x: touch.clientX, y: touch.clientY });
@@ -389,8 +392,7 @@ export default function ProfileImageEditor({
                 className={styles.cardPreviewImage}
                 style={{
                   backgroundImage: `url(${selectedImage.url})`,
-                  backgroundPosition: `${cropData.x}% ${cropData.y}%`,
-                  backgroundSize: `${100 * cropData.zoom}%`,
+                  ...calculateBackgroundStyles(cropData),
                 }}
               />
               <div className={styles.cardPreviewOverlay}>
@@ -513,8 +515,7 @@ export default function ProfileImageEditor({
                   className={styles.currentImage}
                   style={{
                     backgroundImage: `url(${currentImage.url})`,
-                    backgroundPosition: `${currentImage.cropData.x}% ${currentImage.cropData.y}%`,
-                    backgroundSize: `${100 * currentImage.cropData.zoom}%`,
+                    ...calculateBackgroundStyles(currentImage.cropData),
                   }}
                 />
               </div>
