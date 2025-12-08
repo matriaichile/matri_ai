@@ -8,7 +8,7 @@ import { useAuthStore, CategoryId, ProviderProfile } from '@/store/authStore';
 import { useSurveyStore } from '@/store/surveyStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { SurveyContainer, SurveyStep, QuestionRenderer } from '@/components/surveys';
-import { saveProviderCategorySurvey } from '@/lib/firebase/firestore';
+import { saveProviderCategorySurvey, getProviderProfile } from '@/lib/firebase/firestore';
 import styles from './page.module.css';
 
 /**
@@ -20,7 +20,7 @@ export default function ProviderCategorySurveyPage() {
   const params = useParams();
   const categoryId = params.categoryId as CategoryId;
   
-  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser } = useAuthStore();
+  const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const {
     currentStep,
     totalSteps,
@@ -105,6 +105,16 @@ export default function ProviderCategorySurveyPage() {
 
       // Guardar respuestas en Firestore (también actualiza el estado en el perfil)
       await saveProviderCategorySurvey(firebaseUser.uid, categoryId, responses);
+
+      // CAMBIO: Actualizar el perfil del proveedor en el store para reflejar la encuesta completada
+      try {
+        const updatedProfile = await getProviderProfile(firebaseUser.uid);
+        if (updatedProfile) {
+          setUserProfile(updatedProfile);
+        }
+      } catch (profileError) {
+        console.warn('Error actualizando perfil:', profileError);
+      }
 
       // Mostrar éxito
       setShowSuccess(true);

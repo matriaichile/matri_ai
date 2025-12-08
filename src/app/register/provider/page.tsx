@@ -117,16 +117,16 @@ export default function ProviderRegisterPage() {
     providerData.phone.length >= 8;
   
   const isStep2Valid = providerData.categories.length > 0; // Ahora múltiples categorías
-  const isStep3Valid = providerData.serviceStyle.length > 0;
+  // CAMBIO: Eliminado paso de estilos (isStep3Valid) - se pregunta en las encuestas por categoría
   // Validar rango de precios: ambos deben ser > 0 y max > min
   // CAMBIO: ahora workRegions es un array
-  const isStep4Valid = 
+  const isStep3Valid = 
     providerData.priceMin > 0 && 
     providerData.priceMax > 0 && 
     providerData.priceMax > providerData.priceMin && 
     providerData.workRegions.length > 0;
-  const isStep5Valid = providerData.description.trim().length >= 20;
-  const isStep6Valid = true; // Redes sociales son opcionales
+  const isStep4Valid = providerData.description.trim().length >= 20;
+  const isStep5Valid = true; // Redes sociales son opcionales
 
   const displayError = registrationError || authError;
 
@@ -260,35 +260,18 @@ export default function ProviderRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 3: Estilo del servicio */}
+        {/* CAMBIO: Eliminado Paso 3 (Estilo del servicio) - se pregunta en las encuestas por categoría */}
+
+        {/* Paso 3: Precios y ubicación con rango de precios en CLP (antes era paso 4) */}
         <WizardStep
-          title="¿Cuál es tu estilo?"
-          subtitle="Define el estilo de tu trabajo"
+          title="Precios y ubicación"
+          subtitle="Define tu rango de precios en CLP y zona de trabajo"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 2}
           onNext={handleNext}
           onBack={handleBack}
           nextDisabled={!isStep3Valid}
-        >
-          <SelectionGrid
-            options={SERVICE_STYLES}
-            selected={providerData.serviceStyle}
-            onSelect={(id) => handleSingleSelect('serviceStyle', id)}
-            columns={2}
-          />
-        </WizardStep>
-
-        {/* Paso 4: Precios y ubicación con rango de precios en CLP */}
-        <WizardStep
-          title="Precios y ubicación"
-          subtitle="Define tu rango de precios en CLP y zona de trabajo"
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          isVisible={currentStep === 3}
-          onNext={handleNext}
-          onBack={handleBack}
-          nextDisabled={!isStep4Valid}
         >
           <div className={styles.detailsSection}>
             <div className={styles.fieldSection}>
@@ -345,16 +328,16 @@ export default function ProviderRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 5: Descripción */}
+        {/* Paso 4: Descripción (antes era paso 5) */}
         <WizardStep
           title="Cuéntanos sobre ti"
           subtitle="Una breve descripción de tu servicio (mínimo 20 caracteres)"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 4}
+          isVisible={currentStep === 3}
           onNext={handleNext}
           onBack={handleBack}
-          nextDisabled={!isStep5Valid}
+          nextDisabled={!isStep4Valid}
         >
           <div className={styles.textareaSection}>
             <textarea
@@ -370,16 +353,16 @@ export default function ProviderRegisterPage() {
           </div>
         </WizardStep>
 
-        {/* Paso 6: Redes sociales y portfolio */}
+        {/* Paso 5: Redes sociales y portfolio (antes era paso 6) */}
         <WizardStep
           title="Redes sociales y portfolio"
           subtitle="Opcional - Ayuda a los novios a conocerte mejor"
           currentStep={currentStep}
           totalSteps={totalSteps}
-          isVisible={currentStep === 5}
+          isVisible={currentStep === 4}
           onNext={handleComplete}
           onBack={handleBack}
-          nextDisabled={!isStep6Valid}
+          nextDisabled={!isStep5Valid}
           nextLabel="Crear mi cuenta"
           showSkip
           onSkip={handleComplete}

@@ -5,8 +5,36 @@
 
 import { create } from 'zustand';
 import { CategoryId } from './authStore';
-import { SurveyResponses, SurveyQuestion } from '@/lib/surveys/types';
+import { SurveyResponses, SurveyQuestion, QuestionCondition } from '@/lib/surveys/types';
 import { getSurveyQuestions } from '@/lib/surveys';
+
+/**
+ * Helper para evaluar si una pregunta debe mostrarse basándose en su condición dependsOn
+ */
+function shouldShowQuestion(question: SurveyQuestion, responses: SurveyResponses): boolean {
+  // Si no tiene condición, siempre se muestra
+  if (!question.dependsOn) return true;
+  
+  const { questionId, values, negate } = question.dependsOn;
+  const response = responses[questionId];
+  
+  // Si no hay respuesta para la pregunta de la cual depende, no mostrar
+  if (response === undefined || response === null) return false;
+  
+  // Verificar si alguno de los valores requeridos está en la respuesta
+  let hasMatch = false;
+  
+  if (Array.isArray(response)) {
+    // Si la respuesta es un array, verificar si contiene alguno de los valores
+    hasMatch = values.some(v => response.includes(v));
+  } else if (typeof response === 'string') {
+    // Si es string, verificar si coincide con alguno de los valores
+    hasMatch = values.includes(response);
+  }
+  
+  // Si negate es true, invertir la lógica
+  return negate ? !hasMatch : hasMatch;
+}
 
 // Estado de la encuesta
 interface SurveyState {
@@ -16,13 +44,16 @@ interface SurveyState {
   // Tipo de usuario (user o provider)
   userType: 'user' | 'provider';
   
-  // Paso actual (índice de la pregunta)
+  // Paso actual (índice de la pregunta visible)
   currentStep: number;
   
-  // Total de pasos
+  // Total de pasos (preguntas visibles)
   totalSteps: number;
   
-  // Preguntas de la encuesta actual
+  // Todas las preguntas de la encuesta (incluyendo las condicionales)
+  allQuestions: SurveyQuestion[];
+  
+  // Preguntas visibles basadas en las respuestas actuales
   questions: SurveyQuestion[];
   
   // Respuestas del usuario
@@ -48,6 +79,7 @@ interface SurveyState {
   setIsSubmitting: (submitting: boolean) => void;
   setError: (error: string | null) => void;
   resetSurvey: () => void;
+  updateVisibleQuestions: () => void;
   
   // Helpers
   getCurrentQuestion: () => SurveyQuestion | null;
@@ -64,6 +96,7 @@ const initialState = {
   userType: 'user' as 'user' | 'provider',
   currentStep: 0,
   totalSteps: 0,
+  allQuestions: [] as SurveyQuestion[],
   questions: [] as SurveyQuestion[],
   responses: {} as SurveyResponses,
   isLoading: false,
@@ -78,14 +111,17 @@ export const useSurveyStore = create<SurveyState>((set, get) => ({
   
   // Inicializar encuesta para una categoría
   initSurvey: (categoryId: CategoryId, userType: 'user' | 'provider') => {
-    const questions = getSurveyQuestions(categoryId, userType);
+    const allQuestions = getSurveyQuestions(categoryId, userType);
+    // Inicialmente, filtrar solo las preguntas sin condiciones o con condiciones ya cumplidas
+    const visibleQuestions = allQuestions.filter(q => shouldShowQuestion(q, {}));
     
     set({
       currentCategory: categoryId,
       userType,
       currentStep: 0,
-      totalSteps: questions.length,
-      questions,
+      totalSteps: visibleQuestions.length,
+      allQuestions,
+      questions: visibleQuestions,
       responses: {},
       showWelcome: true,
       isTransitioning: false,
@@ -117,14 +153,58 @@ export const useSurveyStore = create<SurveyState>((set, get) => ({
     }
   },
   
-  // Guardar respuesta
+  // Guardar respuesta y actualizar preguntas visibles
   setResponse: (questionId: string, value: string | string[] | number | boolean | undefined) => {
-    set((state) => ({
-      responses: {
-        ...state.responses,
-        [questionId]: value,
-      },
-    }));
+    const { allQuestions, currentStep } = get();
+    const newResponses = {
+      ...get().responses,
+      [questionId]: value,
+    };
+    
+    // Recalcular preguntas visibles basándose en las nuevas respuestas
+    const visibleQuestions = allQuestions.filter(q => shouldShowQuestion(q, newResponses));
+    
+    // Obtener la pregunta actual para mantener la posición
+    const currentQuestion = get().questions[currentStep];
+    let newStep = currentStep;
+    
+    if (currentQuestion) {
+      // Encontrar el nuevo índice de la pregunta actual en las preguntas visibles
+      const newIndex = visibleQuestions.findIndex(q => q.id === currentQuestion.id);
+      if (newIndex >= 0) {
+        newStep = newIndex;
+      }
+    }
+    
+    set({
+      responses: newResponses,
+      questions: visibleQuestions,
+      totalSteps: visibleQuestions.length,
+      currentStep: newStep,
+    });
+  },
+  
+  // Actualizar preguntas visibles manualmente
+  updateVisibleQuestions: () => {
+    const { allQuestions, responses, currentStep } = get();
+    const visibleQuestions = allQuestions.filter(q => shouldShowQuestion(q, responses));
+    
+    // Obtener la pregunta actual para mantener la posición
+    const currentQuestion = get().questions[currentStep];
+    let newStep = currentStep;
+    
+    if (currentQuestion) {
+      const newIndex = visibleQuestions.findIndex(q => q.id === currentQuestion.id);
+      if (newIndex >= 0) {
+        newStep = newIndex;
+      }
+    }
+    
+    set({
+      questions: visibleQuestions,
+      totalSteps: visibleQuestions.length,
+      currentStep: Math.min(newStep, visibleQuestions.length - 1),
+    });
   },
   
   // UI states

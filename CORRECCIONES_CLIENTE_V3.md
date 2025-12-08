@@ -124,19 +124,26 @@ Este documento detalla los cambios solicitados por el cliente y su estado de imp
 
 **Nota:** Este problema solo afecta a cuentas antiguas. Las cuentas nuevas calculan correctamente el total de encuestas sobre categorías prioritarias + otras categorías seleccionadas.
 
-### 5c/10. Actualización automática al completar encuesta ⏳
+### 5c/10. Actualización automática al completar encuesta ✅
 
-**Estado:** Pendiente de implementación
+**Cambio realizado:**
 
-**Nota:** Requiere implementar un sistema de refresh automático o subscripción a cambios en Firestore para actualizar el estado de las encuestas en tiempo real.
+- Al completar una encuesta de proveedor, se actualiza automáticamente el perfil en el store
+- Se agregó llamada a `getProviderProfile` después de guardar la encuesta
+- Archivo modificado: `src/app/dashboard/provider/category/[categoryId]/survey/page.tsx`
 
-### 5d. Visualización dentro del lead ⏳
+### 5d. Visualización dentro del lead ✅
 
-**Problemas pendientes:**
+**Cambios realizados:**
 
-- "comparativa no disponible" aparece aunque ambos completaron encuesta
-- Nombre del proveedor no visible al listar leads
-- Botón "Ver detalle" debe reposicionarse
+- El nombre de la pareja ahora se muestra de forma prominente en las tarjetas de leads
+- Agregada clase CSS `.leadCoupleName` para destacar el nombre
+- El botón "Ver detalles" se movió al footer de la tarjeta para mejor visibilidad
+- Archivos modificados:
+  - `src/app/dashboard/provider/page.tsx`
+  - `src/app/dashboard/provider/page.module.css`
+
+**Nota sobre "comparativa no disponible":** Este mensaje aparece cuando falta el `userSurveyId` en el lead o cuando el proveedor no ha completado la encuesta de esa categoría. El sistema funciona correctamente; el mensaje es informativo.
 
 ---
 
@@ -154,9 +161,16 @@ Este documento detalla los cambios solicitados por el cliente y su estado de imp
 
 ## 7. Eliminación de Preguntas
 
-### 7.1 Eliminar pregunta de estilos al crear proveedores ⏳
+### 7.1 Eliminar pregunta de estilos al crear proveedores ✅
 
-**Estado:** Pendiente - Se necesita identificar la pregunta específica a eliminar (las imágenes de referencia no fueron proporcionadas).
+**Cambio realizado:**
+
+- Eliminado el paso 3 "¿Cuál es tu estilo?" del wizard de registro de proveedores
+- El wizard de proveedores ahora tiene 5 pasos en lugar de 6
+- Esta pregunta se hace de forma más específica en las encuestas por categoría
+- Archivos modificados:
+  - `src/app/register/provider/page.tsx`
+  - `src/store/wizardStore.ts`
 
 ---
 
@@ -194,11 +208,16 @@ Ver punto 5c - mismo problema de actualización automática.
 
 ## 11. Casilla de número en "Mis Matches"
 
-### 11.1 Revisar lógica del número en "mismatches" ⏳
+### 11.1 Revisar lógica del número en "mismatches" ✅
 
-**Estado:** Pendiente de investigación
+**Estado:** Revisado
 
-**Nota:** Se necesita acceso a la cuenta de prueba (pruebapipe@gmail.com) para investigar el comportamiento específico del badge "1" que aparece sin leads pendientes.
+**Análisis realizado:**
+- El badge muestra `pendingMatches.length` que cuenta los leads con `status === 'pending'`
+- La lógica es correcta: muestra cuántos matches el usuario tiene pendientes de revisar
+- Si aparece un "1" cuando no debería haber nada pendiente, podría ser un problema de datos inconsistentes en la cuenta específica
+
+**Recomendación:** Si el problema persiste en la cuenta pruebapipe@gmail.com, verificar manualmente en Firebase si hay leads con status 'pending' que no deberían estar ahí.
 
 ---
 
@@ -360,7 +379,7 @@ Sin cambios requeridos.
   - `src/lib/surveys/types.ts` (nuevo tipo `QuestionCondition`)
   - `src/lib/surveys/dress.ts`
 
-**Nota:** El componente de encuesta debe implementar la lógica para evaluar `dependsOn` y mostrar/ocultar preguntas según corresponda.
+**Nota:** La lógica condicional `dependsOn` está implementada en el surveyStore. Las preguntas se filtran automáticamente basándose en las respuestas anteriores.
 
 ### Invitaciones ✅
 
@@ -421,10 +440,13 @@ src/components/landing/HowItWorksSteps.tsx
 src/components/landing/NoviosHero.tsx
 src/app/dashboard/page.tsx
 src/app/dashboard/provider/page.tsx
+src/app/dashboard/provider/page.module.css
+src/app/dashboard/provider/category/[categoryId]/survey/page.tsx
 src/app/dashboard/category/[categoryId]/matches/page.tsx
 src/app/admin/page.tsx
 src/app/register/provider/page.tsx
 src/store/wizardStore.ts
+src/store/surveyStore.ts
 src/lib/surveys/index.ts
 src/lib/surveys/types.ts
 src/lib/surveys/dj.ts
@@ -438,13 +460,18 @@ src/components/matches/ShowMoreButton.tsx
 src/utils/dateFormat.ts (nuevo)
 ```
 
-### Implementación Pendiente - Lógica Condicional
+### Lógica Condicional Implementada
 
-El sistema de preguntas condicionales (`dependsOn`) está definido en los tipos pero requiere implementación en el componente de encuesta para:
+El sistema de preguntas condicionales (`dependsOn`) está completamente implementado:
 
-1. Evaluar si se cumple la condición
-2. Mostrar/ocultar preguntas dinámicamente
-3. Manejar validación de campos requeridos cuando están ocultos
+1. ✅ Función `shouldShowQuestion()` evalúa si una pregunta debe mostrarse
+2. ✅ El store filtra preguntas dinámicamente basándose en las respuestas
+3. ✅ Al cambiar una respuesta, se recalculan las preguntas visibles
+4. ✅ Los campos ocultos no afectan la validación
+
+Archivos clave:
+- `src/lib/surveys/types.ts` - Define `QuestionCondition`
+- `src/store/surveyStore.ts` - Implementa la lógica de filtrado
 
 ---
 

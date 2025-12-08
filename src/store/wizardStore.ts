@@ -184,7 +184,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   
   setWizardType: (type) => set({ 
     wizardType: type,
-    totalSteps: type === 'user' ? 9 : 6, // 9 para usuarios (sin vinculación), 6 para proveedores
+    totalSteps: type === 'user' ? 9 : 5, // 9 para usuarios (sin vinculación), 5 para proveedores (eliminado paso de estilos)
     currentStep: 0,
     showWelcome: true,
   }),

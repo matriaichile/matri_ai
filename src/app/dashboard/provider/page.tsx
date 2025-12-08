@@ -844,29 +844,20 @@ export default function ProviderDashboardPage() {
                   >
                     <div className={styles.leadCardHeader}>
                       <div className={styles.leadCardTitle}>
+                        {/* CAMBIO: Nombre de la pareja más prominente */}
+                        <h3 className={styles.leadCoupleName}>{lead.userInfo.coupleNames}</h3>
                         <div className={styles.leadCardNameRow}>
-                          {/* Icono de categoría más grande con nombre */}
+                          {/* Icono de categoría con nombre */}
                           <div className={styles.leadCategoryBadgeLarge}>
                             {CATEGORY_ICONS[lead.category]}
                             <span className={styles.leadCategoryName}>{getCategoryLabel(lead.category)}</span>
                           </div>
-                          <h3>{lead.userInfo.coupleNames}</h3>
+                          <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
+                            {lead.status === 'pending' ? 'Pendiente' : 
+                             lead.status === 'approved' ? 'Interesado' : 
+                             lead.status === 'contacted' ? 'Contactado' : 'Rechazado'}
+                          </span>
                         </div>
-                        <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
-                          {lead.status === 'pending' ? 'Pendiente' : 
-                           lead.status === 'approved' ? 'Interesado' : 
-                           lead.status === 'contacted' ? 'Contactado' : 'Rechazado'}
-                        </span>
-                      </div>
-                      <div className={styles.leadCardActions}>
-                        {/* Presupuesto total eliminado - los proveedores no deben ver el presupuesto total */}
-                        <button 
-                          className={styles.viewDetailsButton}
-                          onClick={() => handleOpenLeadModal(lead)}
-                        >
-                          <Eye size={14} />
-                          <span>Ver detalles</span>
-                        </button>
                       </div>
                     </div>
 
@@ -889,6 +880,14 @@ export default function ProviderDashboardPage() {
                       >
                         {getMatchCategory(lead.matchScore).label}
                       </div>
+                      {/* CAMBIO: Botón Ver detalles en el footer para mejor visibilidad */}
+                      <button 
+                        className={styles.viewDetailsButton}
+                        onClick={() => handleOpenLeadModal(lead)}
+                      >
+                        <Eye size={14} />
+                        <span>Ver detalles</span>
+                      </button>
                       {/* Fecha de creación con etiqueta explícita - formato DD-MM-AAAA */}
                       <span className={styles.leadDate}>
                         Creado: {lead.createdAt.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')}

@@ -721,6 +721,18 @@
   text-overflow: ellipsis;
 }
 
+/* CAMBIO: Nombre de la pareja más prominente */
+.leadCoupleName {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .leadStatusBadge {
   display: inline-flex;
   padding: 0.2rem 0.4rem;
