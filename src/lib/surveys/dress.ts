@@ -42,6 +42,11 @@ export const DRESS_USER_QUESTIONS: SurveyQuestion[] = [
     ],
     required: true,
     weight: 20,
+    // CAMBIO: Solo mostrar si seleccionó vestido de novia
+    dependsOn: {
+      questionId: 'dress_u_need',
+      values: ['bride_dress'],
+    },
   },
   {
     id: 'dress_u_bride_silhouette',
@@ -60,6 +65,11 @@ export const DRESS_USER_QUESTIONS: SurveyQuestion[] = [
     ],
     required: true,
     weight: 15,
+    // CAMBIO: Solo mostrar si seleccionó vestido de novia
+    dependsOn: {
+      questionId: 'dress_u_need',
+      values: ['bride_dress'],
+    },
   },
   {
     id: 'dress_u_groom_style',
@@ -76,6 +86,11 @@ export const DRESS_USER_QUESTIONS: SurveyQuestion[] = [
     ],
     required: true,
     weight: 15,
+    // CAMBIO: Solo mostrar si seleccionó traje de novio
+    dependsOn: {
+      questionId: 'dress_u_need',
+      values: ['groom_suit'],
+    },
   },
   {
     id: 'dress_u_service_type',
@@ -107,6 +122,11 @@ export const DRESS_USER_QUESTIONS: SurveyQuestion[] = [
     ],
     required: true,
     weight: 15,
+    // CAMBIO: Solo mostrar si seleccionó vestido de novia
+    dependsOn: {
+      questionId: 'dress_u_need',
+      values: ['bride_dress'],
+    },
   },
   {
     id: 'dress_u_budget_groom',
@@ -122,6 +142,11 @@ export const DRESS_USER_QUESTIONS: SurveyQuestion[] = [
     ],
     required: true,
     weight: 10,
+    // CAMBIO: Solo mostrar si seleccionó traje de novio
+    dependsOn: {
+      questionId: 'dress_u_need',
+      values: ['groom_suit'],
+    },
   },
   {
     id: 'dress_u_timeline',

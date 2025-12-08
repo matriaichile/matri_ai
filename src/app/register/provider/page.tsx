@@ -119,11 +119,12 @@ export default function ProviderRegisterPage() {
   const isStep2Valid = providerData.categories.length > 0; // Ahora múltiples categorías
   const isStep3Valid = providerData.serviceStyle.length > 0;
   // Validar rango de precios: ambos deben ser > 0 y max > min
+  // CAMBIO: ahora workRegions es un array
   const isStep4Valid = 
     providerData.priceMin > 0 && 
     providerData.priceMax > 0 && 
     providerData.priceMax > providerData.priceMin && 
-    providerData.workRegion.length > 0;
+    providerData.workRegions.length > 0;
   const isStep5Valid = providerData.description.trim().length >= 20;
   const isStep6Valid = true; // Redes sociales son opcionales
 
@@ -309,19 +310,25 @@ export default function ProviderRegisterPage() {
             </div>
 
             <div className={styles.fieldSection}>
-              <h3 className={styles.fieldTitle}>Región donde trabajas</h3>
-              <CustomDropdown
+              <h3 className={styles.fieldTitle}>¿En qué zonas prestas tus servicios?</h3>
+              <p className={styles.fieldDescription}>Selecciona todas las regiones donde trabajas</p>
+              <SelectionGrid
                 options={REGIONS}
-                value={providerData.workRegion}
-                onChange={(value) => updateProviderData({ workRegion: value })}
-                placeholder="Selecciona una región"
-                dropUp={true}
-                icon={
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                }
+                selectedValues={providerData.workRegions}
+                onSelect={(value) => {
+                  playUiClick();
+                  const currentRegions = providerData.workRegions || [];
+                  const newRegions = currentRegions.includes(value)
+                    ? currentRegions.filter((v) => v !== value)
+                    : [...currentRegions, value];
+                  // Actualizar ambos campos para compatibilidad
+                  updateProviderData({ 
+                    workRegions: newRegions,
+                    workRegion: newRegions[0] || '' // Mantener legacy con la primera selección
+                  });
+                }}
+                multiSelect
+                columns={2}
               />
             </div>
 

@@ -6,7 +6,7 @@ export default function NoviosHero() {
     <section className={styles.hero}>
       <div className={styles.content}>
         <span className={styles.tag}>Para Parejas</span>
-        <h1 className={styles.title}>Planifica la boda perfecta,<br />sin el estrés.</h1>
+        <h1 className={styles.title}>Planifica tu boda perfecta,<br />sin estrés.</h1>
         <p className={styles.subtitle}>
           MatriMatch te ayuda a encontrar los proveedores ideales que se ajustan a tu estilo, presupuesto y visión.
         </p>

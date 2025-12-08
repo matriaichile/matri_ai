@@ -53,7 +53,7 @@ export const CATEGORY_INFO: Record<CategoryId, { name: string; description: stri
     icon: 'music',
   },
   decoration: {
-    name: 'Decoración',
+    name: 'Decoración & Florería',
     description: 'Transforma el espacio en un sueño',
     icon: 'flower',
   },
@@ -133,7 +133,7 @@ export const CATEGORY_SURVEYS: Record<CategoryId, CategorySurveyConfig> = {
   },
   decoration: {
     categoryId: 'decoration',
-    categoryName: 'Decoración',
+    categoryName: 'Decoración & Florería',
     description: 'Cuéntanos sobre tus preferencias de decoración',
     userQuestions: DECORATION_USER_QUESTIONS,
     providerQuestions: DECORATION_PROVIDER_QUESTIONS,

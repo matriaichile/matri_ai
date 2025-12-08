@@ -15,6 +15,13 @@ export interface QuestionOption {
   description?: string;
 }
 
+// Definición de condición para mostrar una pregunta
+export interface QuestionCondition {
+  questionId: string; // ID de la pregunta de la cual depende
+  values: string[]; // Valores que deben estar seleccionados para mostrar esta pregunta
+  negate?: boolean; // Si es true, se muestra cuando NO están seleccionados los valores
+}
+
 // Definición de pregunta
 export interface SurveyQuestion {
   id: string;
@@ -27,6 +34,7 @@ export interface SurveyQuestion {
   placeholder?: string;
   required: boolean;
   weight: number; // Peso en el matchmaking (0-100)
+  dependsOn?: QuestionCondition; // NUEVO: Condición para mostrar esta pregunta
 }
 
 // Criterio de matching entre preguntas de usuario y proveedor

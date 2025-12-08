@@ -5,7 +5,7 @@ export default function HowItWorksSteps() {
     {
       number: "01",
       title: "Cuéntanos tu Sueño",
-      description: "Regístrate y completa nuestro wizard inteligente. Dinos qué buscas, tu presupuesto y estilo.",
+      description: "Regístrate y completa nuestro cuestionario inteligente. Dinos qué buscas, tu presupuesto y estilo.",
     },
     {
       number: "02",

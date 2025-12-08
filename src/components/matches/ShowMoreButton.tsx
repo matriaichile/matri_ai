@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, Clock, Plus, AlertCircle } from 'lucide-react';
+import { RefreshCw, Clock, Plus, AlertCircle, SearchX } from 'lucide-react';
 import { 
   canShowMoreProviders, 
   getRemainingSlots, 
@@ -33,6 +33,7 @@ export default function ShowMoreButton({
   const [timeUntilReset, setTimeUntilReset] = useState('');
   const [providersShown, setProvidersShown] = useState(0);
   const [requesting, setRequesting] = useState(false);
+  const [noMoreProviders, setNoMoreProviders] = useState(false); // NUEVO: estado para cuando no hay más proveedores
 
   // Actualizar estado de límites
   const updateLimitsState = () => {
@@ -60,7 +61,7 @@ export default function ShowMoreButton({
 
   // Manejar click en el botón
   const handleClick = async () => {
-    if (!canShowMore || requesting || isLoading) return;
+    if (!canShowMore || requesting || isLoading || noMoreProviders) return;
     
     setRequesting(true);
     try {
@@ -68,6 +69,10 @@ export default function ShowMoreButton({
       if (success) {
         // Actualizar estado después de generar nuevo match
         updateLimitsState();
+        setNoMoreProviders(false);
+      } else {
+        // No se encontraron más proveedores disponibles
+        setNoMoreProviders(true);
       }
     } catch (error) {
       console.error('Error solicitando nuevo match:', error);
@@ -76,7 +81,24 @@ export default function ShowMoreButton({
     }
   };
 
-  // Si ya se alcanzó el límite
+  // Si no hay más proveedores disponibles
+  if (noMoreProviders) {
+    return (
+      <div className={styles.limitReached}>
+        <div className={styles.limitIcon}>
+          <SearchX size={20} />
+        </div>
+        <div className={styles.limitContent}>
+          <p className={styles.limitTitle}>No se encontraron más proveedores disponibles</p>
+          <p className={styles.limitText}>
+            Ya has visto todos los proveedores que coinciden con tus preferencias en esta categoría.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si ya se alcanzó el límite diario
   if (!canShowMore) {
     return (
       <div className={styles.limitReached}>

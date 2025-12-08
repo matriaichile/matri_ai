@@ -5,8 +5,41 @@
 
 import { SurveyQuestion } from './types';
 
-// Preguntas para USUARIOS sobre decoración
+// Preguntas para USUARIOS sobre decoración & florería
 export const DECORATION_USER_QUESTIONS: SurveyQuestion[] = [
+  {
+    id: 'deco_u_service_types',
+    question: '¿Qué tipo de servicios de decoración necesitas?',
+    type: 'multiple',
+    options: [
+      { id: 'ceremony_full', label: 'Decoración completa ceremonia' },
+      { id: 'reception_full', label: 'Decoración completa recepción' },
+      { id: 'cocktail_deco', label: 'Decoración para cóctel' },
+      { id: 'thematic', label: 'Ambientación temática' },
+      { id: 'production_details', label: 'Producción de detalles', description: 'Abanicos, sombreros, quitasoles, fotos colgantes, señalética, etc.' },
+      { id: 'flowers', label: 'Flores / arreglos florales' },
+      { id: 'decorative_lighting', label: 'Iluminación decorativa' },
+      { id: 'other', label: 'Otros' },
+    ],
+    required: true,
+    weight: 20,
+  },
+  {
+    id: 'deco_u_cocktail_packs',
+    question: '¿Qué elementos adicionales te interesan para el cóctel o recepción?',
+    type: 'multiple',
+    options: [
+      { id: 'hanging_photos', label: 'Fotos colgantes' },
+      { id: 'parasols', label: 'Quitasoles' },
+      { id: 'hats', label: 'Sombreros para invitados' },
+      { id: 'fans', label: 'Abanicos' },
+      { id: 'cocktail_table_deco', label: 'Decoración de mesas de cóctel' },
+      { id: 'custom_signage', label: 'Señalética personalizada' },
+      { id: 'none', label: 'No necesito estos servicios' },
+    ],
+    required: true,
+    weight: 10,
+  },
   {
     id: 'deco_u_style',
     question: '¿Qué estilo de decoración prefieres?',
@@ -22,7 +55,7 @@ export const DECORATION_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'glamorous', label: 'Glamoroso', description: 'Lujoso y brillante' },
     ],
     required: true,
-    weight: 25,
+    weight: 15,
   },
   {
     id: 'deco_u_colors',
@@ -137,8 +170,41 @@ export const DECORATION_USER_QUESTIONS: SurveyQuestion[] = [
   },
 ];
 
-// Preguntas para PROVEEDORES de decoración
+// Preguntas para PROVEEDORES de decoración & florería
 export const DECORATION_PROVIDER_QUESTIONS: SurveyQuestion[] = [
+  {
+    id: 'deco_p_service_types',
+    question: '¿Qué tipo de servicios ofreces?',
+    type: 'multiple',
+    options: [
+      { id: 'ceremony_full', label: 'Decoración completa ceremonia' },
+      { id: 'reception_full', label: 'Decoración completa recepción' },
+      { id: 'cocktail_deco', label: 'Decoración para cóctel' },
+      { id: 'thematic', label: 'Ambientación temática' },
+      { id: 'production_details', label: 'Producción de detalles', description: 'Abanicos, sombreros, quitasoles, fotos colgantes, señalética, etc.' },
+      { id: 'flowers', label: 'Flores / arreglos florales' },
+      { id: 'decorative_lighting', label: 'Iluminación decorativa' },
+      { id: 'other', label: 'Otros' },
+    ],
+    required: true,
+    weight: 20,
+  },
+  {
+    id: 'deco_p_cocktail_packs',
+    question: '¿Ofreces packs o servicios adicionales pensados para el cóctel o recepción?',
+    type: 'multiple',
+    options: [
+      { id: 'hanging_photos', label: 'Fotos colgantes' },
+      { id: 'parasols', label: 'Quitasoles' },
+      { id: 'hats', label: 'Sombreros para invitados' },
+      { id: 'fans', label: 'Abanicos' },
+      { id: 'cocktail_table_deco', label: 'Decoración de mesas de cóctel' },
+      { id: 'custom_signage', label: 'Señalética personalizada' },
+      { id: 'none', label: 'No ofrezco estos servicios' },
+    ],
+    required: true,
+    weight: 10,
+  },
   {
     id: 'deco_p_styles',
     question: '¿Qué estilos de decoración ofreces?',
@@ -154,7 +220,7 @@ export const DECORATION_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'glamorous', label: 'Glamoroso' },
     ],
     required: true,
-    weight: 25,
+    weight: 15,
   },
   {
     id: 'deco_p_color_expertise',

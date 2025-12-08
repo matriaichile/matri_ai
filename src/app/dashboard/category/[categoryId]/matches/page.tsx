@@ -312,7 +312,7 @@ export default function CategoryMatchesPage() {
         <div className={styles.headerRow}>
           <Link href="/dashboard" className={styles.backButton}>
             <ChevronLeft size={20} />
-            <span>Volver al dashboard</span>
+            <span>Volver al inicio</span>
           </Link>
           
           <div className={styles.headerContent}>
@@ -397,7 +397,7 @@ export default function CategoryMatchesPage() {
               Estamos procesando tu encuesta. Los matches aparecerán pronto.
             </p>
             <Link href="/dashboard" className={styles.primaryButton}>
-              Volver al dashboard
+              Volver al inicio
             </Link>
           </div>
         ) : (

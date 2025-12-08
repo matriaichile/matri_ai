@@ -23,7 +23,7 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'cinematic', label: 'Cinemático', description: 'Estilo de película' },
     ],
     required: true,
-    weight: 25,
+    weight: 10, // CAMBIO: bajado de 25 a 10
   },
   {
     id: 'video_u_duration',
@@ -89,14 +89,14 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'required', label: 'Indispensable', description: 'Lo considero necesario' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'video_u_same_day_edit',
     question: '¿Te interesa un video editado el mismo día?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   // ELIMINADO: video_u_raw_footage
   // ELIMINADO: video_u_social_reel
@@ -111,7 +111,7 @@ export const VIDEO_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'indifferent', label: 'Me es indiferente' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   // ELIMINADO: video_u_music_preference
 ];
@@ -132,7 +132,7 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'cinematic', label: 'Cinemático' },
     ],
     required: true,
-    weight: 25,
+    weight: 10, // CAMBIO: bajado de 25 a 10
   },
   {
     id: 'video_p_durations',
@@ -209,14 +209,14 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'included', label: 'Incluido' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'video_p_same_day_edit',
     question: '¿Ofreces edición el mismo día?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'video_p_delivery_time',
@@ -228,7 +228,7 @@ export const VIDEO_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'over_1_month', label: '+1 mes' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'video_p_equipment',

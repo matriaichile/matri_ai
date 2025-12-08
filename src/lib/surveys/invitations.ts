@@ -13,11 +13,10 @@ export const INVITATIONS_USER_QUESTIONS: SurveyQuestion[] = [
   {
     id: 'inv_u_type',
     question: '¿Qué tipo de invitaciones prefieres?',
-    type: 'single',
+    type: 'multiple', // CAMBIO: era 'single', ahora es múltiple
     options: [
       { id: 'printed', label: 'Impresas / Físicas', description: 'Invitaciones tradicionales' },
       { id: 'digital', label: 'Digitales', description: 'Para enviar por WhatsApp/Email' },
-      { id: 'both', label: 'Ambas', description: 'Físicas + Digitales' },
       { id: 'video', label: 'Video invitación', description: 'Invitación animada en video' },
     ],
     required: true,

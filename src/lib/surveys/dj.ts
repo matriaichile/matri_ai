@@ -28,7 +28,7 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'romantic', label: 'Baladas / Románticas' },
     ],
     required: true,
-    weight: 25,
+    weight: 10, // CAMBIO: bajado de 25 a 10 (estilos musicales)
   },
   {
     id: 'dj_u_style',
@@ -41,7 +41,7 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'chill', label: 'Relajado / Lounge', description: 'Ambiente tranquilo' },
     ],
     required: true,
-    weight: 15,
+    weight: 10, // CAMBIO: bajado de 15 a 10
   },
   {
     id: 'dj_u_budget',
@@ -55,7 +55,7 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'over_1400k', label: 'Más de $1.400.000' },
     ],
     required: true,
-    weight: 20,
+    weight: 25, // CAMBIO: subido de 20 a 25
   },
   {
     id: 'dj_u_hours',
@@ -75,7 +75,7 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Necesitas música para la ceremonia?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10
   },
   {
     id: 'dj_u_cocktail_music',
@@ -123,7 +123,7 @@ export const DJ_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'none', label: 'Ninguno' },
     ],
     required: true,
-    weight: 3,
+    weight: 8, // CAMBIO: subido de 3 a 8
   },
   {
     id: 'dj_u_karaoke',
@@ -167,7 +167,7 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'romantic', label: 'Baladas / Románticas' },
     ],
     required: true,
-    weight: 25,
+    weight: 10, // CAMBIO: bajado de 25 a 10 (estilos musicales)
   },
   {
     id: 'dj_p_styles',
@@ -180,14 +180,14 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'chill', label: 'Relajado / Lounge' },
     ],
     required: true,
-    weight: 15,
+    weight: 10, // CAMBIO: bajado de 15 a 10
   },
   {
     id: 'dj_p_price_min',
     question: 'Precio mínimo de tu servicio (CLP)',
     type: 'number',
     min: 100000,
-    max: 5000000,
+    max: 15000000,
     step: 50000,
     required: true,
     weight: 20,
@@ -197,7 +197,7 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: 'Precio máximo de tu servicio (CLP)',
     type: 'number',
     min: 100000,
-    max: 5000000,
+    max: 15000000,
     step: 50000,
     required: true,
     weight: 0,
@@ -225,7 +225,7 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Ofreces música para ceremonia?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10
   },
   {
     id: 'dj_p_cocktail_music',
@@ -272,7 +272,7 @@ export const DJ_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'bubbles', label: 'Burbujas' },
     ],
     required: true,
-    weight: 3,
+    weight: 8, // CAMBIO: subido de 3 a 8
   },
   {
     id: 'dj_p_karaoke',

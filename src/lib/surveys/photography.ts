@@ -22,7 +22,7 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'cinematic', label: 'Cinemático', description: 'Estilo de película' },
     ],
     required: true,
-    weight: 25,
+    weight: 15, // CAMBIO: bajado de 25 a 15
   },
   {
     id: 'photo_u_hours',
@@ -76,7 +76,7 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'required', label: 'Indispensable', description: 'Lo considero necesario' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'photo_u_delivery_time',
@@ -89,7 +89,7 @@ export const PHOTOGRAPHY_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'indifferent', label: 'Me es indiferente' }, // CAMBIO
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'photo_u_delivery_format',
@@ -149,7 +149,7 @@ export const PHOTOGRAPHY_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'cinematic', label: 'Cinemático' },
     ],
     required: true,
-    weight: 25,
+    weight: 15, // CAMBIO: bajado de 25 a 15
   },
   {
     id: 'photo_p_hours_min',
@@ -214,7 +214,7 @@ export const PHOTOGRAPHY_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'always', label: 'Siempre incluido' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'photo_p_delivery_time',
@@ -226,7 +226,7 @@ export const PHOTOGRAPHY_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'over_1_month', label: '+1 mes' },
     ],
     required: true,
-    weight: 5,
+    weight: 10, // CAMBIO: subido de 5 a 10 (+5%)
   },
   {
     id: 'photo_p_delivery_formats',

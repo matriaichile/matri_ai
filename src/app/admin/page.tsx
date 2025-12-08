@@ -451,7 +451,7 @@ export default function AdminDashboardPage() {
                       <th>Región</th>
                       <th>Estado</th>
                       <th>Métricas</th>
-                      <th>Leads (Usados / Límite)</th>
+                      <th>Créditos (Usados / Límite)</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
@@ -544,7 +544,7 @@ export default function AdminDashboardPage() {
                               <button
                                 className={styles.actionBtn}
                                 onClick={() => handleEditLeads(provider)}
-                                title="Editar límite de leads"
+                                title="Editar límite de créditos"
                               >
                                 <Edit2 />
                               </button>
@@ -654,7 +654,7 @@ export default function AdminDashboardPage() {
         <div className={styles.modalOverlay} onClick={() => setIsEditModalOpen(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Editar Límite de Leads</h3>
+              <h3 className={styles.modalTitle}>Editar Límite de Créditos</h3>
               <button className={styles.modalClose} onClick={() => setIsEditModalOpen(false)}>
                 <X size={16} />
               </button>
@@ -664,12 +664,12 @@ export default function AdminDashboardPage() {
                 <Info />
                 <p>
                   <strong>{selectedProvider.providerName}</strong><br />
-                  Leads usados: {selectedProvider.leadsUsed ?? 0} de {selectedProvider.leadLimit ?? 10}
+                  Créditos usados: {selectedProvider.leadsUsed ?? 0} de {selectedProvider.leadLimit ?? 10}
                 </p>
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Nuevo límite de leads</label>
+                <label className={styles.formLabel}>Nuevo límite de créditos</label>
                 <div className={styles.leadEditContainer}>
                   <input
                     type="number"
@@ -678,7 +678,7 @@ export default function AdminDashboardPage() {
                     value={newLeadLimit}
                     onChange={(e) => setNewLeadLimit(Math.max(0, parseInt(e.target.value) || 0))}
                   />
-                  <span className={styles.leadEditLabel}>leads máximos</span>
+                  <span className={styles.leadEditLabel}>créditos máximos</span>
                 </div>
               </div>
 
@@ -686,7 +686,7 @@ export default function AdminDashboardPage() {
                 <div className={styles.infoBox} style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
                   <AlertTriangle style={{ color: '#ef4444' }} />
                   <p style={{ color: '#ef4444' }}>
-                    El nuevo límite es menor que los leads ya usados. 
+                    El nuevo límite es menor que los créditos ya usados. 
                     El proveedor no podrá recibir nuevos leads.
                   </p>
                 </div>

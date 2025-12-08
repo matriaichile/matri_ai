@@ -145,7 +145,7 @@ export default function ProviderCategorySurveyPage() {
       <div className={styles.errorContainer}>
         <h2>Categoría no encontrada</h2>
         <Link href="/dashboard/provider" className={styles.backLink}>
-          Volver al dashboard
+          Volver al inicio
         </Link>
       </div>
     );

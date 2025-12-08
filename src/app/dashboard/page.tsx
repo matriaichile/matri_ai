@@ -492,7 +492,7 @@ export default function UserDashboardPage() {
                     <span className={styles.countdownDays}>
                       {Math.max(0, Math.ceil((new Date(profile.eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
                     </span>
-                    <span className={styles.countdownLabel}>días</span>
+                    <span className={styles.countdownLabel}>Faltan días</span>
                   </div>
                 )}
               </div>
@@ -675,21 +675,29 @@ export default function UserDashboardPage() {
             )}
 
             {/* Otras categorías - Grid más compacto */}
+            {/* CAMBIO: Solo mostrar categorías que el usuario ha comenzado (tiene algún estado de encuesta) */}
             {(() => {
               const otherCategories = ALL_CATEGORIES.filter(
                 cat => !profile?.priorityCategories?.includes(cat)
               );
               
-              if (otherCategories.length === 0) return null;
+              // Filtrar solo las categorías que el usuario ha comenzado a completar
+              const startedOtherCategories = otherCategories.filter(cat => {
+                const surveyStatus = profile?.categorySurveyStatus?.[cat];
+                // Mostrar si tiene algún estado (in_progress, completed, matches_generated)
+                return surveyStatus && surveyStatus !== 'not_started';
+              });
+              
+              if (startedOtherCategories.length === 0) return null;
               
               return (
                 <div className={styles.categoriesOtherSection}>
                   <div className={styles.categoriesSectionLabel}>
                     <Search size={14} />
-                    <span>Explorar más categorías</span>
+                    <span>Otras categorías en progreso</span>
                   </div>
                   <div className={styles.categoriesIconGridSmall}>
-                    {otherCategories.map((category) => {
+                    {startedOtherCategories.map((category) => {
                       const categoryId = category as CategoryId;
                       const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
                       const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';

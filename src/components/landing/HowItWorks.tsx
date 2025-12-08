@@ -9,7 +9,7 @@ export default function HowItWorks() {
     {
       number: '01',
       title: 'Crea tu usuario',
-      desc: 'Regístrate y cuéntanos sobre tu boda soñada a través de un wizard interactivo y personalizado.',
+      desc: 'Regístrate y cuéntanos sobre tu boda soñada a través de un cuestionario interactivo y personalizado.',
       icon: UserPlus,
       tag: '5 minutos'
     },

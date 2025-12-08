@@ -532,15 +532,19 @@ export default function ProviderDashboardPage() {
   const isPending = profile?.status === 'pending';
   const isClosed = profile?.status === 'closed';
 
+  // CAMBIO: Filtrar leads para ocultar pendientes al proveedor (solo mostrar approved, rejected, contacted)
+  // Los proveedores no deben ver leads pendientes, solo cuando el usuario los aprueba
+  const visibleLeads = leads.filter(l => l.status !== 'pending');
+  
   // Filtrar leads por categoría
   const filteredLeads = selectedCategory === 'all' 
-    ? leads 
-    : leads.filter(l => l.category === selectedCategory);
+    ? visibleLeads 
+    : visibleLeads.filter(l => l.category === selectedCategory);
 
-  // Estadísticas
-  const totalLeads = leads.length;
-  const pendingLeads = leads.filter(l => l.status === 'pending').length;
-  const approvedLeads = leads.filter(l => l.status === 'approved').length;
+  // Estadísticas - basadas en leads visibles (excluyendo pendientes)
+  const totalLeads = visibleLeads.length;
+  const approvedLeads = visibleLeads.filter(l => l.status === 'approved').length;
+  const rejectedLeads = visibleLeads.filter(l => l.status === 'rejected').length;
   const matchRate = totalLeads > 0 ? Math.round((approvedLeads / totalLeads) * 100) : 0;
 
   // Calcular encuestas completadas por categoría
@@ -572,7 +576,7 @@ export default function ProviderDashboardPage() {
           activeSection={activeSection}
           onSectionChange={setActiveSection}
           onLogout={handleLogout}
-          pendingLeadsCount={pendingLeads}
+          pendingLeadsCount={approvedLeads}
           categoryIcon={profile?.categories?.[0] ? CATEGORY_ICONS[profile.categories[0]] : undefined}
           completedSurveysCount={completedSurveysCount}
         />
@@ -627,8 +631,8 @@ export default function ProviderDashboardPage() {
                   <Clock size={24} />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{pendingLeads}</span>
-                  <span className={styles.statLabel}>Pendientes</span>
+                  <span className={styles.statValue}>{rejectedLeads}</span>
+                  <span className={styles.statLabel}>Rechazados</span>
                 </div>
               </div>
 

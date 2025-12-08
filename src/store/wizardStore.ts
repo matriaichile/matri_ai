@@ -62,7 +62,8 @@ export interface ProviderWizardData {
   priceRange: string; // Campo legacy para compatibilidad
   priceMin: number; // Nuevo: precio mínimo en CLP
   priceMax: number; // Nuevo: precio máximo en CLP
-  workRegion: string;
+  workRegions: string[]; // CAMBIO: ahora es múltiple
+  workRegion: string; // Campo legacy para compatibilidad
   acceptsOutsideZone: boolean;
   
   // Paso 5: Descripción
@@ -154,7 +155,8 @@ const initialProviderData: ProviderWizardData = {
   priceRange: '', // Campo legacy
   priceMin: 0, // Nuevo campo numérico
   priceMax: 0, // Nuevo campo numérico
-  workRegion: '',
+  workRegions: [], // NUEVO: múltiples regiones
+  workRegion: '', // Campo legacy
   acceptsOutsideZone: false,
   description: '',
   website: '',
@@ -285,7 +287,7 @@ export const PRIORITY_CATEGORIES: WizardOption[] = [
   { id: 'photography', label: 'Fotografía', iconType: 'camera' },
   { id: 'video', label: 'Video', iconType: 'video' },
   { id: 'dj', label: 'DJ/VJ', iconType: 'music' },
-  { id: 'decoration', label: 'Decoración', iconType: 'flower' },
+  { id: 'decoration', label: 'Decoración & Florería', iconType: 'flower' },
   { id: 'entertainment', label: 'Entretenimiento', iconType: 'party' },
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
   { id: 'cakes', label: 'Tortas & Dulces', iconType: 'cake' },
