@@ -24,7 +24,7 @@ import {
   Settings,
   Sliders,
 } from 'lucide-react';
-import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus } from '@/store/authStore';
+import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus, CategoryId } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
 import { Lead, getUserLeads } from '@/lib/firebase/firestore';
 import {
@@ -64,8 +64,16 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Búsqueda
+  // Búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filtros para proveedores
+  const [providerCategoryFilter, setProviderCategoryFilter] = useState<string>('all');
+  const [providerStatusFilter, setProviderStatusFilter] = useState<string>('all');
+  const [providerSortBy, setProviderSortBy] = useState<string>('name'); // name, credits_asc, credits_desc
+  
+  // Filtros para usuarios
+  const [userSortBy, setUserSortBy] = useState<string>('date_asc'); // date_asc (próximos primero), date_desc, name
   
   // Modal de edición de leads (Proveedores)
   const [selectedProvider, setSelectedProvider] = useState<ProviderProfile | null>(null);
@@ -265,21 +273,72 @@ export default function AdminDashboardPage() {
     return styles.low;
   };
 
-  // Filtrar proveedores
-  const filteredProviders = providers.filter(p => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return p.providerName.toLowerCase().includes(term) || 
-           p.email.toLowerCase().includes(term);
-  });
+  // Filtrar y ordenar proveedores
+  const filteredProviders = providers
+    .filter(p => {
+      // Filtro de búsqueda
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        if (!p.providerName.toLowerCase().includes(term) && 
+            !p.email.toLowerCase().includes(term)) {
+          return false;
+        }
+      }
+      // Filtro por categoría
+      if (providerCategoryFilter !== 'all') {
+        if (!p.categories.includes(providerCategoryFilter as CategoryId)) {
+          return false;
+        }
+      }
+      // Filtro por estado activo/inactivo
+      if (providerStatusFilter !== 'all') {
+        if (providerStatusFilter === 'active' && p.status !== 'active') return false;
+        if (providerStatusFilter === 'inactive' && p.status === 'active') return false;
+        if (providerStatusFilter === 'verified' && !p.isVerified) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      // Ordenamiento
+      switch (providerSortBy) {
+        case 'credits_asc':
+          return ((a.leadLimit ?? 10) - (a.leadsUsed ?? 0)) - ((b.leadLimit ?? 10) - (b.leadsUsed ?? 0));
+        case 'credits_desc':
+          return ((b.leadLimit ?? 10) - (b.leadsUsed ?? 0)) - ((a.leadLimit ?? 10) - (a.leadsUsed ?? 0));
+        case 'name':
+        default:
+          return a.providerName.localeCompare(b.providerName);
+      }
+    });
 
-  // Filtrar usuarios
-  const filteredUsers = users.filter(u => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return u.coupleNames.toLowerCase().includes(term) || 
-           u.email.toLowerCase().includes(term);
-  });
+  // Filtrar y ordenar usuarios
+  const filteredUsers = users
+    .filter(u => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return u.coupleNames.toLowerCase().includes(term) || 
+             u.email.toLowerCase().includes(term);
+    })
+    .sort((a, b) => {
+      // Ordenamiento por fecha de evento
+      switch (userSortBy) {
+        case 'date_asc': {
+          // Eventos próximos primero, sin fecha al final
+          const dateA = a.eventDate ? new Date(a.eventDate).getTime() : Infinity;
+          const dateB = b.eventDate ? new Date(b.eventDate).getTime() : Infinity;
+          return dateA - dateB;
+        }
+        case 'date_desc': {
+          // Eventos lejanos primero, sin fecha al final
+          const dateA = a.eventDate ? new Date(a.eventDate).getTime() : -Infinity;
+          const dateB = b.eventDate ? new Date(b.eventDate).getTime() : -Infinity;
+          return dateB - dateA;
+        }
+        case 'name':
+        default:
+          return a.coupleNames.localeCompare(b.coupleNames);
+      }
+    });
 
   // Loading
   if (authLoading || isVerifying) {
@@ -429,6 +488,50 @@ export default function AdminDashboardPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
+                </div>
+              </div>
+              
+              {/* Filtros de proveedores */}
+              <div className={styles.filtersRow}>
+                <div className={styles.filterGroup}>
+                  <label className={styles.filterLabel}>Categoría:</label>
+                  <select 
+                    className={styles.filterSelect}
+                    value={providerCategoryFilter}
+                    onChange={(e) => setProviderCategoryFilter(e.target.value)}
+                  >
+                    <option value="all">Todas</option>
+                    {PROVIDER_CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className={styles.filterGroup}>
+                  <label className={styles.filterLabel}>Estado:</label>
+                  <select 
+                    className={styles.filterSelect}
+                    value={providerStatusFilter}
+                    onChange={(e) => setProviderStatusFilter(e.target.value)}
+                  >
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
+                    <option value="verified">Verificados</option>
+                  </select>
+                </div>
+                
+                <div className={styles.filterGroup}>
+                  <label className={styles.filterLabel}>Ordenar por:</label>
+                  <select 
+                    className={styles.filterSelect}
+                    value={providerSortBy}
+                    onChange={(e) => setProviderSortBy(e.target.value)}
+                  >
+                    <option value="name">Nombre</option>
+                    <option value="credits_desc">Más créditos disponibles</option>
+                    <option value="credits_asc">Menos créditos disponibles</option>
+                  </select>
                 </div>
               </div>
 
@@ -586,6 +689,22 @@ export default function AdminDashboardPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
+                </div>
+              </div>
+              
+              {/* Filtros de usuarios */}
+              <div className={styles.filtersRow}>
+                <div className={styles.filterGroup}>
+                  <label className={styles.filterLabel}>Ordenar por fecha evento:</label>
+                  <select 
+                    className={styles.filterSelect}
+                    value={userSortBy}
+                    onChange={(e) => setUserSortBy(e.target.value)}
+                  >
+                    <option value="date_asc">Próximos eventos primero</option>
+                    <option value="date_desc">Eventos lejanos primero</option>
+                    <option value="name">Nombre</option>
+                  </select>
                 </div>
               </div>
 
@@ -806,10 +925,10 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Modal: Ver Matches del Usuario (3 proveedores asignados) */}
+      {/* Modal: Ver Matches del Usuario (máximo 3 proveedores por categoría) */}
       {isViewUserMatchesModalOpen && selectedUser && (
         <div className={styles.modalOverlay} onClick={() => setIsViewUserMatchesModalOpen(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modalLarge} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Matches de {selectedUser.coupleNames}</h3>
               <button className={styles.modalClose} onClick={() => setIsViewUserMatchesModalOpen(false)}>
@@ -831,23 +950,48 @@ export default function AdminDashboardPage() {
                   <p>Esta pareja aún no tiene proveedores asignados</p>
                 </div>
               ) : (
-                <div className={styles.leadList}>
-                  {userMatches.map(match => (
-                    <div key={match.id} className={styles.leadItem}>
-                      <div className={styles.leadItemInfo}>
-                        <div className={styles.leadItemName}>
-                          {match.providerInfo?.providerName || 'Proveedor'}
-                        </div>
-                        <div className={styles.leadItemMeta}>
-                          {getCategoryLabel(match.category)} • {match.providerInfo?.priceRange || ''}
-                        </div>
-                      </div>
-                      <div className={styles.leadItemScore}>
-                        {match.matchScore}%
+                <>
+                  {/* Agrupar matches por categoría */}
+                  {Object.entries(
+                    userMatches.reduce((acc, match) => {
+                      const cat = match.category;
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(match);
+                      return acc;
+                    }, {} as Record<string, typeof userMatches>)
+                  ).map(([category, matches]) => (
+                    <div key={category} className={styles.leadSection}>
+                      <h4 className={styles.leadSectionTitle}>
+                        <Store size={14} className={styles.leadSectionIconActive} />
+                        {getCategoryLabel(category)} ({matches.length}/3 máx.)
+                      </h4>
+                      <div className={styles.leadList}>
+                        {matches.map(match => (
+                          <div key={match.id} className={styles.leadItem}>
+                            <div className={styles.leadItemInfo}>
+                              <div className={styles.leadItemName}>
+                                {match.providerInfo?.providerName || 'Proveedor'}
+                                {match.providerInfo?.isVerified && (
+                                  <CheckCircle size={12} className={styles.verifiedInline} />
+                                )}
+                              </div>
+                              <div className={styles.leadItemMeta}>
+                                {match.providerInfo?.priceRange || ''} • 
+                                <span className={`${styles.matchStatusInline} ${styles[match.status]}`}>
+                                  {match.status === 'approved' ? ' Interesado' : 
+                                   match.status === 'rejected' ? ' Rechazado' : ' Pendiente'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className={styles.leadItemScore}>
+                              {match.matchScore}%
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
-                </div>
+                </>
               )}
             </div>
             <div className={styles.modalFooter}>

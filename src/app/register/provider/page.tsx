@@ -297,7 +297,7 @@ export default function ProviderRegisterPage() {
               <p className={styles.fieldDescription}>Selecciona todas las regiones donde trabajas</p>
               <SelectionGrid
                 options={REGIONS}
-                selectedValues={providerData.workRegions}
+                selected={providerData.workRegions}
                 onSelect={(value) => {
                   playUiClick();
                   const currentRegions = providerData.workRegions || [];
@@ -310,7 +310,7 @@ export default function ProviderRegisterPage() {
                     workRegion: newRegions[0] || '' // Mantener legacy con la primera selección
                   });
                 }}
-                multiSelect
+                multiple
                 columns={2}
               />
             </div>

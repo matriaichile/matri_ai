@@ -310,6 +310,50 @@
   margin: 0;
 }
 
+/* Filtros */
+.filtersRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--admin-bg);
+  border-bottom: 1px solid var(--admin-border);
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+.filterSelect {
+  padding: 0.4rem 0.75rem;
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  color: var(--admin-text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.filterSelect:hover {
+  border-color: var(--admin-border-light);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+}
+
 .searchBox {
   display: flex;
   align-items: center;
@@ -425,6 +469,32 @@
 .verifiedBadge svg {
   width: 14px;
   height: 14px;
+}
+
+/* Verified badge inline en listados */
+.verifiedInline {
+  display: inline-flex;
+  color: var(--admin-success);
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+/* Match status inline */
+.matchStatusInline {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.matchStatusInline.approved {
+  color: var(--admin-success);
+}
+
+.matchStatusInline.rejected {
+  color: var(--admin-danger);
+}
+
+.matchStatusInline.pending {
+  color: var(--admin-warning);
 }
 
 /* Metrics Cell */

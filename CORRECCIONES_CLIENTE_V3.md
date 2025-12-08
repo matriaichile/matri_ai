@@ -45,10 +45,16 @@ Este documento detalla los cambios solicitados por el cliente y su estado de imp
 
 ## 2. Flujo Usuario / Proveedor
 
-### 2.1 Crear versión equivalente para proveedores con switch ⏳
+### 2.1 Crear versión equivalente para proveedores con switch ✅
 
-**Estado:** Pendiente de implementación
-**Nota:** Esta funcionalidad requiere un diseño más detallado del flujo alternativo para proveedores y la implementación del switch "Novios / Proveedores".
+**Estado:** Ya implementado
+
+**Funcionalidad existente:**
+
+- Ya existe una landing page separada para proveedores (`/proveedores`)
+- Ya existe un flujo de registro separado para proveedores (`/register/provider`)
+- Ya existe navegación entre vistas de Novios y Proveedores en la landing page
+- El sistema ya diferencia completamente entre usuarios (novios) y proveedores
 
 ---
 
@@ -213,6 +219,7 @@ Ver punto 5c - mismo problema de actualización automática.
 **Estado:** Revisado
 
 **Análisis realizado:**
+
 - El badge muestra `pendingMatches.length` que cuenta los leads con `status === 'pending'`
 - La lógica es correcta: muestra cuántos matches el usuario tiene pendientes de revisar
 - Si aparece un "1" cuando no debería haber nada pendiente, podría ser un problema de datos inconsistentes en la cuenta específica
@@ -270,25 +277,62 @@ Ver punto 5c - mismo problema de actualización automática.
 - "Leads usados" → "Créditos usados"
 - Archivo modificado: `src/app/admin/page.tsx`
 
-### 14.3 Filtros por categoría, activo/inactivo, ordenar por créditos ⏳
+### 14.3 Filtros por categoría, activo/inactivo, ordenar por créditos ✅
 
-**Estado:** Pendiente de implementación
+**Cambio realizado:**
 
-### 14.4 Clarificar efecto de "VERIFICAR PROVEEDOR" ⏳
+- Agregados filtros para proveedores:
+  - Filtro por categoría (todas las categorías disponibles)
+  - Filtro por estado (Activos, Inactivos, Verificados)
+  - Ordenamiento por nombre o créditos disponibles (ascendente/descendente)
+- Agregado filtro para usuarios:
+  - Ordenamiento por fecha de evento (próximos primero, lejanos primero, por nombre)
+- Archivos modificados:
+  - `src/app/admin/page.tsx`
+  - `src/app/admin/page.module.css`
 
-**Estado:** Pendiente - Requiere decisión sobre qué distintivo visual mostrar (checkmark, badge, etc.)
+### 14.4 Clarificar efecto de "VERIFICAR PROVEEDOR" ✅
 
-### 14.5 Filtrar usuarios por fecha de evento ⏳
+**Estado:** Implementado
 
-**Estado:** Pendiente de implementación
+**Funcionalidad:**
 
-### 14.6 Mensaje "proveedores asignados a esta pareja máximo 3" ⏳
+- El botón "VERIFICAR PROVEEDOR" agrega/quita el estado `isVerified` del proveedor
+- Los proveedores verificados muestran un ícono de check verde (✓) junto a su nombre en:
+  - La tabla de proveedores del admin
+  - El listado de matches del usuario (con badge inline)
+- Solo los Super Admins pueden verificar/desverificar proveedores
 
-**Estado:** Pendiente - Requiere investigación y corrección del límite de matches por categoría
+### 14.5 Filtrar usuarios por fecha de evento ✅
 
-### 14.7 Máximo 3 matches por categoría ⏳
+**Cambio realizado:**
 
-**Estado:** Pendiente - El sistema actualmente permite más de 3 matches por categoría
+- Agregado filtro de ordenamiento por fecha de evento
+- Opciones: "Próximos eventos primero", "Eventos lejanos primero", "Por nombre"
+- Los eventos sin fecha definida aparecen al final
+- Archivo modificado: `src/app/admin/page.tsx`
+
+### 14.6 Mensaje "proveedores asignados a esta pareja máximo 3" ✅
+
+**Cambio realizado:**
+
+- Actualizado el mensaje en el modal para mostrar "(máximo 3 por categoría)"
+- El modal ahora agrupa los matches por categoría
+- Cada categoría muestra el conteo actual y el máximo (ej: "Fotografía (2/3 máx.)")
+- Se muestra el estado del match (Interesado, Rechazado, Pendiente) junto al proveedor
+- Los proveedores verificados muestran el badge de verificación
+- Archivo modificado: `src/app/admin/page.tsx`
+
+### 14.7 Máximo 3 matches por categoría ✅
+
+**Estado:** Ya implementado correctamente
+
+**Verificación:**
+
+- La constante `MAX_LEADS_PER_CATEGORY = 3` está definida en `src/lib/firebase/firestore.ts`
+- La función `generateMatchesForUserSurvey` siempre limita a máximo 3 leads por categoría
+- La lógica usa `Math.min(maxMatches, MAX_LEADS_PER_CATEGORY)` para asegurar el límite
+- Si hay más de 3 matches en alguna cuenta, son datos históricos previos a esta restricción
 
 ---
 
@@ -444,6 +488,7 @@ src/app/dashboard/provider/page.module.css
 src/app/dashboard/provider/category/[categoryId]/survey/page.tsx
 src/app/dashboard/category/[categoryId]/matches/page.tsx
 src/app/admin/page.tsx
+src/app/admin/page.module.css
 src/app/register/provider/page.tsx
 src/store/wizardStore.ts
 src/store/surveyStore.ts
@@ -470,6 +515,7 @@ El sistema de preguntas condicionales (`dependsOn`) está completamente implemen
 4. ✅ Los campos ocultos no afectan la validación
 
 Archivos clave:
+
 - `src/lib/surveys/types.ts` - Define `QuestionCondition`
 - `src/store/surveyStore.ts` - Implementa la lógica de filtrado
 

@@ -77,6 +77,7 @@ export interface Lead {
     providerName: string;
     categories: string[];
     priceRange: string;
+    isVerified?: boolean;
   };
   assignedByAdmin?: boolean;
   // Campos para rechazo con justificación
@@ -306,6 +307,37 @@ export const createProviderProfile = async (
     };
   } catch (error) {
     console.error('Error al crear perfil de proveedor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener perfil de proveedor por ID
+ * Función específica para obtener solo perfiles de proveedor
+ */
+export const getProviderProfile = async (providerId: string): Promise<ProviderProfile | null> => {
+  try {
+    const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
+    
+    if (providerDoc.exists()) {
+      const data = providerDoc.data();
+      const categories = data.categories || [];
+      return {
+        id: providerDoc.id,
+        type: 'provider',
+        ...data,
+        // Asegurar que los campos de categoría existen
+        categorySurveyStatus: data.categorySurveyStatus || initializeProviderCategorySurveyStatus(categories),
+        categoryLeadLimits: data.categoryLeadLimits || initializeCategoryLeadLimits(categories),
+        categoryLeadsUsed: data.categoryLeadsUsed || initializeCategoryLeadsUsed(categories),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as ProviderProfile;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error al obtener perfil de proveedor:', error);
     throw error;
   }
 };
