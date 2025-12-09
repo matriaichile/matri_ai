@@ -4,7 +4,7 @@
 
 **Fecha:** Diciembre 2025  
 **Estado:** ✅ IMPLEMENTADO  
-**Versión:** 3.1 (Actualización 9 de Diciembre)
+**Versión:** 3.2 (Actualización 9 de Diciembre)
 
 ---
 
@@ -12,7 +12,20 @@
 
 Este documento detalla los cambios solicitados por el cliente y su estado de implementación.
 
-### Última Actualización (V3.1) - 9 Diciembre 2025
+### Última Actualización (V3.2) - 9 Diciembre 2025
+
+| #   | Cambio                                                                 | Estado |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 1   | Email de contacto actualizado a matrimatch.chile@gmail.com (dashboard) | ✅     |
+| 2   | Eliminada pregunta de rango de precios del registro de proveedor       | ✅     |
+| 3   | Contador "Me interesa/No me interesa" ahora cuenta decisión final      | ✅     |
+| 4   | Estado (Aprobado/Rechazado) visible en leads recientes                 | ✅     |
+| 5   | Estado del lead visible en popup + formato fecha DD-MM-AAAA            | ✅     |
+| 6   | Nueva sección "Disponibilidad" con calendario de bloqueo               | ✅     |
+| 7   | Validación de disponibilidad en matching (solo si fecha exacta)        | ✅     |
+| 8   | Filtros de leads: por estado y por fecha de evento                     | ✅     |
+
+### Actualización Anterior (V3.1) - 9 Diciembre 2025
 
 | #   | Cambio                                                                     | Estado |
 | --- | -------------------------------------------------------------------------- | ------ |
@@ -634,6 +647,150 @@ const categoryMatches = matches.filter(
 
 ---
 
+---
+
+## Cambios V3.2 - Detalle Técnico (9 Diciembre 2025)
+
+### 1. Email de Contacto en Dashboard ✅
+
+**Archivo:** `src/components/dashboard/DashboardHeader.tsx`
+
+**Cambio:** Se actualizó la constante `CONTACT_EMAIL` de `matriaichile@gmail.com` a `matrimatch.chile@gmail.com` para unificar el email en toda la aplicación.
+
+---
+
+### 2. Eliminación de Pregunta de Precios en Registro ✅
+
+**Archivo:** `src/app/register/provider/page.tsx`
+
+**Cambio:** Se eliminó el componente `PriceRangeInput` del paso 3 del wizard de registro de proveedores. La pregunta de rango de precios ahora solo se hace en las encuestas específicas de cada categoría.
+
+**Validación actualizada:** Solo se requiere que el proveedor seleccione al menos una región de trabajo.
+
+---
+
+### 3. Contador de Métricas con Decisión Final ✅
+
+**Archivo:** `src/lib/firebase/firestore.ts`
+
+**Cambios:**
+
+- `approveLeadWithMetrics()` ahora verifica el estado anterior del lead
+- `rejectLeadWithReason()` ahora verifica el estado anterior del lead
+- Nueva función `decrementProviderMetric()` para ajustar métricas cuando el usuario cambia de opinión
+
+**Lógica:**
+
+- Si el lead estaba `pending` y se aprueba → incrementa `timesInterested`
+- Si el lead estaba `pending` y se rechaza → incrementa `timesNotInterested`
+- Si el lead estaba `approved` y se rechaza → decrementa `timesInterested`, incrementa `timesNotInterested`
+- Si el lead estaba `rejected` y se aprueba → decrementa `timesNotInterested`, incrementa `timesInterested`
+- Si el lead ya tenía el mismo estado → no se modifican métricas
+
+---
+
+### 4. Estado Visible en Leads Recientes ✅
+
+**Archivo:** `src/app/dashboard/provider/page.tsx`
+
+**Cambio:** Se agregó un badge de estado (`Interesado`, `Rechazado`, `Contactado`, `Pendiente`) en las tarjetas de leads recientes de la sección Overview.
+
+---
+
+### 5. Estado en Popup y Formato Fecha ✅
+
+**Archivos:**
+
+- `src/app/dashboard/provider/page.tsx`
+- `src/app/dashboard/provider/page.module.css`
+
+**Cambios:**
+
+- Agregado badge de estado en el header del modal de detalles del lead
+- Fechas formateadas a DD-MM-AAAA usando `toLocaleDateString('es-CL', {...})`
+
+**Nuevos estilos CSS:**
+
+- `.leadStatusBadge` - Base para badges de estado
+- `.leadStatusApproved` - Verde para interesados
+- `.leadStatusRejected` - Rojo para rechazados
+- `.leadStatusContacted` - Azul para contactados
+- `.leadStatusPending` - Púrpura para pendientes
+
+---
+
+### 6. Sección de Disponibilidad ✅
+
+**Archivos modificados:**
+
+- `src/store/authStore.ts` - Agregado campo `blockedDates?: string[]` a `ProviderProfile`
+- `src/components/dashboard/Sidebar.tsx` - Agregada sección "Disponibilidad" con icono `CalendarX`
+- `src/app/dashboard/provider/page.tsx` - Implementada UI del calendario anual
+- `src/app/dashboard/provider/page.module.css` - Estilos para calendario y controles
+- `firestore.rules` - Nueva función `isOnlyAvailabilityUpdate()` y regla de actualización
+
+**Funcionalidades:**
+
+- Calendario anual interactivo para bloquear días no disponibles
+- Selector de año para navegar entre años
+- Leyenda explicativa (Disponible, Bloqueado, Fecha pasada)
+- Botón para guardar cambios
+- Mensaje informativo sobre la lógica de bloqueo
+
+**Reglas Firestore:**
+
+```javascript
+function isOnlyAvailabilityUpdate() {
+  return request.resource.data
+    .diff(resource.data)
+    .affectedKeys()
+    .hasOnly(["blockedDates", "updatedAt"]);
+}
+```
+
+---
+
+### 7. Validación de Disponibilidad en Matching ✅
+
+**Archivo:** `src/lib/firebase/firestore.ts`
+
+**Cambios:**
+
+- Nueva función `isProviderAvailableOnDate()` para verificar disponibilidad
+- `getAvailableProvidersForCategory()` ahora acepta `eventDate` e `isDateTentative`
+- `generateMatchesForUserSurvey()` pasa la fecha del evento a las funciones de filtrado
+
+**Lógica crítica:**
+
+- Si `isDateTentative === true` → NO se filtra por disponibilidad (permite todos los proveedores)
+- Si `isDateTentative === false` → SE filtra por disponibilidad (excluye proveedores que bloquearon esa fecha)
+
+---
+
+### 8. Filtros de Leads ✅
+
+**Archivos:**
+
+- `src/app/dashboard/provider/page.tsx`
+- `src/app/dashboard/provider/page.module.css`
+
+**Cambios:**
+
+- Estados agregados: `statusFilter` y `sortByEventDate`
+- UI con selectores para:
+  - Filtrar por estado: Todos / Interesado / Rechazado
+  - Ordenar por fecha: Sin ordenar / Más próximos primero / Más lejanos primero
+- Función `filteredLeads` actualizada para aplicar ambos filtros
+
+**Nuevos estilos CSS:**
+
+- `.leadsFilters` - Contenedor de filtros
+- `.filterGroup` - Grupo de label + select
+- `.filterLabel` - Etiqueta del filtro
+- `.filterSelect` - Selector estilizado
+
+---
+
 _Documento creado: Diciembre 2025_  
-_Última actualización: 9 Diciembre 2025 (V3.1)_  
+_Última actualización: 9 Diciembre 2025 (V3.2)_  
 _Desarrollador: MatriMatch Development Team_

@@ -145,6 +145,9 @@ export interface ProviderProfile {
   categorySurveyStatus: CategorySurveyStatusMap; // Estado de encuestas por categoría
   // Métricas del proveedor
   metrics?: ProviderMetrics; // Métricas de rendimiento
+  // NUEVO: Fechas bloqueadas para disponibilidad
+  // Array de strings en formato YYYY-MM-DD
+  blockedDates?: string[];
   // Campos legacy para compatibilidad
   leadLimit: number;
   leadsUsed: number;

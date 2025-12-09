@@ -117,14 +117,10 @@ export default function ProviderRegisterPage() {
     providerData.phone.length >= 8;
   
   const isStep2Valid = providerData.categories.length > 0; // Ahora múltiples categorías
-  // CAMBIO: Eliminado paso de estilos (isStep3Valid) - se pregunta en las encuestas por categoría
-  // Validar rango de precios: ambos deben ser > 0 y max > min
-  // CAMBIO: ahora workRegions es un array
-  const isStep3Valid = 
-    providerData.priceMin > 0 && 
-    providerData.priceMax > 0 && 
-    providerData.priceMax > providerData.priceMin && 
-    providerData.workRegions.length > 0;
+  // CAMBIO: Eliminado paso de estilos - se pregunta en las encuestas por categoría
+  // CAMBIO: Eliminada validación de precios - ahora se pregunta en las encuestas específicas por categoría
+  // Solo validamos que haya al menos una región seleccionada
+  const isStep3Valid = providerData.workRegions.length > 0;
   const isStep4Valid = providerData.description.trim().length >= 20;
   const isStep5Valid = true; // Redes sociales son opcionales
 
@@ -262,10 +258,10 @@ export default function ProviderRegisterPage() {
 
         {/* CAMBIO: Eliminado Paso 3 (Estilo del servicio) - se pregunta en las encuestas por categoría */}
 
-        {/* Paso 3: Precios y ubicación con rango de precios en CLP (antes era paso 4) */}
+        {/* Paso 3: Ubicación (sin precios - se pregunta en encuestas específicas) */}
         <WizardStep
-          title="Precios y ubicación"
-          subtitle="Define tu rango de precios en CLP y zona de trabajo"
+          title="Ubicación"
+          subtitle="Define tu zona de trabajo"
           currentStep={currentStep}
           totalSteps={totalSteps}
           isVisible={currentStep === 2}
@@ -274,23 +270,7 @@ export default function ProviderRegisterPage() {
           nextDisabled={!isStep3Valid}
         >
           <div className={styles.detailsSection}>
-            <div className={styles.fieldSection}>
-              <PriceRangeInput
-                priceMin={providerData.priceMin}
-                priceMax={providerData.priceMax}
-                onChangeMin={(value) => {
-                  // Actualizar priceMin y también priceRange (legacy) para compatibilidad
-                  const rangeLabel = getPriceRangeLabel(value, providerData.priceMax);
-                  updateProviderData({ priceMin: value, priceRange: rangeLabel });
-                }}
-                onChangeMax={(value) => {
-                  // Actualizar priceMax y también priceRange (legacy) para compatibilidad
-                  const rangeLabel = getPriceRangeLabel(providerData.priceMin, value);
-                  updateProviderData({ priceMax: value, priceRange: rangeLabel });
-                }}
-                label="Rango de precios de tus servicios"
-              />
-            </div>
+            {/* ELIMINADO: PriceRangeInput - El rango de precios ahora se pregunta en las encuestas específicas de cada categoría */}
 
             <div className={styles.fieldSection}>
               <h3 className={styles.fieldTitle}>¿En qué zonas prestas tus servicios?</h3>

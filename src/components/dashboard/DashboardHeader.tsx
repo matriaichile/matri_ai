@@ -28,7 +28,8 @@ export default function DashboardHeader({
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   
-  const CONTACT_EMAIL = 'matriaichile@gmail.com';
+  // Email de contacto unificado para novios y proveedores
+  const CONTACT_EMAIL = 'matrimatch.chile@gmail.com';
   
   // Copiar email al portapapeles
   const handleCopyEmail = async () => {

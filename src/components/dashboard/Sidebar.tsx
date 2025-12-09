@@ -12,14 +12,16 @@ import {
   ChevronLeft,
   Menu,
   Mail,
-  Image
+  Image,
+  CalendarX
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 // Definición de tipos para las secciones
 type UserSection = 'matches' | 'surveys' | 'profile';
-type ProviderSection = 'overview' | 'leads' | 'surveys' | 'portfolio' | 'profile';
+// CAMBIO: Agregada sección 'availability' para proveedores
+type ProviderSection = 'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile';
 
 // Props base del sidebar
 interface BaseSidebarProps {
@@ -295,6 +297,16 @@ export default function Sidebar(props: SidebarProps) {
         >
           <Image size={18} />
           {showExpanded && <span>Portafolio</span>}
+        </button>
+
+        {/* NUEVO: Sección de Disponibilidad */}
+        <button 
+          className={`${styles.navItem} ${activeSection === 'availability' ? styles.navItemActive : ''}`}
+          onClick={() => onSectionChange('availability')}
+          title={!showExpanded ? 'Disponibilidad' : undefined}
+        >
+          <CalendarX size={18} />
+          {showExpanded && <span>Disponibilidad</span>}
         </button>
         
         <button 

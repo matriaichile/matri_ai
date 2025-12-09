@@ -149,7 +149,8 @@ export default function ProviderDashboardPage() {
   const router = useRouter();
   const toast = useToast();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
-  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'profile'>('overview');
+  // CAMBIO: Agregada sección 'availability'
+  const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile'>('overview');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -171,6 +172,15 @@ export default function ProviderDashboardPage() {
     eventDetails: true,
     surveyComparison: false,
   });
+  
+  // Estados para la sección de disponibilidad
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+  const [savingAvailability, setSavingAvailability] = useState(false);
+  
+  // Estados para filtros de leads
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'rejected'>('all');
+  const [sortByEventDate, setSortByEventDate] = useState<'asc' | 'desc' | null>(null);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -182,6 +192,16 @@ export default function ProviderDashboardPage() {
       }
     }
   }, [isAuthenticated, userType, isLoading, router]);
+  
+  // Inicializar fechas bloqueadas desde el perfil del proveedor
+  useEffect(() => {
+    if (userProfile && userProfile.type === 'provider') {
+      const providerData = userProfile as ProviderProfile;
+      if (providerData.blockedDates && Array.isArray(providerData.blockedDates)) {
+        setBlockedDates(new Set(providerData.blockedDates));
+      }
+    }
+  }, [userProfile]);
 
   // Cargar leads del proveedor
   useEffect(() => {
@@ -537,9 +557,30 @@ export default function ProviderDashboardPage() {
   const visibleLeads = leads.filter(l => l.status !== 'pending');
   
   // Filtrar leads por categoría
-  const filteredLeads = selectedCategory === 'all' 
+  const leadsByCategory_base = selectedCategory === 'all' 
     ? visibleLeads 
     : visibleLeads.filter(l => l.category === selectedCategory);
+  
+  // NUEVO: Aplicar filtros adicionales (estado y ordenamiento por fecha)
+  const filteredLeads = (() => {
+    let result = [...leadsByCategory_base];
+    
+    // Filtrar por estado
+    if (statusFilter !== 'all') {
+      result = result.filter(lead => lead.status === statusFilter);
+    }
+    
+    // Ordenar por fecha de evento
+    if (sortByEventDate) {
+      result.sort((a, b) => {
+        const dateA = new Date(a.userInfo.eventDate).getTime();
+        const dateB = new Date(b.userInfo.eventDate).getTime();
+        return sortByEventDate === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    }
+    
+    return result;
+  })();
 
   // Estadísticas - basadas en leads visibles (excluyendo pendientes)
   const totalLeads = visibleLeads.length;
@@ -551,6 +592,99 @@ export default function ProviderDashboardPage() {
   const completedSurveysCount = profile?.categorySurveyStatus 
     ? Object.values(profile.categorySurveyStatus).filter(status => status === 'completed').length 
     : 0;
+  
+  // Handler para toggle de fecha bloqueada
+  const handleToggleBlockedDate = (dateString: string) => {
+    setBlockedDates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dateString)) {
+        newSet.delete(dateString);
+      } else {
+        newSet.add(dateString);
+      }
+      return newSet;
+    });
+  };
+  
+  // Handler para guardar disponibilidad
+  const handleSaveAvailability = async () => {
+    if (!firebaseUser || !profile) return;
+    
+    setSavingAvailability(true);
+    try {
+      const blockedDatesArray = Array.from(blockedDates).sort();
+      await updateProviderProfile(firebaseUser.uid, {
+        blockedDates: blockedDatesArray
+      });
+      
+      // Actualizar el estado local
+      setUserProfile({
+        ...profile,
+        blockedDates: blockedDatesArray
+      });
+      
+      toast.success('Disponibilidad actualizada correctamente');
+    } catch (error) {
+      console.error('Error al guardar disponibilidad:', error);
+      toast.error('Error al guardar disponibilidad');
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
+  
+  // Generar días del mes para el calendario
+  const getDaysInMonth = (year: number, month: number) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
+    
+    const days: (Date | null)[] = [];
+    
+    // Días vacíos antes del primer día del mes
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Días del mes
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    
+    return days;
+  };
+  
+  // Formatear fecha para comparación (YYYY-MM-DD)
+  const formatDateKey = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Nombres de meses
+  const MONTH_NAMES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  // Filtrar y ordenar leads según los filtros activos
+  const filteredAndSortedLeads = (() => {
+    let result = [...visibleLeads];
+    
+    // Filtrar por estado
+    if (statusFilter !== 'all') {
+      result = result.filter(lead => lead.status === statusFilter);
+    }
+    
+    // Ordenar por fecha de evento
+    if (sortByEventDate) {
+      result.sort((a, b) => {
+        const dateA = new Date(a.userInfo.eventDate).getTime();
+        const dateB = new Date(b.userInfo.eventDate).getTime();
+        return sortByEventDate === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    }
+    
+    return result;
+  })();
 
   // Agrupar leads por categoría para stats
   const leadsByCategory = leads.reduce((acc, lead) => {
@@ -564,6 +698,7 @@ export default function ProviderDashboardPage() {
     leads: { title: 'Mis Leads', subtitle: 'Parejas interesadas en tus servicios' },
     surveys: { title: 'Encuestas por Categoría', subtitle: 'Completa las encuestas para recibir mejores matches' },
     portfolio: { title: 'Mi Portafolio', subtitle: 'Muestra tu mejor trabajo a las parejas' },
+    availability: { title: 'Disponibilidad', subtitle: 'Gestiona tu calendario de disponibilidad' },
     profile: { title: 'Mi Perfil', subtitle: 'Información de tu negocio' },
   };
 
@@ -732,7 +867,7 @@ export default function ProviderDashboardPage() {
               </div>
             )}
 
-            {/* Leads recientes */}
+            {/* Leads recientes - MEJORADO: Muestra estado y fecha formateada */}
             <div className={styles.recentSection}>
               <div className={styles.sectionHeader}>
                 <h2>Leads recientes</h2>
@@ -747,7 +882,7 @@ export default function ProviderDashboardPage() {
 
               {loadingLeads ? (
                 <LoadingState message="Cargando leads..." />
-              ) : leads.length === 0 ? (
+              ) : visibleLeads.length === 0 ? (
                 <EmptyState
                   icon={<Inbox size={48} />}
                   title="Aún no tienes leads"
@@ -755,7 +890,7 @@ export default function ProviderDashboardPage() {
                 />
               ) : (
                 <div className={styles.leadsPreview}>
-                  {leads.slice(0, 3).map((lead) => (
+                  {visibleLeads.slice(0, 3).map((lead) => (
                     <div 
                       key={lead.id} 
                       className={styles.leadPreviewCard}
@@ -769,6 +904,11 @@ export default function ProviderDashboardPage() {
                             <span className={styles.leadCategoryName}>{getCategoryLabel(lead.category)}</span>
                           </div>
                           <h4>{lead.userInfo.coupleNames}</h4>
+                          {/* NUEVO: Badge de estado para distinguir aprobados de rechazados */}
+                          <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
+                            {lead.status === 'approved' ? 'Interesado' : 
+                             lead.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                          </span>
                         </div>
                         <span 
                           className={styles.matchBadge}
@@ -780,7 +920,8 @@ export default function ProviderDashboardPage() {
                       <div className={styles.leadPreviewMeta}>
                         <span>
                           <Calendar size={12} />
-                          <span>{lead.userInfo.eventDate}</span>
+                          {/* CAMBIO: Formato de fecha DD-MM-AAAA */}
+                          <span>{new Date(lead.userInfo.eventDate).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')}</span>
                         </span>
                         <span>
                           <MapPin size={12} />
@@ -828,6 +969,35 @@ export default function ProviderDashboardPage() {
                 </div>
               </div>
             )}
+            
+            {/* NUEVO: Filtros adicionales por estado y fecha de evento */}
+            <div className={styles.leadsFilters}>
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Estado:</label>
+                <select 
+                  className={styles.filterSelect}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'approved' | 'rejected')}
+                >
+                  <option value="all">Todos</option>
+                  <option value="approved">Interesado</option>
+                  <option value="rejected">Rechazado</option>
+                </select>
+              </div>
+              
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Ordenar por fecha:</label>
+                <select 
+                  className={styles.filterSelect}
+                  value={sortByEventDate || ''}
+                  onChange={(e) => setSortByEventDate(e.target.value ? e.target.value as 'asc' | 'desc' : null)}
+                >
+                  <option value="">Sin ordenar</option>
+                  <option value="asc">Más próximos primero</option>
+                  <option value="desc">Más lejanos primero</option>
+                </select>
+              </div>
+            </div>
 
             {loadingLeads ? (
               <LoadingState message="Cargando leads..." />
@@ -855,9 +1025,8 @@ export default function ProviderDashboardPage() {
                             <span className={styles.leadCategoryName}>{getCategoryLabel(lead.category)}</span>
                           </div>
                           <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${lead.status.charAt(0).toUpperCase()}${lead.status.slice(1)}`]}`}>
-                            {lead.status === 'pending' ? 'Pendiente' : 
-                             lead.status === 'approved' ? 'Interesado' : 
-                             lead.status === 'contacted' ? 'Contactado' : 'Rechazado'}
+                            {lead.status === 'approved' ? 'Interesado' : 
+                             lead.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
                           </span>
                         </div>
                       </div>
@@ -1004,6 +1173,100 @@ export default function ProviderDashboardPage() {
               onImagesReordered={handlePortfolioImagesReordered}
               disabled={!firebaseUser?.uid}
             />
+          </div>
+        )}
+
+        {/* NUEVA: Sección de Disponibilidad */}
+        {activeSection === 'availability' && (
+          <div className={styles.availabilitySection}>
+            <div className={styles.availabilityIntro}>
+              <p className={styles.availabilityMessage}>
+                <strong>Bloquea únicamente los días NO disponibles o SIN capacidad</strong>
+              </p>
+              <p className={styles.availabilityDescription}>
+                Algunos proveedores pueden realizar 2 o 3 eventos en un mismo día; por lo tanto, 
+                solo debes bloquear una fecha cuando hayas alcanzado tu capacidad máxima para ese día.
+                Esto evita que recibas matches en fechas que no puedes tomar y que desperdicies créditos.
+              </p>
+            </div>
+            
+            {/* Selector de año */}
+            <div className={styles.yearSelector}>
+              <button 
+                className={styles.yearButton}
+                onClick={() => setSelectedYear(prev => prev - 1)}
+              >
+                ←
+              </button>
+              <span className={styles.yearDisplay}>{selectedYear}</span>
+              <button 
+                className={styles.yearButton}
+                onClick={() => setSelectedYear(prev => prev + 1)}
+              >
+                →
+              </button>
+            </div>
+            
+            {/* Calendario anual */}
+            <div className={styles.yearCalendar}>
+              {MONTH_NAMES.map((monthName, monthIndex) => (
+                <div key={monthIndex} className={styles.monthCalendar}>
+                  <h4 className={styles.monthName}>{monthName}</h4>
+                  <div className={styles.weekDays}>
+                    <span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span>
+                  </div>
+                  <div className={styles.daysGrid}>
+                    {getDaysInMonth(selectedYear, monthIndex).map((day, idx) => {
+                      if (!day) {
+                        return <span key={idx} className={styles.emptyDay}></span>;
+                      }
+                      
+                      const dateKey = formatDateKey(day);
+                      const isBlocked = blockedDates.has(dateKey);
+                      const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+                      
+                      return (
+                        <button
+                          key={idx}
+                          className={`${styles.dayButton} ${isBlocked ? styles.dayBlocked : ''} ${isPast ? styles.dayPast : ''}`}
+                          onClick={() => !isPast && handleToggleBlockedDate(dateKey)}
+                          disabled={isPast}
+                          title={isBlocked ? 'Día bloqueado - click para desbloquear' : 'Click para bloquear'}
+                        >
+                          {day.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Leyenda y botón guardar */}
+            <div className={styles.availabilityFooter}>
+              <div className={styles.availabilityLegend}>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.legendDot} ${styles.legendAvailable}`}></span>
+                  <span>Disponible</span>
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.legendDot} ${styles.legendBlocked}`}></span>
+                  <span>Bloqueado (sin capacidad)</span>
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={`${styles.legendDot} ${styles.legendPast}`}></span>
+                  <span>Fecha pasada</span>
+                </div>
+              </div>
+              
+              <button 
+                className={styles.saveAvailabilityButton}
+                onClick={handleSaveAvailability}
+                disabled={savingAvailability}
+              >
+                {savingAvailability ? 'Guardando...' : 'Guardar disponibilidad'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -1345,6 +1608,11 @@ export default function ProviderDashboardPage() {
                   <span>{getCategoryLabel(selectedLead.category)}</span>
                 </span>
                 <h2>{selectedLead.userInfo.coupleNames}</h2>
+                {/* NUEVO: Estado del lead en el modal */}
+                <span className={`${styles.leadStatusBadge} ${styles[`leadStatus${selectedLead.status.charAt(0).toUpperCase()}${selectedLead.status.slice(1)}`]}`}>
+                  {selectedLead.status === 'approved' ? 'Interesado' : 
+                   selectedLead.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                </span>
                 <div 
                   className={styles.modalMatchBadge}
                   style={getMatchCategoryStylesLarge(selectedLead.matchScore)}
@@ -1427,7 +1695,10 @@ export default function ProviderDashboardPage() {
                             <Calendar size={16} />
                             <div>
                               <span className={styles.infoLabel}>Fecha del evento</span>
-                              <span className={styles.infoValue}>{selectedLead.userInfo.eventDate}</span>
+                              {/* CAMBIO: Formato de fecha DD-MM-AAAA */}
+                              <span className={styles.infoValue}>
+                                {new Date(selectedLead.userInfo.eventDate).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')}
+                              </span>
                             </div>
                           </div>
                           <div className={styles.infoItem}>

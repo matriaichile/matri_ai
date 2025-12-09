@@ -1,6 +1,6 @@
 /* ====================================
-   TOAST NOTIFICATIONS - Dark Gold Theme
-   Matri.AI - Elegant Dark Premium
+   TOAST NOTIFICATIONS
+   Matri.AI - Soporte Modo Claro/Oscuro
    Notificaciones elegantes y compactas
    ==================================== */
 
@@ -22,16 +22,15 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: linear-gradient(145deg, #1f1f1f, #181818);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-background-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 
-    0 10px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+  box-shadow: var(--shadow-lg);
   animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
   position: relative;
   overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .toast.exiting {
@@ -81,7 +80,7 @@
   font-family: var(--font-body, 'Outfit', sans-serif);
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text, #F5F5F5);
+  color: var(--color-text);
   margin: 0;
   line-height: 1.4;
 }
@@ -89,7 +88,7 @@
 .message {
   font-family: var(--font-body, 'Outfit', sans-serif);
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-secondary);
   margin: 0.25rem 0 0;
   line-height: 1.4;
 }
@@ -103,7 +102,7 @@
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
@@ -111,8 +110,8 @@
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-background-hover);
+  color: var(--color-text-secondary);
 }
 
 /* Barra de progreso */
@@ -142,74 +141,74 @@
 
 /* Success - Dorado elegante */
 .success {
-  border-color: rgba(212, 175, 55, 0.2);
+  border-color: var(--color-border-accent);
   box-shadow: 
-    0 10px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(212, 175, 55, 0.1),
-    0 0 20px rgba(212, 175, 55, 0.05);
+    var(--shadow-lg),
+    0 0 0 1px var(--color-primary-subtle),
+    0 0 20px var(--color-primary-subtle);
 }
 
 .success .iconContainer {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--color-primary, #D4AF37);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 
 .success .progressBar {
-  background: linear-gradient(90deg, var(--color-primary, #D4AF37), var(--color-primary-light, #E8D090));
+  background: var(--gradient-primary);
 }
 
 /* Error - Rojo elegante */
 .error {
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: var(--color-danger-border);
   box-shadow: 
-    0 10px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(239, 68, 68, 0.1),
-    0 0 20px rgba(239, 68, 68, 0.05);
+    var(--shadow-lg),
+    0 0 0 1px var(--color-danger-bg),
+    0 0 20px var(--color-danger-bg);
 }
 
 .error .iconContainer {
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .error .progressBar {
-  background: linear-gradient(90deg, #EF4444, #F87171);
+  background: linear-gradient(90deg, var(--color-danger), var(--color-danger-light));
 }
 
 /* Warning - Ámbar */
 .warning {
-  border-color: rgba(245, 158, 11, 0.2);
+  border-color: var(--color-warning-border);
   box-shadow: 
-    0 10px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(245, 158, 11, 0.1),
-    0 0 20px rgba(245, 158, 11, 0.05);
+    var(--shadow-lg),
+    0 0 0 1px var(--color-warning-bg),
+    0 0 20px var(--color-warning-bg);
 }
 
 .warning .iconContainer {
-  background: rgba(245, 158, 11, 0.1);
-  color: #F59E0B;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .warning .progressBar {
-  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+  background: linear-gradient(90deg, var(--color-warning), var(--color-warning-light));
 }
 
 /* Info - Azul elegante */
 .info {
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: var(--color-info-border);
   box-shadow: 
-    0 10px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(59, 130, 246, 0.1),
-    0 0 20px rgba(59, 130, 246, 0.05);
+    var(--shadow-lg),
+    0 0 0 1px var(--color-info-bg),
+    0 0 20px var(--color-info-bg);
 }
 
 .info .iconContainer {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3B82F6;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 .info .progressBar {
-  background: linear-gradient(90deg, #3B82F6, #60A5FA);
+  background: linear-gradient(90deg, var(--color-info), var(--color-info-light));
 }
 
 /* ====================================
@@ -277,8 +276,3 @@
     width: 100%;
   }
 }
-
-
-
-
-

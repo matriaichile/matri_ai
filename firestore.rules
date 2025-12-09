@@ -77,6 +77,12 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['metrics', 'updatedAt']);
     }
     
+    // NUEVO: Verificar si solo se está actualizando la disponibilidad (blockedDates)
+    // Esto permite que el proveedor bloquee/desbloquee fechas en su calendario
+    function isOnlyAvailabilityUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blockedDates', 'updatedAt']);
+    }
+    
     // Verificar que al agregar categorías, solo se inicializan nuevas (no se modifican existentes)
     // Permite agregar nuevas categorías con sus límites/contadores iniciales
     function isValidCategoryUpdate() {
@@ -123,6 +129,7 @@ service cloud.firestore {
       // Actualización: 
       // - El propio proveedor puede actualizar EXCEPTO campos de leads críticos, status e isVerified
       // - El proveedor puede agregar nuevas categorías y sus campos asociados
+      // - El proveedor puede actualizar su disponibilidad (blockedDates) para el calendario
       // - Admins pueden actualizar cualquier campo (incluyendo isVerified)
       // - Sistema puede actualizar categoryLeadsUsed cuando se crea un lead (via el usuario que crea el lead)
       // - Sistema puede actualizar metrics cuando un usuario aprueba/rechaza un lead
@@ -134,7 +141,10 @@ service cloud.firestore {
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['categoryLeadsUsed', 'leadsUsed', 'updatedAt'])) ||
         // Permitir actualización de métricas cuando un usuario aprueba/rechaza un lead
         // Esto es necesario para el tracking de conversiones
-        isOnlyMetricsUpdate()
+        isOnlyMetricsUpdate() ||
+        // NUEVO: Permitir actualización de disponibilidad (blockedDates) por el propio proveedor
+        // Esto permite gestionar el calendario de disponibilidad
+        (isOwner(providerId) && isOnlyAvailabilityUpdate())
       );
       
       // Eliminación: Solo super_admin puede eliminar

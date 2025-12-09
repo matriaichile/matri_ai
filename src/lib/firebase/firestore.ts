@@ -960,7 +960,8 @@ export const updateLeadStatus = async (
 
 /**
  * Rechazar un lead con justificación
- * También actualiza las métricas del proveedor
+ * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
+ * Si el usuario cambia de opinión (aprobado -> rechazado), decrementamos "me interesa" e incrementamos "no me interesa"
  */
 export const rejectLeadWithReason = async (
   leadId: string,
@@ -970,7 +971,7 @@ export const rejectLeadWithReason = async (
   try {
     const now = Timestamp.now();
     
-    // Obtener el lead para saber el providerId
+    // Obtener el lead para saber el providerId y estado anterior
     const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
     if (!leadDoc.exists()) {
       throw new Error('Lead no encontrado');
@@ -978,6 +979,7 @@ export const rejectLeadWithReason = async (
     
     const leadData = leadDoc.data();
     const providerId = leadData.providerId;
+    const previousStatus = leadData.status as LeadStatus;
     
     // Actualizar el lead con el motivo de rechazo
     await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
@@ -988,10 +990,18 @@ export const rejectLeadWithReason = async (
       updatedAt: now,
     });
     
-    // Incrementar métrica de "no me interesa" del proveedor
-    await incrementProviderMetric(providerId, 'timesNotInterested');
-    
-    console.log(`✓ Lead ${leadId} rechazado con motivo: ${reason}`);
+    // CAMBIO: Solo actualizar métricas basándose en la decisión final
+    // Si estaba aprobado y ahora se rechaza, decrementar "me interesa" e incrementar "no me interesa"
+    if (previousStatus === 'approved') {
+      await decrementProviderMetric(providerId, 'timesInterested');
+      await incrementProviderMetric(providerId, 'timesNotInterested');
+      console.log(`✓ Lead ${leadId} cambió de aprobado a rechazado - métricas ajustadas`);
+    } else if (previousStatus === 'pending') {
+      // Solo si es la primera decisión, incrementar "no me interesa"
+      await incrementProviderMetric(providerId, 'timesNotInterested');
+      console.log(`✓ Lead ${leadId} rechazado (primera decisión) con motivo: ${reason}`);
+    }
+    // Si ya estaba rechazado, no hacemos nada con las métricas
   } catch (error) {
     console.error('Error al rechazar lead:', error);
     throw error;
@@ -1000,13 +1010,14 @@ export const rejectLeadWithReason = async (
 
 /**
  * Aprobar un lead (marcar como interesado)
- * También actualiza las métricas del proveedor
+ * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
+ * Si el usuario cambia de opinión (rechazado -> aprobado), decrementamos "no me interesa" e incrementamos "me interesa"
  */
 export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
   try {
     const now = Timestamp.now();
     
-    // Obtener el lead para saber el providerId
+    // Obtener el lead para saber el providerId y estado anterior
     const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
     if (!leadDoc.exists()) {
       throw new Error('Lead no encontrado');
@@ -1014,6 +1025,7 @@ export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
     
     const leadData = leadDoc.data();
     const providerId = leadData.providerId;
+    const previousStatus = leadData.status as LeadStatus;
     
     // Actualizar el lead
     await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
@@ -1021,10 +1033,18 @@ export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
       updatedAt: now,
     });
     
-    // Incrementar métrica de "me interesa" del proveedor
-    await incrementProviderMetric(providerId, 'timesInterested');
-    
-    console.log(`✓ Lead ${leadId} aprobado`);
+    // CAMBIO: Solo actualizar métricas basándose en la decisión final
+    // Si estaba rechazado y ahora se aprueba, decrementar "no me interesa" e incrementar "me interesa"
+    if (previousStatus === 'rejected') {
+      await decrementProviderMetric(providerId, 'timesNotInterested');
+      await incrementProviderMetric(providerId, 'timesInterested');
+      console.log(`✓ Lead ${leadId} cambió de rechazado a aprobado - métricas ajustadas`);
+    } else if (previousStatus === 'pending') {
+      // Solo si es la primera decisión, incrementar "me interesa"
+      await incrementProviderMetric(providerId, 'timesInterested');
+      console.log(`✓ Lead ${leadId} aprobado (primera decisión)`);
+    }
+    // Si ya estaba aprobado, no hacemos nada con las métricas
   } catch (error) {
     console.error('Error al aprobar lead:', error);
     throw error;
@@ -1075,6 +1095,45 @@ export const incrementProviderMetric = async (
     console.log(`✓ Métrica ${metric} incrementada para proveedor ${providerId}`);
   } catch (error) {
     console.error('Error al incrementar métrica:', error);
+    // No lanzamos el error para no bloquear la operación principal
+  }
+};
+
+/**
+ * Decrementar una métrica específica del proveedor
+ * NUEVO: Necesario para ajustar métricas cuando el usuario cambia de opinión
+ */
+export const decrementProviderMetric = async (
+  providerId: string,
+  metric: keyof ProviderMetrics
+): Promise<void> => {
+  try {
+    const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+    const providerDoc = await getDoc(providerRef);
+    
+    if (!providerDoc.exists()) {
+      console.warn(`Proveedor ${providerId} no encontrado para actualizar métricas`);
+      return;
+    }
+    
+    const data = providerDoc.data();
+    const currentMetrics: ProviderMetrics = data.metrics || {
+      timesOffered: 0,
+      timesInterested: 0,
+      timesNotInterested: 0,
+    };
+    
+    // Decrementar la métrica específica (mínimo 0)
+    currentMetrics[metric] = Math.max(0, (currentMetrics[metric] || 0) - 1);
+    
+    await updateDoc(providerRef, {
+      metrics: currentMetrics,
+      updatedAt: Timestamp.now(),
+    });
+    
+    console.log(`✓ Métrica ${metric} decrementada para proveedor ${providerId}`);
+  } catch (error) {
+    console.error('Error al decrementar métrica:', error);
     // No lanzamos el error para no bloquear la operación principal
   }
 };
@@ -1173,17 +1232,58 @@ export const getProvidersByFilters = async (
 };
 
 /**
+ * Verificar si un proveedor está disponible para una fecha específica
+ * NUEVO: Función auxiliar para validar disponibilidad del proveedor
+ */
+const isProviderAvailableOnDate = (
+  provider: ProviderProfile,
+  eventDate: string | null,
+  isDateTentative: boolean
+): boolean => {
+  // Si la fecha es tentativa, NO validamos disponibilidad (no es criterio de exclusión)
+  if (isDateTentative || !eventDate) {
+    return true;
+  }
+  
+  // Si el proveedor no tiene fechas bloqueadas, está disponible
+  if (!provider.blockedDates || provider.blockedDates.length === 0) {
+    return true;
+  }
+  
+  // Convertir la fecha del evento al formato YYYY-MM-DD para comparar
+  try {
+    const eventDateFormatted = new Date(eventDate).toISOString().split('T')[0];
+    
+    // Verificar si la fecha del evento está bloqueada
+    const isBlocked = provider.blockedDates.includes(eventDateFormatted);
+    
+    if (isBlocked) {
+      console.log(`  ⚠️ Proveedor ${provider.providerName} no disponible en fecha ${eventDateFormatted}`);
+    }
+    
+    return !isBlocked;
+  } catch (error) {
+    // Si hay error parseando la fecha, permitimos el match
+    console.warn('Error parseando fecha del evento:', error);
+    return true;
+  }
+};
+
+/**
  * Obtener proveedores disponibles para matchmaking en una categoría específica
  * Solo retorna proveedores que:
  * 1. Ofrecen esa categoría (en su array 'categories')
  * 2. Están activos
  * 3. Tienen leads disponibles para esa categoría
  * 4. Han completado su encuesta para esa categoría
+ * 5. NUEVO: Están disponibles en la fecha del evento (si no es tentativa)
  */
 export const getAvailableProvidersForCategory = async (
   category: CategoryId,
   region: string,
-  limitCount: number = 10
+  limitCount: number = 10,
+  eventDate: string | null = null,
+  isDateTentative: boolean = true
 ): Promise<ProviderProfile[]> => {
   try {
     console.log(`🔍 Buscando proveedores para categoría: ${category}, región: ${region}`);
@@ -1247,7 +1347,10 @@ export const getAvailableProvidersForCategory = async (
       // Verificar que completó encuesta para esta categoría
       const surveyCompleted = p.categorySurveyStatus?.[category] === 'completed';
       
-      return regionMatch && hasLeadsAvailable && surveyCompleted;
+      // NUEVO: Verificar disponibilidad en la fecha del evento (solo si fecha no es tentativa)
+      const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
+      
+      return regionMatch && hasLeadsAvailable && surveyCompleted && isAvailable;
     });
     
     console.log(`✅ Proveedores que pasan todos los filtros: ${filteredProviders.length}`);
@@ -1298,9 +1401,22 @@ export const generateMatchesForUserSurvey = async (
     if (!userProfile) {
       throw new Error('No se pudo obtener el perfil del usuario');
     }
+    
+    // NUEVO: Extraer fecha del evento y si es tentativa para filtrar por disponibilidad
+    // Verificamos que sea un perfil de usuario (no de proveedor)
+    let eventDate: string | null = null;
+    let isDateTentative = true; // Por defecto es true (no filtrar por disponibilidad)
+    
+    if (userProfile.type === 'user') {
+      eventDate = (userProfile as UserProfile).eventDate || null;
+      isDateTentative = (userProfile as UserProfile).isDateTentative !== false;
+    }
+    
+    console.log(`📅 Fecha del evento: ${eventDate || 'No especificada'}`);
+    console.log(`📅 ¿Es fecha tentativa?: ${isDateTentative ? 'Sí (NO se filtra por disponibilidad)' : 'No (SE FILTRA por disponibilidad)'}`);
 
-    // 3. Obtener proveedores disponibles
-    const providers = await getAvailableProvidersForCategory(category, region, maxMatches * 3);
+    // 3. Obtener proveedores disponibles (con filtro de disponibilidad si fecha no es tentativa)
+    const providers = await getAvailableProvidersForCategory(category, region, maxMatches * 3, eventDate, isDateTentative);
     
     // Si no hay proveedores con encuesta completada, buscar todos los activos de la categoría
     if (providers.length === 0) {
@@ -1325,17 +1441,24 @@ export const generateMatchesForUserSurvey = async (
         ...doc.data(),
       })) as ProviderProfile[];
       
-      // FILTRO CRÍTICO: Solo incluir proveedores que tengan leads disponibles
+      // FILTRO CRÍTICO: Solo incluir proveedores que tengan leads disponibles y estén disponibles en la fecha
       const fallbackProviders = allProviders.filter(p => {
         const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
         const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
         const hasLeadsAvailable = leadsUsed < leadLimit;
         
+        // NUEVO: También verificar disponibilidad en la fecha del evento
+        const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
+        
         if (!hasLeadsAvailable) {
           console.log(`⚠️ Proveedor ${p.providerName} excluido del fallback: sin leads disponibles (${leadsUsed}/${leadLimit})`);
         }
         
-        return hasLeadsAvailable;
+        if (!isAvailable) {
+          console.log(`⚠️ Proveedor ${p.providerName} excluido del fallback: no disponible en fecha ${eventDate}`);
+        }
+        
+        return hasLeadsAvailable && isAvailable;
       });
       
       if (fallbackProviders.length === 0) {

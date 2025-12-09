@@ -1321,6 +1321,318 @@
 }
 
 /* ====================================
+   LEAD STATUS BADGES
+   ==================================== */
+.leadStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.leadStatusApproved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.leadStatusRejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.leadStatusPending {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+/* ====================================
+   LEADS FILTERS SECTION
+   ==================================== */
+.leadsFilters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.filterSelect {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterSelect:hover {
+  border-color: var(--color-primary);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1);
+}
+
+/* ====================================
+   AVAILABILITY SECTION
+   ==================================== */
+.availabilitySection {
+  width: 100%;
+}
+
+.availabilityIntro {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+}
+
+.availabilityMessage {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-accent);
+  margin: 0 0 0.5rem 0;
+}
+
+.availabilityDescription {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.yearSelector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.yearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.yearButton:hover {
+  border-color: var(--color-primary);
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.yearDisplay {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+}
+
+.yearCalendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .yearCalendar {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .yearCalendar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .yearCalendar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.monthCalendar {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.monthName {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.75rem 0;
+  font-family: var(--font-heading);
+}
+
+.weekDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.weekDays span {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 0.25rem 0;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.dayButton {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.dayButton:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.2);
+  transform: scale(1.1);
+}
+
+.dayButton.dayBlocked {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.dayButton.dayBlocked:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.5);
+}
+
+.dayButton.dayPast {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.availabilityFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.availabilityLegend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legendAvailable {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.legendBlocked {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.legendPast {
+  background: var(--color-bg-tertiary);
+  opacity: 0.4;
+}
+
+.saveAvailabilityButton {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--color-primary-glow);
+}
+
+.saveAvailabilityButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-primary-glow);
+}
+
+.saveAvailabilityButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ====================================
    PROFILE SECTION - Diseño Premium Compacto
    ==================================== */
 .profileSection {
