@@ -29,7 +29,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.social}>
-            <a href="mailto:hola@matrimatch.com" aria-label="Email"><Mail /></a>
+            <a href="mailto:matrimatch.chile@gmail.com" aria-label="Email"><Mail /></a>
             <Instagram />
             <Facebook />
             <Twitter />

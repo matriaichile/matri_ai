@@ -1,13 +1,13 @@
 /* ====================================
    REJECT REASON MODAL - Dark Gold Theme
-   Matri.AI - Elegant Dark Premium
+   Matri.AI - Soporte Modo Claro/Oscuro
    Diseño compacto sin scroll
    ==================================== */
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -23,18 +23,16 @@
 }
 
 .modal {
-  background: linear-gradient(145deg, #1f1f1f, #181818);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  background: var(--color-background-elevated);
+  border: 1px solid var(--color-border-accent);
   border-radius: 16px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(212, 175, 55, 0.1),
-    0 0 30px rgba(212, 175, 55, 0.05);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
   animation: slideUp 0.3s ease;
   /* No scroll - diseño compacto */
   overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -61,18 +59,18 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-border-accent);
   border-radius: 10px;
-  color: var(--color-primary, #D4AF37);
+  color: var(--color-primary);
   margin-bottom: 0.625rem;
 }
 
 .title {
-  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 500;
-  background: linear-gradient(135deg, #E8D090, #D4AF37);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -80,9 +78,9 @@
 }
 
 .subtitle {
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-family: var(--font-body);
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -91,18 +89,18 @@
   top: 0.75rem;
   right: 0.75rem;
   padding: 0.375rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-background-hover);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-background-card);
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
 }
 
 /* Info del proveedor - compacta */
@@ -112,16 +110,16 @@
   justify-content: center;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.03);
-  border-top: 1px solid rgba(212, 175, 55, 0.08);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  background: var(--color-primary-subtle);
+  border-top: 1px solid var(--color-border-accent);
+  border-bottom: 1px solid var(--color-border-accent);
+  font-family: var(--font-body);
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .providerInfo strong {
-  color: var(--color-primary, #D4AF37);
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -138,11 +136,11 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -150,15 +148,15 @@
 }
 
 .optionButton:hover {
-  background: rgba(212, 175, 55, 0.05);
-  border-color: rgba(212, 175, 55, 0.15);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-border-accent);
+  color: var(--color-text);
 }
 
 .optionSelected {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
-  color: var(--color-primary, #D4AF37);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-border-hover);
+  color: var(--color-primary);
 }
 
 /* Radio button visual */
@@ -168,20 +166,20 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid var(--color-border);
   border-radius: 50%;
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
 .optionSelected .optionRadio {
-  border-color: var(--color-primary, #D4AF37);
+  border-color: var(--color-primary);
 }
 
 .optionRadioFill {
   width: 8px;
   height: 8px;
-  background: linear-gradient(135deg, #E8D090, #D4AF37);
+  background: var(--gradient-primary);
   border-radius: 50%;
   animation: popIn 0.15s ease;
 }
@@ -204,11 +202,11 @@
 .customReasonInput {
   width: 100%;
   padding: 0.625rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  background: var(--color-background-input);
+  border: 1px solid var(--color-border-accent);
   border-radius: 8px;
-  color: white;
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   resize: none;
   outline: none;
@@ -216,21 +214,21 @@
 }
 
 .customReasonInput::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-muted);
 }
 
 .customReasonInput:focus {
-  border-color: rgba(212, 175, 55, 0.35);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 .charCount {
   position: absolute;
   bottom: 1rem;
   right: 1.5rem;
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-family: var(--font-body);
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-muted);
 }
 
 /* Acciones - compactas */
@@ -238,18 +236,18 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-background-hover);
 }
 
 .cancelButton {
   flex: 1;
   padding: 0.625rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -257,8 +255,8 @@
 }
 
 .cancelButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--color-background-hover);
+  color: var(--color-text);
 }
 
 .confirmButton {
@@ -268,21 +266,21 @@
   justify-content: center;
   gap: 0.375rem;
   padding: 0.625rem 1rem;
-  background: linear-gradient(135deg, #D4AF37 0%, #B8941E 100%);
+  background: var(--gradient-primary);
   border: none;
   border-radius: 8px;
-  color: #000;
-  font-family: var(--font-body, 'Outfit', sans-serif);
+  color: var(--color-text-inverse);
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 2px 8px var(--color-primary-glow);
 }
 
 .confirmButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 12px var(--color-primary-glow);
 }
 
 .confirmButton:disabled {
@@ -296,7 +294,7 @@
   width: 14px;
   height: 14px;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  border-top-color: #000;
+  border-top-color: var(--color-text-inverse);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

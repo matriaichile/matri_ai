@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Mail, X, Copy, Check } from 'lucide-react';
 import styles from './DashboardHeader.module.css';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface DashboardHeaderProps {
   title: string;
@@ -48,6 +49,9 @@ export default function DashboardHeader({
           <p className={styles.pageSubtitle}>{subtitle}</p>
         </div>
         <div className={styles.headerRight}>
+          {/* Toggle de tema */}
+          <ThemeToggle compact className={styles.themeToggle} />
+          
           {/* Botón de contacto */}
           <button 
             className={styles.contactButton}

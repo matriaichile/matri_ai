@@ -550,7 +550,8 @@ export default function UserDashboardPage() {
                 const categoryInfo = getCategoryInfo(categoryId);
                 const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
                 const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
-                const categoryMatches = matches.filter(m => m.category === categoryId);
+                // CAMBIO: Solo contar matches NO rechazados para el badge
+                const categoryMatches = matches.filter(m => m.category === categoryId && m.status !== 'rejected');
                 
                 // Mapeo de iconos por categoría
                 const CATEGORY_ICON_MAP: Record<CategoryId, React.ReactNode> = {
@@ -579,7 +580,7 @@ export default function UserDashboardPage() {
                     className={`${styles.homeCategoryCard} ${isCompleted ? styles.homeCategoryCardCompleted : ''}`}
                     style={{ position: 'relative' }}
                   >
-                    {/* Badge de matches si hay */}
+                    {/* Badge de matches si hay - solo no rechazados */}
                     {categoryMatches.length > 0 && (
                       <span className={styles.homeCategoryMatchesBadge}>
                         {categoryMatches.length}
@@ -629,11 +630,12 @@ export default function UserDashboardPage() {
                     const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
                     const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
                     const categoryInfo = getCategoryInfo(categoryId);
-                    const categoryMatches = matches.filter(m => m.category === categoryId);
+                    // CAMBIO: Solo contar matches NO rechazados para el badge amarillo
+                    const categoryMatches = matches.filter(m => m.category === categoryId && m.status !== 'rejected');
                     
                     return (
                       <div key={category} className={styles.categoryIconCardWrapper}>
-                        {/* Badge de matches - fuera de la tarjeta para que no se corte */}
+                        {/* Badge de matches - fuera de la tarjeta para que no se corte - solo no rechazados */}
                         {isCompleted && categoryMatches.length > 0 && (
                           <span className={styles.categoryMatchCount}>
                             {categoryMatches.length}
@@ -675,72 +677,122 @@ export default function UserDashboardPage() {
             )}
 
             {/* Otras categorías - Grid más compacto */}
-            {/* CAMBIO: Solo mostrar categorías que el usuario ha comenzado (tiene algún estado de encuesta) */}
+            {/* CAMBIO: Mostrar categorías en progreso Y demás categorías (aunque no haya respondido nada) */}
             {(() => {
               const otherCategories = ALL_CATEGORIES.filter(
                 cat => !profile?.priorityCategories?.includes(cat)
               );
               
-              // Filtrar solo las categorías que el usuario ha comenzado a completar
+              // Separar categorías en progreso de las demás
               const startedOtherCategories = otherCategories.filter(cat => {
                 const surveyStatus = profile?.categorySurveyStatus?.[cat];
                 // Mostrar si tiene algún estado (in_progress, completed, matches_generated)
                 return surveyStatus && surveyStatus !== 'not_started';
               });
               
-              if (startedOtherCategories.length === 0) return null;
+              // Categorías que no ha comenzado (demás categorías)
+              const notStartedCategories = otherCategories.filter(cat => {
+                const surveyStatus = profile?.categorySurveyStatus?.[cat];
+                return !surveyStatus || surveyStatus === 'not_started';
+              });
               
               return (
-                <div className={styles.categoriesOtherSection}>
-                  <div className={styles.categoriesSectionLabel}>
-                    <Search size={14} />
-                    <span>Otras categorías en progreso</span>
-                  </div>
-                  <div className={styles.categoriesIconGridSmall}>
-                    {startedOtherCategories.map((category) => {
-                      const categoryId = category as CategoryId;
-                      const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
-                      const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
-                      const categoryInfo = getCategoryInfo(categoryId);
-                      const categoryMatches = matches.filter(m => m.category === categoryId);
-                      
-                      return (
-                        <div key={category} className={styles.categoryIconCardSmallWrapper}>
-                          {/* Badge de matches - fuera de la tarjeta */}
-                          {isCompleted && categoryMatches.length > 0 && (
-                            <span className={styles.categoryMatchCountSmall}>
-                              {categoryMatches.length}
-                            </span>
-                          )}
-                          <Link 
-                            href={isCompleted 
-                              ? `/dashboard/category/${categoryId}/matches` 
-                              : `/dashboard/category/${categoryId}/survey`
-                            }
-                            className={`${styles.categoryIconCardSmall} ${isCompleted ? styles.categoryIconCardSmallCompleted : ''}`}
-                          >
-                            {/* Icono */}
-                            <div className={styles.categoryIconMedium}>
-                              {CATEGORY_ICONS[category]}
+                <>
+                  {/* Categorías en progreso */}
+                  {startedOtherCategories.length > 0 && (
+                    <div className={styles.categoriesOtherSection}>
+                      <div className={styles.categoriesSectionLabel}>
+                        <Search size={14} />
+                        <span>Otras categorías en progreso</span>
+                      </div>
+                      <div className={styles.categoriesIconGridSmall}>
+                        {startedOtherCategories.map((category) => {
+                          const categoryId = category as CategoryId;
+                          const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
+                          const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+                          const categoryInfo = getCategoryInfo(categoryId);
+                          // CAMBIO: Solo contar matches NO rechazados
+                          const categoryMatches = matches.filter(m => m.category === categoryId && m.status !== 'rejected');
+                          
+                          return (
+                            <div key={category} className={styles.categoryIconCardSmallWrapper}>
+                              {/* Badge de matches - fuera de la tarjeta - solo no rechazados */}
+                              {isCompleted && categoryMatches.length > 0 && (
+                                <span className={styles.categoryMatchCountSmall}>
+                                  {categoryMatches.length}
+                                </span>
+                              )}
+                              <Link 
+                                href={isCompleted 
+                                  ? `/dashboard/category/${categoryId}/matches` 
+                                  : `/dashboard/category/${categoryId}/survey`
+                                }
+                                className={`${styles.categoryIconCardSmall} ${isCompleted ? styles.categoryIconCardSmallCompleted : ''}`}
+                              >
+                                {/* Icono */}
+                                <div className={styles.categoryIconMedium}>
+                                  {CATEGORY_ICONS[category]}
+                                </div>
+                                
+                                {/* Nombre */}
+                                <span className={styles.categoryIconNameSmall}>
+                                  {categoryInfo?.name || getCategoryLabel(category)}
+                                </span>
+                                
+                                {/* Estado */}
+                                {isCompleted && (
+                                  <span className={styles.categoryStatusCompletedSmall}>
+                                    <Check size={8} />
+                                  </span>
+                                )}
+                              </Link>
                             </div>
-                            
-                            {/* Nombre */}
-                            <span className={styles.categoryIconNameSmall}>
-                              {categoryInfo?.name || getCategoryLabel(category)}
-                            </span>
-                            
-                            {/* Estado */}
-                            {isCompleted && (
-                              <span className={styles.categoryStatusCompletedSmall}>
-                                <Check size={8} />
-                              </span>
-                            )}
-                          </Link>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* DEMÁS CATEGORÍAS - Aunque no haya respondido nada */}
+                  {notStartedCategories.length > 0 && (
+                    <div className={styles.categoriesOtherSection}>
+                      <div className={styles.categoriesSectionLabel}>
+                        <FileText size={14} />
+                        <span>Demás categorías</span>
+                      </div>
+                      <div className={styles.categoriesIconGridSmall}>
+                        {notStartedCategories.map((category) => {
+                          const categoryId = category as CategoryId;
+                          const categoryInfo = getCategoryInfo(categoryId);
+                          
+                          return (
+                            <div key={category} className={styles.categoryIconCardSmallWrapper}>
+                              <Link 
+                                href={`/dashboard/category/${categoryId}/survey`}
+                                className={styles.categoryIconCardSmall}
+                              >
+                                {/* Icono */}
+                                <div className={styles.categoryIconMedium}>
+                                  {CATEGORY_ICONS[category]}
+                                </div>
+                                
+                                {/* Nombre */}
+                                <span className={styles.categoryIconNameSmall}>
+                                  {categoryInfo?.name || getCategoryLabel(category)}
+                                </span>
+                                
+                                {/* Estado - No iniciada */}
+                                <span className={styles.categoryStatusPending}>
+                                  Completar
+                                </span>
+                              </Link>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
               );
             })()}
 
@@ -1087,12 +1139,14 @@ export default function UserDashboardPage() {
                   </div>
                   <h2 className={styles.providerModalTitle}>
                     {selectedMatch.providerInfo.providerName}
-                    {providers[selectedMatch.providerId]?.isVerified && (
-                      <span className={styles.verifiedBadgeLarge} title="Proveedor verificado">
-                        <BadgeCheck size={20} />
-                      </span>
-                    )}
                   </h2>
+                  {/* CAMBIO: Badge de verificación prominente con texto en azul */}
+                  {providers[selectedMatch.providerId]?.isVerified && (
+                    <span className={styles.verifiedBadgeTextLarge}>
+                      <BadgeCheck size={14} />
+                      <span>Proveedor verificado</span>
+                    </span>
+                  )}
                   <p className={styles.providerModalCategory}>
                     {getCategoryLabel(selectedMatch.category)}
                   </p>

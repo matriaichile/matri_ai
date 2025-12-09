@@ -576,7 +576,8 @@ export default function ProviderDashboardPage() {
           activeSection={activeSection}
           onSectionChange={setActiveSection}
           onLogout={handleLogout}
-          pendingLeadsCount={approvedLeads}
+          // CAMBIO: Unificar el número - mostrar total de leads visible (no solo aprobados)
+          pendingLeadsCount={totalLeads}
           categoryIcon={profile?.categories?.[0] ? CATEGORY_ICONS[profile.categories[0]] : undefined}
           completedSurveysCount={completedSurveysCount}
         />
@@ -811,7 +812,8 @@ export default function ProviderDashboardPage() {
                     className={`${styles.filterOption} ${selectedCategory === 'all' ? styles.filterOptionActive : ''}`}
                     onClick={() => setSelectedCategory('all')}
                   >
-                    Todos ({leads.length})
+                    {/* CAMBIO: Usar visibleLeads.length para unificar el conteo */}
+                    Todos ({visibleLeads.length})
                   </button>
                   {profile.categories.map((cat) => (
                     <button

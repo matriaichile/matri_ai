@@ -4,13 +4,28 @@
 
 **Fecha:** Diciembre 2025  
 **Estado:** ✅ IMPLEMENTADO  
-**Versión:** 3.0
+**Versión:** 3.1 (Actualización 9 de Diciembre)
 
 ---
 
 ## Resumen de Cambios Implementados
 
 Este documento detalla los cambios solicitados por el cliente y su estado de implementación.
+
+### Última Actualización (V3.1) - 9 Diciembre 2025
+
+| #   | Cambio                                                                     | Estado |
+| --- | -------------------------------------------------------------------------- | ------ |
+| 1   | Email de contacto actualizado a matrimatch.chile@gmail.com                 | ✅     |
+| 2   | Sección Categorías: Tus prioridades + Otras en progreso + DEMÁS CATEGORÍAS | ✅     |
+| 3   | Contador de matches muestra x/5 (cantidad real, no 0/5)                    | ✅     |
+| 4   | Mis Matches: primero aprobados (te interesan), luego pendientes            | ✅     |
+| 5   | Límite de 3 opciones iniciales + máximo 2 extras                           | ✅     |
+| 6   | Número de leads unificado en bandeja de entrada                            | ✅     |
+| 7   | Badge amarillo no cuenta rechazados                                        | ✅     |
+| 8   | Badge de verificación: texto "Proveedor verificado" en azul                | ✅     |
+
+---
 
 ### Leyenda de Estados
 
@@ -521,5 +536,104 @@ Archivos clave:
 
 ---
 
+## Cambios V3.1 - Detalle Técnico (9 Diciembre 2025)
+
+### 1. Email de Contacto ✅
+
+**Archivo:** `src/components/landing/Footer.tsx`
+
+**Cambio:** Email actualizado de `hola@matrimatch.com` a `matrimatch.chile@gmail.com`
+
+---
+
+### 2. Sección Categorías - Panel Novios ✅
+
+**Archivo:** `src/app/dashboard/page.tsx`
+
+**Cambios:**
+
+- Se muestran ahora 3 secciones:
+  1. **Tus prioridades** - Categorías prioritarias del usuario
+  2. **Otras categorías en progreso** - Categorías que ha comenzado pero no son prioritarias
+  3. **Demás categorías** - TODAS las categorías restantes (aunque no haya respondido nada)
+
+---
+
+### 3. Contador de Matches ✅
+
+**Archivos:**
+
+- `src/components/matches/ShowMoreButton.tsx`
+- `src/utils/matchLimits.ts`
+
+**Cambio:** El contador ahora muestra `x/5` donde `x` es la cantidad real de matches (leads) que tiene el usuario, no siempre 0/5. Solo muestra 0/5 cuando se reinician los matches cada 24 horas.
+
+---
+
+### 4. Orden de Matches ✅
+
+**Archivo:** `src/app/dashboard/category/[categoryId]/matches/page.tsx`
+
+**Cambio:** Los matches ahora se muestran en este orden:
+
+1. **Proveedores de interés** (aprobados) - Lo más importante
+2. **Posibles matches** (pendientes)
+3. **Descartados** (rechazados)
+
+---
+
+### 5. Límite de Opciones ✅
+
+**Archivos:**
+
+- `src/utils/matchLimits.ts` - Nuevas constantes `INITIAL_MATCHES_COUNT = 3` y `EXTRA_MATCHES_ALLOWED = 2`
+- `src/app/dashboard/category/[categoryId]/survey/page.tsx` - Genera máximo 3 iniciales
+- `src/components/matches/ShowMoreButton.tsx` - Controla que solo puede pedir 2 extras
+
+**Regla:** 3 matches iniciales + máximo 2 extras si rechaza = 5 total máximo
+
+---
+
+### 6. Unificación de Conteo de Leads ✅
+
+**Archivo:** `src/app/dashboard/provider/page.tsx`
+
+**Cambio:** El badge de "Mis Leads" ahora muestra `totalLeads` (total visible) en lugar de solo `approvedLeads`, unificando el número con lo que se muestra dentro de la sección.
+
+---
+
+### 7. Badge Amarillo - No Contar Rechazados ✅
+
+**Archivo:** `src/app/dashboard/page.tsx`
+
+**Cambio:** El badge amarillo de cantidad de matches por categoría ahora filtra los rechazados:
+
+```javascript
+const categoryMatches = matches.filter(
+  (m) => m.category === categoryId && m.status !== "rejected"
+);
+```
+
+---
+
+### 8. Badge de Verificación Mejorado ✅
+
+**Archivos:**
+
+- `src/app/dashboard/category/[categoryId]/matches/page.tsx`
+- `src/app/dashboard/category/[categoryId]/matches/page.module.css`
+- `src/app/dashboard/page.tsx`
+- `src/app/dashboard/page.module.css`
+
+**Cambio:** El badge de verificación ahora muestra el texto "Proveedor verificado" en color azul (#3b82f6) con fondo semitransparente, más visible y distintivo que el pequeño check amarillo anterior.
+
+**Nuevos estilos CSS:**
+
+- `.verifiedBadgeText` - Para tarjetas de matches
+- `.verifiedBadgeTextLarge` - Para modales de detalles
+
+---
+
 _Documento creado: Diciembre 2025_  
+_Última actualización: 9 Diciembre 2025 (V3.1)_  
 _Desarrollador: MatriMatch Development Team_

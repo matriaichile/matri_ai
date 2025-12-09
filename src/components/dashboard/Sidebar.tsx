@@ -15,6 +15,7 @@ import {
   Image
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 // Definición de tipos para las secciones
 type UserSection = 'matches' | 'surveys' | 'profile';
@@ -66,6 +67,7 @@ type SidebarProps = UserSidebarProps | ProviderSidebarProps;
 /**
  * Sidebar moderno colapsable para los dashboards.
  * Se expande en hover, estilo Make/Supabase.
+ * Incluye toggle de tema claro/oscuro.
  */
 export default function Sidebar(props: SidebarProps) {
   const { variant, onLogout } = props;
@@ -178,6 +180,13 @@ export default function Sidebar(props: SidebarProps) {
               <span className={styles.statValue}>{approvedCount}</span>
               <span className={styles.statLabel}>Aprobados</span>
             </div>
+          </div>
+        )}
+
+        {/* Toggle de tema - Solo visible cuando está expandido */}
+        {showExpanded && (
+          <div className={styles.themeContainer}>
+            <ThemeToggle />
           </div>
         )}
 
@@ -311,6 +320,13 @@ export default function Sidebar(props: SidebarProps) {
               style={{ width: `${leadsUsedPercentage}%` }}
             />
           </div>
+        </div>
+      )}
+
+      {/* Toggle de tema - Solo visible cuando está expandido */}
+      {showExpanded && (
+        <div className={styles.themeContainer}>
+          <ThemeToggle />
         </div>
       )}
 

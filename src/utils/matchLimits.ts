@@ -10,7 +10,10 @@
  */
 
 // Constantes del sistema
+// CAMBIO: 3 opciones iniciales + máximo 2 extras si rechaza = 5 total
 export const MATCH_LIMIT_PER_CATEGORY = 5;
+export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales por categoría
+export const EXTRA_MATCHES_ALLOWED = 2; // Máximo extras que puede solicitar
 export const RESET_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 // Estructura de datos para límites por categoría

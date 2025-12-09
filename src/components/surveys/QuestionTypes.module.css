@@ -1,6 +1,6 @@
 /* ====================================
    QUESTION TYPES - ESTILO ELEGANTE
-   Negro y Dorado Premium - Matri.AI
+   Matri.AI - Soporte Modo Claro/Oscuro
    ==================================== */
 
 /* Grid de opciones */
@@ -24,7 +24,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: rgba(26, 26, 26, 0.6);
+  background: var(--color-background-input);
   /* Borde de 2px desde el inicio para evitar layout shift */
   border: 2px solid var(--color-border);
   border-radius: 10px;
@@ -52,18 +52,18 @@
 
 .optionCard:hover {
   border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  background: var(--color-primary-subtle);
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 4px 15px var(--color-primary-glow);
 }
 
 .optionCardSelected {
   border-color: var(--color-primary);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  background: linear-gradient(135deg, var(--color-primary-subtle), rgba(212, 175, 55, 0.05));
   /* Solo box-shadow para el glow, sin outline que puede causar shift visual */
   box-shadow: 
-    0 0 0 1px rgba(212, 175, 55, 0.4),
-    0 4px 20px rgba(212, 175, 55, 0.2);
+    0 0 0 1px var(--color-border-hover),
+    0 4px 20px var(--color-primary-glow);
 }
 
 .optionCardSelected:hover {
@@ -116,7 +116,7 @@
 /* Estado visible del checkmark */
 .checkmarkVisible {
   background: var(--color-primary);
-  color: #000000;
+  color: var(--color-text-inverse);
   transform: scale(1);
   opacity: 1;
 }
@@ -155,7 +155,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem 2.5rem;
-  background: rgba(26, 26, 26, 0.6);
+  background: var(--color-background-input);
   border: 2px solid var(--color-border);
   border-radius: 16px;
   color: var(--color-text-secondary);
@@ -172,18 +172,18 @@
 
 .booleanButton:hover {
   border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
+  background: var(--color-primary-subtle);
   transform: translateY(-2px);
 }
 
 .booleanButtonSelected {
   border-color: var(--color-primary);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), var(--color-primary-subtle));
   color: var(--color-primary-light);
   box-shadow: 
-    0 0 0 3px rgba(212, 175, 55, 0.3),
-    0 0 20px rgba(212, 175, 55, 0.25),
-    0 8px 30px rgba(212, 175, 55, 0.2);
+    0 0 0 3px var(--color-border-hover),
+    0 0 20px var(--color-primary-glow),
+    0 8px 30px var(--color-primary-glow);
   z-index: 2;
 }
 
@@ -193,15 +193,15 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--color-primary-subtle);
   border-radius: 12px;
   transition: all 300ms ease;
 }
 
 .booleanButtonSelected .booleanIcon {
   background: var(--color-primary);
-  color: #000000;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+  color: var(--color-text-inverse);
+  box-shadow: 0 0 15px var(--color-primary-glow);
 }
 
 /* Contenedor numérico */
@@ -222,7 +222,7 @@
 .numberInput {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: rgba(26, 26, 26, 0.6);
+  background: var(--color-background-input);
   border: 2px solid var(--color-border);
   border-radius: 12px;
   color: var(--color-text);
@@ -243,8 +243,8 @@
 .numberInput:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 .numberInput::placeholder {
@@ -260,12 +260,12 @@
 
 /* Estilos de error para inputs numéricos fuera de rango */
 .numberInputError {
-  border-color: #ef4444 !important;
-  background: rgba(239, 68, 68, 0.05) !important;
+  border-color: var(--color-danger) !important;
+  background: var(--color-danger-bg) !important;
 }
 
 .numberHintError {
-  color: #ef4444 !important;
+  color: var(--color-danger) !important;
   font-weight: 500;
 }
 
@@ -278,7 +278,7 @@
 .textInput {
   width: 100%;
   padding: 1rem;
-  background: rgba(26, 26, 26, 0.6);
+  background: var(--color-background-input);
   border: 2px solid var(--color-border);
   border-radius: 12px;
   color: var(--color-text);
@@ -293,8 +293,8 @@
 .textInput:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: rgba(212, 175, 55, 0.05);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 .textInput::placeholder {
@@ -334,4 +334,3 @@
     padding: 0.875rem 1rem;
   }
 }
-

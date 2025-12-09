@@ -402,152 +402,7 @@ export default function CategoryMatchesPage() {
           </div>
         ) : (
           <>
-            {/* Matches pendientes */}
-            {pendingMatches.length > 0 && (
-              <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>
-                  <Sparkles size={18} />
-                  <span>Nuevos matches</span>
-                  <span className={styles.badge}>{pendingMatches.length}</span>
-                </h2>
-                <p className={styles.sectionDescription}>
-                  Revisa estos proveedores y decide si quieres contactarlos
-                </p>
-                
-                <div className={styles.matchesGridCentered}>
-                  {pendingMatches.map((match, index) => {
-                    const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
-                    const hasProfileImage = match.providerDetails?.profileImage?.url;
-                    
-                    return (
-                      <div 
-                        key={match.id} 
-                        className={styles.matchCardWithScore}
-                        style={{ animationDelay: `${index * 80}ms` }}
-                      >
-                        {/* Badge de compatibilidad flotante */}
-                        <div 
-                          className={styles.matchBadgeFloating}
-                          style={getMatchCategoryStyles(match.matchScore)}
-                        >
-                          {getMatchCategory(match.matchScore).label}
-                        </div>
-                        
-                        <div className={styles.matchCard}>
-                          {/* Imagen del proveedor */}
-                          <div 
-                            className={styles.matchImage}
-                            onClick={() => {
-                              // Si tiene portafolio, abrir galería; si no, abrir detalles
-                              const hasPortfolio = match.providerDetails?.portfolioImages && match.providerDetails.portfolioImages.length > 0;
-                              if (hasPortfolio) {
-                                setGalleryMatch(match);
-                              } else {
-                                handleViewDetails(match);
-                              }
-                            }}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <div className={styles.matchImageWrapper}>
-                              {hasProfileImage ? (
-                                <div 
-                                  className={styles.matchProfileImage}
-                                  style={{
-                                    backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
-                                    ...calculateBackgroundStyles(match.providerDetails!.profileImage!.cropData),
-                                  }}
-                                />
-                              ) : (
-                                <img 
-                                  src={categoryImage} 
-                                  alt={match.providerInfo.providerName}
-                                />
-                              )}
-                            </div>
-                            <div className={styles.matchCategory}>
-                              <span>{categoryInfo?.name}</span>
-                            </div>
-                          </div>
-
-                        <div className={styles.matchBody}>
-                          <h3 className={styles.providerName}>
-                            {match.providerInfo.providerName}
-                            {match.providerDetails?.isVerified && (
-                              <span className={styles.verifiedBadge} title="Proveedor verificado">
-                                <BadgeCheck size={16} />
-                              </span>
-                            )}
-                          </h3>
-
-                          <div className={styles.matchMeta}>
-                            <span className={styles.metaItem}>
-                              <MapPin size={14} />
-                              <span>{getRegionLabel(match.userInfo.region)}</span>
-                            </span>
-                            <span className={styles.metaItem}>
-                              <DollarSign size={14} />
-                              <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
-                            </span>
-                          </div>
-                        </div>
-
-                          <div className={styles.matchActions}>
-                            <button 
-                              className={styles.viewDetailsButton}
-                              onClick={() => handleViewDetails(match)}
-                            >
-                              <Eye size={16} />
-                              <span>Ver detalles</span>
-                            </button>
-                            <div className={styles.actionButtons}>
-                              <button 
-                                className={styles.rejectButton}
-                                onClick={() => handleRejectClick(match)}
-                                disabled={processingId === match.id}
-                                title="Descartar"
-                              >
-                                {processingId === match.id ? (
-                                  <Loader2 size={16} className={styles.buttonSpinner} />
-                                ) : (
-                                  <X size={16} />
-                                )}
-                              </button>
-                              <button 
-                                className={styles.approveButton}
-                                onClick={() => handleApprove(match.id)}
-                                disabled={processingId === match.id}
-                                title="Me interesa"
-                              >
-                                {processingId === match.id ? (
-                                  <Loader2 size={16} className={styles.buttonSpinner} />
-                                ) : (
-                                  <>
-                                    <Heart size={16} />
-                                    <span>Me interesa</span>
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Botón para mostrar nuevo proveedor */}
-                {firebaseUser?.uid && (
-                  <ShowMoreButton
-                    userId={firebaseUser.uid}
-                    categoryId={categoryId}
-                    onRequestNewMatch={handleRequestNewMatch}
-                    isLoading={isGeneratingNew}
-                  />
-                )}
-              </section>
-            )}
-
-            {/* Matches aprobados - con info de contacto */}
+            {/* CAMBIO: Matches aprobados PRIMERO - son los más importantes (te interesan) */}
             {approvedMatches.length > 0 && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>
@@ -617,12 +472,14 @@ export default function CategoryMatchesPage() {
                         <div className={styles.matchBody}>
                           <h3 className={styles.providerName}>
                             {match.providerInfo.providerName}
-                            {match.providerDetails?.isVerified && (
-                              <span className={styles.verifiedBadge} title="Proveedor verificado">
-                                <BadgeCheck size={16} />
-                              </span>
-                            )}
                           </h3>
+                          {/* CAMBIO: Badge de verificación más prominente con texto en azul */}
+                          {match.providerDetails?.isVerified && (
+                            <span className={styles.verifiedBadgeText}>
+                              <BadgeCheck size={12} />
+                              <span>Proveedor verificado</span>
+                            </span>
+                          )}
 
                           <div className={styles.matchMeta}>
                             <span className={styles.metaItem}>
@@ -662,6 +519,155 @@ export default function CategoryMatchesPage() {
                     );
                   })}
                 </div>
+              </section>
+            )}
+
+            {/* Matches pendientes - DESPUÉS de los aprobados */}
+            {pendingMatches.length > 0 && (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <Sparkles size={18} />
+                  <span>Posibles matches</span>
+                  <span className={styles.badge}>{pendingMatches.length}</span>
+                </h2>
+                <p className={styles.sectionDescription}>
+                  Revisa estos proveedores y decide si quieres contactarlos
+                </p>
+                
+                <div className={styles.matchesGridCentered}>
+                  {pendingMatches.map((match, index) => {
+                    const categoryImage = CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography;
+                    const hasProfileImage = match.providerDetails?.profileImage?.url;
+                    
+                    return (
+                      <div 
+                        key={match.id} 
+                        className={styles.matchCardWithScore}
+                        style={{ animationDelay: `${index * 80}ms` }}
+                      >
+                        {/* Badge de compatibilidad flotante */}
+                        <div 
+                          className={styles.matchBadgeFloating}
+                          style={getMatchCategoryStyles(match.matchScore)}
+                        >
+                          {getMatchCategory(match.matchScore).label}
+                        </div>
+                        
+                        <div className={styles.matchCard}>
+                          {/* Imagen del proveedor */}
+                          <div 
+                            className={styles.matchImage}
+                            onClick={() => {
+                              // Si tiene portafolio, abrir galería; si no, abrir detalles
+                              const hasPortfolio = match.providerDetails?.portfolioImages && match.providerDetails.portfolioImages.length > 0;
+                              if (hasPortfolio) {
+                                setGalleryMatch(match);
+                              } else {
+                                handleViewDetails(match);
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className={styles.matchImageWrapper}>
+                              {hasProfileImage ? (
+                                <div 
+                                  className={styles.matchProfileImage}
+                                  style={{
+                                    backgroundImage: `url(${match.providerDetails!.profileImage!.url})`,
+                                    ...calculateBackgroundStyles(match.providerDetails!.profileImage!.cropData),
+                                  }}
+                                />
+                              ) : (
+                                <img 
+                                  src={categoryImage} 
+                                  alt={match.providerInfo.providerName}
+                                />
+                              )}
+                            </div>
+                            <div className={styles.matchCategory}>
+                              <span>{categoryInfo?.name}</span>
+                            </div>
+                          </div>
+
+                        <div className={styles.matchBody}>
+                          <h3 className={styles.providerName}>
+                            {match.providerInfo.providerName}
+                          </h3>
+                          {/* CAMBIO: Badge de verificación más prominente con texto en azul */}
+                          {match.providerDetails?.isVerified && (
+                            <span className={styles.verifiedBadgeText}>
+                              <BadgeCheck size={12} />
+                              <span>Proveedor verificado</span>
+                            </span>
+                          )}
+
+                          <div className={styles.matchMeta}>
+                            <span className={styles.metaItem}>
+                              <MapPin size={14} />
+                              <span>{getRegionLabel(match.userInfo.region)}</span>
+                            </span>
+                            <span className={styles.metaItem}>
+                              <DollarSign size={14} />
+                              <span>{getPriceLabel(match.providerInfo.priceRange)}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                          <div className={styles.matchActions}>
+                            <button 
+                              className={styles.viewDetailsButton}
+                              onClick={() => handleViewDetails(match)}
+                            >
+                              <Eye size={16} />
+                              <span>Ver detalles</span>
+                            </button>
+                            <div className={styles.actionButtons}>
+                              <button 
+                                className={styles.rejectButton}
+                                onClick={() => handleRejectClick(match)}
+                                disabled={processingId === match.id}
+                                title="Descartar"
+                              >
+                                {processingId === match.id ? (
+                                  <Loader2 size={16} className={styles.buttonSpinner} />
+                                ) : (
+                                  <X size={16} />
+                                )}
+                              </button>
+                              <button 
+                                className={styles.approveButton}
+                                onClick={() => handleApprove(match.id)}
+                                disabled={processingId === match.id}
+                                title="Me interesa"
+                              >
+                                {processingId === match.id ? (
+                                  <Loader2 size={16} className={styles.buttonSpinner} />
+                                ) : (
+                                  <>
+                                    <Heart size={16} />
+                                    <span>Me interesa</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Botón para mostrar nuevo proveedor */}
+                {/* CAMBIO: Pasar cantidad de matches (no rechazados) para mostrar x/5 */}
+                {firebaseUser?.uid && (
+                  <ShowMoreButton
+                    userId={firebaseUser.uid}
+                    categoryId={categoryId}
+                    onRequestNewMatch={handleRequestNewMatch}
+                    isLoading={isGeneratingNew}
+                    currentMatchesCount={matches.filter(m => m.status !== 'rejected').length}
+                  />
+                )}
               </section>
             )}
 
@@ -741,12 +747,14 @@ export default function CategoryMatchesPage() {
                   </div>
                   <h2 className={styles.detailsTitle}>
                     {selectedMatch.providerInfo.providerName}
-                    {selectedMatch.providerDetails?.isVerified && (
-                      <span className={styles.verifiedBadgeLarge} title="Proveedor verificado">
-                        <BadgeCheck size={20} />
-                      </span>
-                    )}
                   </h2>
+                  {/* CAMBIO: Badge de verificación prominente con texto en azul */}
+                  {selectedMatch.providerDetails?.isVerified && (
+                    <span className={styles.verifiedBadgeTextLarge}>
+                      <BadgeCheck size={14} />
+                      <span>Proveedor verificado</span>
+                    </span>
+                  )}
                   <p className={styles.detailsSubtitle}>
                     {categoryInfo?.name}
                   </p>

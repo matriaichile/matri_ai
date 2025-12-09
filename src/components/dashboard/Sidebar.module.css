@@ -1,6 +1,6 @@
 /* ====================================
    SIDEBAR - Modern Collapsible Design
-   Matri.AI - Elegant Dark Theme
+   Matri.AI - Soporte Modo Claro/Oscuro
    ==================================== */
 
 .sidebar {
@@ -13,8 +13,8 @@
   top: 0;
   width: var(--sidebar-collapsed-width);
   height: 100vh;
-  background: #141414;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-background-elevated);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -24,7 +24,7 @@
 
 .sidebarExpanded {
   width: var(--sidebar-expanded-width);
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
 }
 
 .sidebarPinned {
@@ -39,8 +39,8 @@
 .pinButton {
   width: 26px;
   height: 26px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-background-hover);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -56,14 +56,14 @@
 }
 
 .pinButton:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.2);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-border-accent);
   color: var(--color-primary);
 }
 
 .pinButtonActive {
-  background: rgba(212, 175, 55, 0.12);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-border-accent);
   color: var(--color-primary);
 }
 
@@ -74,19 +74,19 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
   height: 64px;
   box-sizing: border-box;
-  background: rgba(212, 175, 55, 0.02);
+  background: var(--color-primary-subtle);
 }
 
 .profileAvatar {
   width: 32px;
   height: 32px;
   min-width: 32px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.08));
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, var(--color-primary-subtle), rgba(212, 175, 55, 0.08));
+  border: 1px solid var(--color-border-accent);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -166,18 +166,18 @@
 }
 
 .statusActive {
-  background: rgba(34, 197, 94, 0.1);
-  color: #4ade80;
+  background: var(--color-success-bg);
+  color: var(--color-success-light);
 }
 
 .statusPending {
-  background: rgba(234, 179, 8, 0.1);
-  color: #facc15;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-light);
 }
 
 .statusClosed {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-light);
 }
 
 /* Navegación */
@@ -217,7 +217,7 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-background-hover);
   color: var(--color-text);
 }
 
@@ -239,7 +239,7 @@
 }
 
 .navItemActive {
-  background: rgba(212, 175, 55, 0.08);
+  background: var(--color-primary-subtle);
   color: var(--color-primary);
 }
 
@@ -261,13 +261,13 @@
 }
 
 .navItemActive:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(212, 175, 55, 0.12);
 }
 
 .navBadge {
   margin-left: auto;
   padding: 0.1rem 0.35rem;
-  background: rgba(212, 175, 55, 0.12);
+  background: var(--color-primary-subtle);
   border-radius: 5px;
   font-size: 0.6rem;
   font-weight: 600;
@@ -298,8 +298,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(212, 175, 55, 0.02);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-primary-subtle);
   flex-shrink: 0;
   opacity: 0;
   animation: fadeIn 0.15s ease forwards;
@@ -333,13 +333,13 @@
 .statDivider {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-border);
 }
 
 /* Leads quota */
 .leadsQuota {
   padding: 0.625rem 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
   opacity: 0;
   animation: fadeIn 0.15s ease forwards;
@@ -368,22 +368,32 @@
 
 .quotaBar {
   height: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-border);
   border-radius: 1px;
   overflow: hidden;
 }
 
 .quotaProgress {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+  background: var(--gradient-primary);
   border-radius: 1px;
   transition: width 0.3s ease;
+}
+
+/* Contenedor del tema - Antes del footer */
+.themeContainer {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+  animation-delay: 0.1s;
 }
 
 /* Footer sidebar */
 .sidebarFooter {
   padding: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 }
 
@@ -395,7 +405,7 @@
   width: 100%;
   padding: 0.4rem;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
   border-radius: 5px;
   color: var(--color-text-muted);
   font-family: var(--font-body);
@@ -406,9 +416,9 @@
 }
 
 .logoutButton:hover {
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.04);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-light);
+  background: var(--color-danger-bg);
 }
 
 .logoutButton span {
@@ -428,7 +438,7 @@
 
   .sidebar:hover {
     width: var(--sidebar-expanded-width);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-lg);
   }
 
   .sidebarPinned {

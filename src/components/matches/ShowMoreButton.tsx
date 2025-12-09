@@ -7,7 +7,9 @@ import {
   getRemainingSlots, 
   formatTimeUntilReset,
   getProvidersShownCount,
-  MATCH_LIMIT_PER_CATEGORY
+  MATCH_LIMIT_PER_CATEGORY,
+  INITIAL_MATCHES_COUNT,
+  EXTRA_MATCHES_ALLOWED
 } from '@/utils/matchLimits';
 import styles from './ShowMoreButton.module.css';
 
@@ -16,24 +18,27 @@ interface ShowMoreButtonProps {
   categoryId: string;
   onRequestNewMatch: () => Promise<boolean>; // Retorna true si se generó un nuevo match
   isLoading?: boolean;
+  currentMatchesCount?: number; // NUEVO: cantidad actual de matches (leads) en esta categoría
 }
 
 /**
  * Botón para solicitar un nuevo match dentro del límite de 5 por categoría cada 24 horas.
  * Muestra el estado actual del límite y tiempo restante si se alcanzó.
+ * CAMBIO: Ahora muestra x/5 donde x es la cantidad de matches (leads) reales, no proveedores vistos.
  */
 export default function ShowMoreButton({
   userId,
   categoryId,
   onRequestNewMatch,
   isLoading = false,
+  currentMatchesCount = 0,
 }: ShowMoreButtonProps) {
   const [canShowMore, setCanShowMore] = useState(false);
   const [remainingSlots, setRemainingSlots] = useState(0);
   const [timeUntilReset, setTimeUntilReset] = useState('');
   const [providersShown, setProvidersShown] = useState(0);
   const [requesting, setRequesting] = useState(false);
-  const [noMoreProviders, setNoMoreProviders] = useState(false); // NUEVO: estado para cuando no hay más proveedores
+  const [noMoreProviders, setNoMoreProviders] = useState(false); // Estado para cuando no hay más proveedores
 
   // Actualizar estado de límites
   const updateLimitsState = () => {
@@ -119,38 +124,51 @@ export default function ShowMoreButton({
     );
   }
 
+  // CAMBIO: Mostrar cantidad de matches reales (x/5) donde x es la cantidad de leads/matches
+  // Solo muestra 0/5 cuando se reinician los matches (cada 24 horas)
+  const displayCount = currentMatchesCount > 0 ? currentMatchesCount : providersShown;
+  
+  // CAMBIO: Calcular cuántos extras ya se han usado (matches actuales - 3 iniciales)
+  const extrasUsed = Math.max(0, currentMatchesCount - INITIAL_MATCHES_COUNT);
+  const extrasRemaining = EXTRA_MATCHES_ALLOWED - extrasUsed;
+  const canRequestExtra = extrasRemaining > 0 && canShowMore;
+  
   return (
     <div className={styles.container}>
       <div className={styles.slotsInfo}>
         <span className={styles.slotsCount}>
-          {providersShown} de {MATCH_LIMIT_PER_CATEGORY}
+          {displayCount} / {MATCH_LIMIT_PER_CATEGORY}
         </span>
-        <span className={styles.slotsText}>proveedores vistos hoy</span>
+        <span className={styles.slotsText}>matches en esta categoría</span>
       </div>
       
-      <button
-        type="button"
-        className={styles.button}
-        onClick={handleClick}
-        disabled={requesting || isLoading}
-      >
-        {requesting || isLoading ? (
-          <>
-            <RefreshCw size={18} className={styles.spinning} />
-            <span>Buscando...</span>
-          </>
-        ) : (
-          <>
-            <Plus size={18} />
-            <span>Mostrar nuevo proveedor</span>
-          </>
-        )}
-      </button>
+      {/* Solo mostrar botón si puede solicitar extras (máximo 2) */}
+      {canRequestExtra && (
+        <button
+          type="button"
+          className={styles.button}
+          onClick={handleClick}
+          disabled={requesting || isLoading}
+        >
+          {requesting || isLoading ? (
+            <>
+              <RefreshCw size={18} className={styles.spinning} />
+              <span>Buscando...</span>
+            </>
+          ) : (
+            <>
+              <Plus size={18} />
+              <span>Mostrar nuevo proveedor ({extrasRemaining} disponible{extrasRemaining !== 1 ? 's' : ''})</span>
+            </>
+          )}
+        </button>
+      )}
       
-      {remainingSlots <= 2 && remainingSlots > 0 && (
+      {/* Mensaje cuando no puede solicitar más extras */}
+      {!canRequestExtra && currentMatchesCount >= INITIAL_MATCHES_COUNT && (
         <p className={styles.warning}>
           <AlertCircle size={14} />
-          <span>Te quedan {remainingSlots} {remainingSlots === 1 ? 'slot' : 'slots'} disponibles</span>
+          <span>Has alcanzado el máximo de {MATCH_LIMIT_PER_CATEGORY} proveedores en esta categoría</span>
         </p>
       )}
     </div>

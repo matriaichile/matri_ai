@@ -1,6 +1,6 @@
 /* ===========================
    PortfolioGallery Styles
-   Paleta: Dorado (#D4AF37, #B8860B) + Negro elegante
+   Matri.AI - Soporte Modo Claro/Oscuro
    =========================== */
 
 .container {
@@ -16,10 +16,10 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 2rem;
-  background: rgba(212, 175, 55, 0.03);
-  border: 1px dashed rgba(212, 175, 55, 0.2);
+  background: var(--color-primary-subtle);
+  border: 1px dashed var(--color-border-accent);
   border-radius: 12px;
-  color: rgba(212, 175, 55, 0.5);
+  color: var(--color-text-muted);
 }
 
 .emptyState p {
@@ -39,28 +39,28 @@
   position: relative;
   aspect-ratio: 1;
   padding: 0;
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--color-background-card);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .imageButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 8px 24px var(--color-primary-glow);
+  border-color: var(--color-border-hover);
 }
 
 .imageButton:focus-visible {
-  outline: 2px solid #D4AF37;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Video button specific styles */
 .videoButton {
-  border: 2px solid rgba(212, 175, 55, 0.3);
+  border: 2px solid var(--color-border-hover);
 }
 
 .videoIndicator {
@@ -73,16 +73,16 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(212, 175, 55, 0.9);
+  background: var(--color-primary);
   border-radius: 50%;
-  color: #000;
+  color: var(--color-text-inverse);
   pointer-events: none;
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .imageButton:hover .videoIndicator {
   transform: translate(-50%, -50%) scale(1.1);
-  background: #D4AF37;
+  background: var(--color-primary-light);
 }
 
 .thumbnail {
@@ -105,7 +105,7 @@
   background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.2s ease;
-  color: #D4AF37;
+  color: var(--color-primary);
 }
 
 .imageButton:hover .imageOverlay {
@@ -120,7 +120,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.95);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(8px);
   animation: fadeIn 0.2s ease;
 }
@@ -159,7 +159,7 @@
   gap: 0.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: #D4AF37;
+  color: var(--color-primary);
 }
 
 .closeButton {
@@ -171,8 +171,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(212, 175, 55, 0.1);
-  color: #D4AF37;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -220,7 +220,7 @@
   overflow: hidden;
   background: #000;
   animation: zoomIn 0.2s ease;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid var(--color-border-accent);
 }
 
 .modalVideo {
@@ -247,15 +247,15 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: rgba(212, 175, 55, 0.9);
+  background: var(--color-primary);
   border-radius: 50%;
-  color: #000;
+  color: var(--color-text-inverse);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .playButtonLarge:hover {
   transform: scale(1.1);
-  background: #D4AF37;
+  background: var(--color-primary-light);
 }
 
 /* Video Controls */
@@ -286,8 +286,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(212, 175, 55, 0.2);
-  color: #D4AF37;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -299,7 +299,7 @@
 .progressBar {
   flex: 1;
   height: 6px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-border);
   border-radius: 3px;
   cursor: pointer;
   overflow: hidden;
@@ -307,7 +307,7 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #B8860B 0%, #D4AF37 100%);
+  background: var(--gradient-primary);
   border-radius: 3px;
   transition: width 0.1s linear;
 }
@@ -325,8 +325,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(212, 175, 55, 0.15);
-  color: #D4AF37;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   z-index: 10;
@@ -353,7 +353,7 @@
   padding-top: 1rem;
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+  scrollbar-color: var(--color-border-hover) transparent;
 }
 
 .thumbnailStrip::-webkit-scrollbar {
@@ -365,7 +365,7 @@
 }
 
 .thumbnailStrip::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: var(--color-border-hover);
   border-radius: 3px;
 }
 
@@ -388,7 +388,7 @@
 }
 
 .stripThumbnail.active {
-  border-color: #D4AF37;
+  border-color: var(--color-primary);
   opacity: 1;
 }
 
@@ -400,11 +400,11 @@
 }
 
 .stripVideoThumbnail {
-  border-color: rgba(212, 175, 55, 0.3);
+  border-color: var(--color-border-hover);
 }
 
 .stripVideoThumbnail.active {
-  border-color: #D4AF37;
+  border-color: var(--color-primary);
 }
 
 .stripVideoIcon {
@@ -417,9 +417,9 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: rgba(212, 175, 55, 0.9);
+  background: var(--color-primary);
   border-radius: 50%;
-  color: #000;
+  color: var(--color-text-inverse);
 }
 
 /* Responsive */

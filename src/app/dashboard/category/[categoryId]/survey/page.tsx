@@ -138,7 +138,8 @@ export default function UserCategorySurveyPage() {
       setLoadingMessage('Buscando proveedores compatibles...');
       let generatedLeads = [];
       try {
-        generatedLeads = await generateMatchesForUserSurvey(firebaseUser.uid, categoryId, userRegion, 5);
+        // CAMBIO: Generar máximo 3 matches iniciales (el usuario puede solicitar 2 extras si rechaza)
+        generatedLeads = await generateMatchesForUserSurvey(firebaseUser.uid, categoryId, userRegion, 3);
         setMatchesGenerated(generatedLeads.length);
         setLoadingProgress(80);
       } catch (matchError) {

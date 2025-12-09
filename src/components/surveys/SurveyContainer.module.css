@@ -1,7 +1,6 @@
 /* ====================================
    SURVEY CONTAINER - ESTILO ELEGANTE
-   Negro y Dorado Premium - Matri.AI
-   Adaptado del WizardContainer
+   Matri.AI - Soporte Modo Claro/Oscuro
    ==================================== */
 
 .container {
@@ -10,6 +9,7 @@
   height: 100vh;
   overflow: hidden;
   background-color: var(--color-background);
+  transition: background-color 0.3s ease;
 }
 
 .backgroundGradient {
@@ -17,11 +17,11 @@
   inset: 0;
   z-index: 1;
   background-color: var(--color-background);
-  background-image: 
-    radial-gradient(ellipse at 20% 10%, rgba(212, 175, 55, 0.08), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgba(212, 175, 55, 0.06), transparent 60%),
+  background-image: var(--gradient-glow),
+    radial-gradient(ellipse at 80% 90%, var(--color-primary-subtle), transparent 60%),
     radial-gradient(ellipse at 40% 40%, rgba(212, 175, 55, 0.04), transparent 70%);
   animation: backgroundFadeIn 1200ms ease-out forwards;
+  transition: background-color 0.3s ease;
 }
 
 @keyframes backgroundFadeIn {
@@ -118,8 +118,8 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, var(--color-primary-subtle), rgba(212, 175, 55, 0.05));
+  border: 1px solid var(--color-border-accent);
   border-radius: 20px;
   color: var(--color-primary);
   animation: iconAppear 800ms ease-out forwards;
@@ -263,9 +263,9 @@
 .startButton {
   position: relative;
   padding: 14px 48px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: var(--gradient-primary);
   border: none;
-  color: #000000;
+  color: var(--color-text-inverse);
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
@@ -276,16 +276,15 @@
   cursor: pointer;
   white-space: nowrap;
   box-shadow: 
-    0 8px 30px rgba(212, 175, 55, 0.4),
-    0 0 60px rgba(212, 175, 55, 0.2);
+    0 8px 30px var(--color-primary-glow),
+    var(--shadow-glow);
 }
 
 .startButton:hover {
   transform: translateY(-3px);
   box-shadow: 
-    0 12px 40px rgba(212, 175, 55, 0.5),
+    0 12px 40px var(--color-primary-glow),
     0 0 80px rgba(212, 175, 55, 0.3);
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
 }
 
 .startButton:active {
@@ -367,4 +366,3 @@
 .transitionOverlayVisible {
   opacity: 1;
 }
-
