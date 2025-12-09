@@ -19,13 +19,61 @@
 .title {
   font-family: var(--font-display);
   font-size: 3.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: var(--color-text);
   font-weight: 500;
 }
 
 .title span {
   color: #D4AF37;
+}
+
+/* Toggle Styles - Exactamente igual que Features */
+.toggleWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.toggleContainer {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  padding: 0.5rem;
+  width: fit-content;
+  gap: 0.5rem;
+}
+
+.toggleButton {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0.8rem 2.5rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.3s ease;
+  min-width: 180px;
+  border-radius: 40px;
+  outline: none;
+  /* Asegura que el texto esté encima del fondo */
+  z-index: 2;
+}
+
+.toggleButton.active {
+  color: #000000;
+}
+
+.activeBackground {
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  border-radius: 40px;
+  z-index: -1;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
 }
 
 .subtitle {
@@ -185,6 +233,16 @@
 }
 
 @media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .toggleButton {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    min-width: 140px;
+  }
+
   .steps {
     flex-direction: column;
     gap: 3rem;
