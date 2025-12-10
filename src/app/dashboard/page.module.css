@@ -347,6 +347,77 @@
 }
 
 /* ====================================
+   EMPTY MATCHES MESSAGE - Cuando no hay categorías completadas
+   ==================================== */
+.emptyMatchesMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--color-background-card);
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.emptyMatchesIcon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-subtle);
+  border-radius: 50%;
+  color: var(--color-primary);
+  margin-bottom: 1.25rem;
+}
+
+.emptyMatchesTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
+}
+
+.emptyMatchesText {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.emptyMatchesButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-inverse);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emptyMatchesButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--color-primary-glow);
+}
+
+.emptyMatchesButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ====================================
    MATCHES SECTION - Diseño Organizado por Categoría (Legacy)
    ==================================== */
 .matchesSection {
@@ -1061,10 +1132,12 @@
   align-items: center;
   gap: 0.2rem;
   padding: 0.15rem 0.375rem;
-  background: var(--overlay-backdrop);
+  /* CAMBIO: Fondo oscuro semitransparente que funciona en ambos temas */
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   border-radius: 8px;
-  color: var(--color-text-inverse);
+  /* CAMBIO: Texto blanco que siempre es visible sobre el fondo oscuro */
+  color: #ffffff;
   font-family: var(--font-body);
   font-size: 0.5rem;
   font-weight: 500;

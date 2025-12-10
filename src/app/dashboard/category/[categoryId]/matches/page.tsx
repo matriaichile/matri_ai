@@ -32,7 +32,7 @@ import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
-import { registerProviderShown } from '@/utils/matchLimits';
+import { registerProviderShown, MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
 import { calculateBackgroundStyles } from '@/utils/profileImage';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
@@ -81,12 +81,19 @@ export default function CategoryMatchesPage() {
   // Estado para generar nuevos matches
   const [isGeneratingNew, setIsGeneratingNew] = useState(false);
   
+  // NUEVO: Estado global para bloquear todas las acciones que modifican matches activos
+  // Esto evita que el usuario haga "trampa" ejecutando múltiples acciones simultáneas
+  const [isModifyingActiveMatches, setIsModifyingActiveMatches] = useState(false);
+  
   // Estado para la galería de portafolio (al hacer click en imagen de tarjeta)
   const [galleryMatch, setGalleryMatch] = useState<ExtendedLead | null>(null);
   
   // Estado para rehacer encuesta
   const [showRedoConfirm, setShowRedoConfirm] = useState(false);
   const [isRedoing, setIsRedoing] = useState(false);
+  
+  // NUEVO: Estado para modal de límite de matches activos alcanzado
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
@@ -188,12 +195,26 @@ export default function CategoryMatchesPage() {
     setMatchToReject(null);
   };
 
-  // Generar un nuevo match para esta categoría
+  // Generar un nuevo match para esta categoría - CAMBIO: Verificar límite de matches activos
   const handleRequestNewMatch = async (): Promise<boolean> => {
     if (!firebaseUser?.uid || !categoryId) return false;
     
+    // NUEVO: Bloquear si ya hay una acción en proceso que modifica matches activos
+    if (isModifyingActiveMatches) {
+      return false; // Silenciosamente ignorar - ya hay una acción en curso
+    }
+    
+    // CAMBIO: Verificar si ya tiene el máximo de matches activos
+    // Recalcular con el estado actual (puede haber cambiado)
+    const currentActiveCount = matches.filter(m => m.status === 'approved' || m.status === 'pending').length;
+    if (currentActiveCount >= MAX_ACTIVE_MATCHES_PER_CATEGORY) {
+      setShowLimitModal(true);
+      return false;
+    }
+    
     try {
       setIsGeneratingNew(true);
+      setIsModifyingActiveMatches(true); // NUEVO: Bloquear otras acciones
       const newLead = await generateNewMatchForUser(firebaseUser.uid, categoryId);
       
       if (newLead) {
@@ -210,13 +231,33 @@ export default function CategoryMatchesPage() {
       return false;
     } finally {
       setIsGeneratingNew(false);
+      setIsModifyingActiveMatches(false); // NUEVO: Desbloquear
     }
   };
 
-  // Revertir estado a pendiente
-  const handleRevert = async (leadId: string) => {
+  // CAMBIO: Calcular cantidad de matches activos (approved + pending, NO rejected)
+  const activeMatchesCount = matches.filter(m => m.status === 'approved' || m.status === 'pending').length;
+  const canAddMoreMatches = activeMatchesCount < MAX_ACTIVE_MATCHES_PER_CATEGORY;
+
+  // Revertir estado a pendiente - CAMBIO: Verificar límite de matches activos
+  const handleRevert = async (leadId: string, isFromRejected: boolean = false) => {
+    // NUEVO: Bloquear si ya hay una acción en proceso que modifica matches activos
+    if (isFromRejected && isModifyingActiveMatches) {
+      return; // Silenciosamente ignorar - ya hay una acción en curso
+    }
+    
+    // Si es desde rechazado (recuperar), verificar el límite de matches activos
+    if (isFromRejected && !canAddMoreMatches) {
+      setShowLimitModal(true);
+      return;
+    }
+    
     try {
       setProcessingId(leadId);
+      // NUEVO: Si es recuperación, marcar que estamos modificando matches activos
+      if (isFromRejected) {
+        setIsModifyingActiveMatches(true);
+      }
       await updateLeadStatus(leadId, 'pending');
       setMatches(prev => prev.map(m => 
         m.id === leadId ? { ...m, status: 'pending' as const } : m
@@ -225,6 +266,9 @@ export default function CategoryMatchesPage() {
       console.error('Error revirtiendo estado:', error);
     } finally {
       setProcessingId(null);
+      if (isFromRejected) {
+        setIsModifyingActiveMatches(false);
+      }
     }
   };
 
@@ -658,7 +702,7 @@ export default function CategoryMatchesPage() {
                 </div>
                 
                 {/* Botón para mostrar nuevo proveedor */}
-                {/* CAMBIO: Pasar cantidad de matches (no rechazados) para mostrar x/5 */}
+                {/* CAMBIO: Pasar cantidad de matches activos para validar límite de 3 */}
                 {firebaseUser?.uid && (
                   <ShowMoreButton
                     userId={firebaseUser.uid}
@@ -666,6 +710,9 @@ export default function CategoryMatchesPage() {
                     onRequestNewMatch={handleRequestNewMatch}
                     isLoading={isGeneratingNew}
                     currentMatchesCount={matches.filter(m => m.status !== 'rejected').length}
+                    activeMatchesCount={activeMatchesCount}
+                    maxActiveMatches={MAX_ACTIVE_MATCHES_PER_CATEGORY}
+                    isBlocked={isModifyingActiveMatches}
                   />
                 )}
               </section>
@@ -679,7 +726,9 @@ export default function CategoryMatchesPage() {
                   <span>Descartados</span>
                 </h2>
                 <p className={styles.sectionDescription}>
-                  Proveedores que has descartado. Puedes cambiar de opinión cuando quieras.
+                  Proveedores que has descartado. {canAddMoreMatches 
+                    ? 'Puedes cambiar de opinión cuando quieras.' 
+                    : `Ya tienes ${MAX_ACTIVE_MATCHES_PER_CATEGORY} proveedores activos. Descarta uno para poder recuperar otro.`}
                 </p>
                 
                 <div className={styles.matchesGridCompact}>
@@ -700,9 +749,10 @@ export default function CategoryMatchesPage() {
                         </span>
                       </div>
                       <button 
-                        className={styles.revertButtonCompact}
-                        onClick={() => handleRevert(match.id)}
-                        disabled={processingId === match.id}
+                        className={`${styles.revertButtonCompact} ${(!canAddMoreMatches || isModifyingActiveMatches) ? styles.revertButtonDisabledLimit : ''}`}
+                        onClick={() => handleRevert(match.id, true)}
+                        disabled={processingId === match.id || isModifyingActiveMatches}
+                        title={!canAddMoreMatches ? `Máximo ${MAX_ACTIVE_MATCHES_PER_CATEGORY} proveedores activos` : isModifyingActiveMatches ? 'Espera a que termine la acción actual' : 'Recuperar proveedor'}
                       >
                         {processingId === match.id ? (
                           <Loader2 size={14} className={styles.buttonSpinner} />
@@ -944,15 +994,24 @@ export default function CategoryMatchesPage() {
                   )}
                   {selectedMatch.status === 'rejected' && (
                     <button 
-                      className={styles.detailsRecoverButton}
+                      className={`${styles.detailsRecoverButton} ${(!canAddMoreMatches || isModifyingActiveMatches) ? styles.detailsRecoverButtonDisabled : ''}`}
                       onClick={() => {
-                        handleRevert(selectedMatch.id);
-                        handleCloseDetails();
+                        if (isModifyingActiveMatches) {
+                          return; // Bloquear si hay otra acción en curso
+                        }
+                        if (!canAddMoreMatches) {
+                          setShowLimitModal(true);
+                          handleCloseDetails();
+                        } else {
+                          handleRevert(selectedMatch.id, true);
+                          handleCloseDetails();
+                        }
                       }}
-                      disabled={processingId === selectedMatch.id}
+                      disabled={processingId === selectedMatch.id || isModifyingActiveMatches}
+                      title={!canAddMoreMatches ? `Máximo ${MAX_ACTIVE_MATCHES_PER_CATEGORY} proveedores activos` : isModifyingActiveMatches ? 'Espera a que termine la acción actual' : 'Recuperar proveedor'}
                     >
                       <RotateCcw size={16} />
-                      <span>Recuperar proveedor</span>
+                      <span>{isModifyingActiveMatches ? 'Procesando...' : canAddMoreMatches ? 'Recuperar proveedor' : `Límite de ${MAX_ACTIVE_MATCHES_PER_CATEGORY} alcanzado`}</span>
                     </button>
                   )}
                 </div>
@@ -979,6 +1038,33 @@ export default function CategoryMatchesPage() {
           autoOpen={true}
           onClose={() => setGalleryMatch(null)}
         />
+      )}
+      
+      {/* NUEVO: Modal de límite de matches activos alcanzado */}
+      {showLimitModal && (
+        <div className={styles.confirmOverlay} onClick={() => setShowLimitModal(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.limitModalIcon}>
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className={styles.confirmTitle}>Límite de proveedores alcanzado</h3>
+            <p className={styles.confirmText}>
+              Ya tienes <strong>{MAX_ACTIVE_MATCHES_PER_CATEGORY} proveedores activos</strong> en esta categoría. 
+              Este es el máximo permitido para que puedas enfocarte en las mejores opciones.
+            </p>
+            <p className={styles.limitModalHint}>
+              Para agregar otro proveedor, primero descarta uno de los que tienes pendientes o que ya te interesan.
+            </p>
+            <div className={styles.confirmActions}>
+              <button 
+                className={styles.limitModalButton}
+                onClick={() => setShowLimitModal(false)}
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

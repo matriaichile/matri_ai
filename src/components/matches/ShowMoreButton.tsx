@@ -9,7 +9,8 @@ import {
   getProvidersShownCount,
   MATCH_LIMIT_PER_CATEGORY,
   INITIAL_MATCHES_COUNT,
-  EXTRA_MATCHES_ALLOWED
+  EXTRA_MATCHES_ALLOWED,
+  MAX_ACTIVE_MATCHES_PER_CATEGORY
 } from '@/utils/matchLimits';
 import styles from './ShowMoreButton.module.css';
 
@@ -18,7 +19,10 @@ interface ShowMoreButtonProps {
   categoryId: string;
   onRequestNewMatch: () => Promise<boolean>; // Retorna true si se generó un nuevo match
   isLoading?: boolean;
-  currentMatchesCount?: number; // NUEVO: cantidad actual de matches (leads) en esta categoría
+  currentMatchesCount?: number; // Cantidad actual de matches (leads) en esta categoría
+  activeMatchesCount?: number; // NUEVO: cantidad de matches activos (approved + pending)
+  maxActiveMatches?: number; // NUEVO: máximo de matches activos permitidos
+  isBlocked?: boolean; // NUEVO: bloquear cuando hay otra acción de recuperación en curso
 }
 
 /**
@@ -32,6 +36,9 @@ export default function ShowMoreButton({
   onRequestNewMatch,
   isLoading = false,
   currentMatchesCount = 0,
+  activeMatchesCount = 0,
+  maxActiveMatches = MAX_ACTIVE_MATCHES_PER_CATEGORY,
+  isBlocked = false,
 }: ShowMoreButtonProps) {
   const [canShowMore, setCanShowMore] = useState(false);
   const [remainingSlots, setRemainingSlots] = useState(0);
@@ -66,7 +73,8 @@ export default function ShowMoreButton({
 
   // Manejar click en el botón
   const handleClick = async () => {
-    if (!canShowMore || requesting || isLoading || noMoreProviders) return;
+    // NUEVO: También verificar isBlocked para evitar acciones simultáneas
+    if (!canShowMore || requesting || isLoading || noMoreProviders || isBlocked) return;
     
     setRequesting(true);
     try {
@@ -131,7 +139,11 @@ export default function ShowMoreButton({
   // CAMBIO: Calcular cuántos extras ya se han usado (matches actuales - 3 iniciales)
   const extrasUsed = Math.max(0, currentMatchesCount - INITIAL_MATCHES_COUNT);
   const extrasRemaining = EXTRA_MATCHES_ALLOWED - extrasUsed;
-  const canRequestExtra = extrasRemaining > 0 && canShowMore;
+  
+  // NUEVO: También verificar que no se exceda el límite de matches activos (3)
+  const hasReachedActiveLimit = activeMatchesCount >= maxActiveMatches;
+  // NUEVO: También bloquear si hay otra acción en curso (ej: recuperando un match)
+  const canRequestExtra = extrasRemaining > 0 && canShowMore && !hasReachedActiveLimit && !isBlocked;
   
   return (
     <div className={styles.container}>
@@ -148,12 +160,18 @@ export default function ShowMoreButton({
           type="button"
           className={styles.button}
           onClick={handleClick}
-          disabled={requesting || isLoading}
+          disabled={requesting || isLoading || isBlocked}
+          title={isBlocked ? 'Espera a que termine la acción actual' : undefined}
         >
           {requesting || isLoading ? (
             <>
               <RefreshCw size={18} className={styles.spinning} />
               <span>Buscando...</span>
+            </>
+          ) : isBlocked ? (
+            <>
+              <RefreshCw size={18} className={styles.spinning} />
+              <span>Procesando...</span>
             </>
           ) : (
             <>
@@ -164,8 +182,16 @@ export default function ShowMoreButton({
         </button>
       )}
       
-      {/* Mensaje cuando no puede solicitar más extras */}
-      {!canRequestExtra && currentMatchesCount >= INITIAL_MATCHES_COUNT && (
+      {/* Mensaje cuando alcanzó el límite de matches activos (3) */}
+      {hasReachedActiveLimit && (
+        <p className={styles.warning}>
+          <AlertCircle size={14} />
+          <span>Tienes {maxActiveMatches} proveedores activos. Descarta uno para ver más opciones.</span>
+        </p>
+      )}
+      
+      {/* Mensaje cuando no puede solicitar más extras por límite diario */}
+      {!canRequestExtra && !hasReachedActiveLimit && currentMatchesCount >= INITIAL_MATCHES_COUNT && (
         <p className={styles.warning}>
           <AlertCircle size={14} />
           <span>Has alcanzado el máximo de {MATCH_LIMIT_PER_CATEGORY} proveedores en esta categoría</span>

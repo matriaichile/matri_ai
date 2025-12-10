@@ -4,7 +4,7 @@
 
 **Fecha:** Diciembre 2025  
 **Estado:** ✅ IMPLEMENTADO  
-**Versión:** 3.2 (Actualización 9 de Diciembre)
+**Versión:** 3.3 (Actualización 10 de Diciembre)
 
 ---
 
@@ -12,7 +12,16 @@
 
 Este documento detalla los cambios solicitados por el cliente y su estado de implementación.
 
-### Última Actualización (V3.2) - 9 Diciembre 2025
+### Última Actualización (V3.3) - 10 Diciembre 2025
+
+| #   | Cambio                                                                      | Estado |
+| --- | --------------------------------------------------------------------------- | ------ |
+| 1   | "Mis Matches" solo muestra categorías con encuestas completadas             | ✅     |
+| 2   | Fix tema oscuro: badge de categoría del proveedor ahora se ve correctamente | ✅     |
+| 3   | Límite de 3 proveedores activos por categoría (approved + pending)          | ✅     |
+| 4   | Modal cuando intenta exceder límite de 3 proveedores activos                | ✅     |
+
+### Actualización Anterior (V3.2) - 9 Diciembre 2025
 
 | #   | Cambio                                                                 | Estado |
 | --- | ---------------------------------------------------------------------- | ------ |
@@ -791,6 +800,78 @@ function isOnlyAvailabilityUpdate() {
 
 ---
 
+---
+
+## Cambios V3.3 - Detalle Técnico (10 Diciembre 2025)
+
+### 1. Sección "Mis Matches" - Solo Categorías Completadas ✅
+
+**Archivo:** `src/app/dashboard/page.tsx`
+
+**Cambio:** La sección "Mis Matches" ahora solo muestra las categorías donde el usuario YA completó la encuesta (`completed` o `matches_generated`). Si no hay ninguna categoría completada, muestra un mensaje con botón para ir a "Categorías".
+
+**Nuevos estilos CSS:** `src/app/dashboard/page.module.css`
+
+- `.emptyMatchesMessage` - Contenedor del mensaje vacío
+- `.emptyMatchesIcon` - Icono decorativo
+- `.emptyMatchesTitle` - Título del mensaje
+- `.emptyMatchesText` - Texto explicativo
+- `.emptyMatchesButton` - Botón para ir a Categorías
+
+---
+
+### 2. Fix Dark Theme - Badge de Categoría en Matches ✅
+
+**Archivos:**
+
+- `src/app/dashboard/page.module.css`
+- `src/app/dashboard/category/[categoryId]/matches/page.module.css`
+
+**Cambio:** El badge de categoría (`.matchCategory`) ahora usa fondo oscuro semitransparente (`rgba(0, 0, 0, 0.7)`) y texto blanco (`#ffffff`) que funciona correctamente en ambos temas (claro y oscuro).
+
+---
+
+### 3. Límite de 3 Proveedores Activos por Categoría ✅
+
+**Archivos:**
+
+- `src/utils/matchLimits.ts` - Nueva constante `MAX_ACTIVE_MATCHES_PER_CATEGORY = 3`
+- `src/app/dashboard/category/[categoryId]/matches/page.tsx` - Lógica de validación
+- `src/components/matches/ShowMoreButton.tsx` - Props y validación adicional
+
+**Cambio:** Ahora se limita a **máximo 3 proveedores activos** (approved + pending) por categoría. Los proveedores rechazados NO cuentan hacia este límite.
+
+**Reglas implementadas:**
+
+- Si el usuario tiene 3 matches activos (approved o pending), NO puede:
+  - Solicitar un nuevo proveedor ("Mostrar nuevo proveedor")
+  - Recuperar un proveedor descartado ("Recuperar")
+- Para agregar un nuevo proveedor, debe primero descartar uno de los activos
+- Se muestra un modal explicativo cuando intenta exceder el límite
+
+**Protección contra race conditions (acciones simultáneas):**
+
+- Se agregó estado global `isModifyingActiveMatches` que bloquea TODAS las acciones que modifican matches activos
+- Cuando se está procesando "Mostrar nuevo proveedor", los botones de "Recuperar" se deshabilitan automáticamente
+- Cuando se está procesando "Recuperar", el botón de "Mostrar nuevo proveedor" se deshabilita automáticamente
+- Esto evita que el usuario pueda hacer "trampa" ejecutando múltiples acciones a la vez para tener más de 3 matches activos
+
+**Modal de límite:**
+
+- Título: "Límite de proveedores alcanzado"
+- Explica que tiene 3 proveedores activos (máximo permitido)
+- Indica cómo puede agregar más (descartando uno primero)
+
+**Nuevos estilos CSS:**
+
+- `.limitModalIcon` - Icono del modal
+- `.limitModalHint` - Texto de ayuda
+- `.limitModalButton` - Botón de confirmación
+- `.revertButtonDisabledLimit` - Estilo para botón recuperar deshabilitado
+- `.detailsRecoverButtonDisabled` - Estilo para botón en panel de detalles
+
+---
+
 _Documento creado: Diciembre 2025_  
-_Última actualización: 9 Diciembre 2025 (V3.2)_  
+_Última actualización: 10 Diciembre 2025 (V3.3)_  
 _Desarrollador: MatriMatch Development Team_

@@ -16,6 +16,10 @@ export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales por categoría
 export const EXTRA_MATCHES_ALLOWED = 2; // Máximo extras que puede solicitar
 export const RESET_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 horas
 
+// NUEVO: Máximo de matches ACTIVOS (approved + pending) que puede tener un usuario por categoría
+// Los rejected NO cuentan. Si tiene 3 activos, NO puede agregar más ni recuperar descartados.
+export const MAX_ACTIVE_MATCHES_PER_CATEGORY = 3;
+
 // Estructura de datos para límites por categoría
 export interface CategoryMatchLimit {
   categoryId: string;

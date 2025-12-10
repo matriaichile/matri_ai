@@ -475,6 +475,7 @@ export default function UserDashboardPage() {
 
       <div className={styles.content}>
         {/* Sección de Matches - NUEVO DISEÑO HOME */}
+        {/* CAMBIO: Solo mostrar categorías con encuestas completadas */}
         {activeSection === 'matches' && (
           <div className={styles.homeSection}>
             {/* Profile Header con saludo, fecha y cuenta regresiva */}
@@ -544,65 +545,95 @@ export default function UserDashboardPage() {
               </div>
             </div>
 
-            {/* Grid de Categorías - TODAS las categorías usando ALL_CATEGORIES y CATEGORY_INFO */}
-            <div className={styles.homeCategoriesGrid}>
-              {ALL_CATEGORIES.map((categoryId) => {
-                const categoryInfo = getCategoryInfo(categoryId);
-                const surveyStatus = profile?.categorySurveyStatus?.[categoryId];
-                const isCompleted = surveyStatus === 'completed' || surveyStatus === 'matches_generated';
-                // CAMBIO: Solo contar matches NO rechazados para el badge
-                const categoryMatches = matches.filter(m => m.category === categoryId && m.status !== 'rejected');
-                
-                // Mapeo de iconos por categoría
-                const CATEGORY_ICON_MAP: Record<CategoryId, React.ReactNode> = {
-                  catering: <Utensils size={36} />,
-                  venue: <Building2 size={36} />,
-                  photography: <Camera size={36} />,
-                  video: <Video size={36} />,
-                  dj: <Music size={36} />,
-                  decoration: <Flower2 size={36} />,
-                  entertainment: <PartyPopper size={36} />,
-                  makeup: <Palette size={36} />,
-                  cakes: <Cake size={36} />,
-                  transport: <Car size={36} />,
-                  invitations: <Send size={36} />,
-                  dress: <Shirt size={36} />,
-                  wedding_planner: <ClipboardList size={36} />,
-                };
-                
+            {/* CAMBIO: Solo mostrar categorías CON ENCUESTAS COMPLETADAS */}
+            {(() => {
+              // Filtrar solo las categorías que tienen encuesta completada o matches generados
+              const completedCategories = ALL_CATEGORIES.filter((catId) => {
+                const surveyStatus = profile?.categorySurveyStatus?.[catId];
+                return surveyStatus === 'completed' || surveyStatus === 'matches_generated';
+              });
+              
+              // Si no hay ninguna categoría completada, mostrar mensaje para ir a Categorías
+              if (completedCategories.length === 0) {
                 return (
-                  <Link 
-                    key={categoryId}
-                    href={isCompleted 
-                      ? `/dashboard/category/${categoryId}/matches` 
-                      : `/dashboard/category/${categoryId}/survey`
-                    }
-                    className={`${styles.homeCategoryCard} ${isCompleted ? styles.homeCategoryCardCompleted : ''}`}
-                    style={{ position: 'relative' }}
-                  >
-                    {/* Badge de matches si hay - solo no rechazados */}
-                    {categoryMatches.length > 0 && (
-                      <span className={styles.homeCategoryMatchesBadge}>
-                        {categoryMatches.length}
-                      </span>
-                    )}
-                    
-                    <div className={styles.homeCategoryIcon}>
-                      {CATEGORY_ICON_MAP[categoryId]}
+                  <div className={styles.emptyMatchesMessage}>
+                    <div className={styles.emptyMatchesIcon}>
+                      <ClipboardCheck size={48} />
                     </div>
-                    
-                    <span className={styles.homeCategoryName}>
-                      {categoryInfo?.name || getCategoryLabel(categoryId)}
-                    </span>
-                    
-                    <span className={styles.homeCategorySearchBtn}>
-                      <Search size={14} />
-                      <span>Buscar</span>
-                    </span>
-                  </Link>
+                    <h3 className={styles.emptyMatchesTitle}>
+                      Aún no tienes matches disponibles
+                    </h3>
+                    <p className={styles.emptyMatchesText}>
+                      Completa al menos una encuesta de categoría para empezar a recibir recomendaciones de proveedores personalizadas.
+                    </p>
+                    <button 
+                      className={styles.emptyMatchesButton}
+                      onClick={() => setActiveSection('surveys')}
+                    >
+                      <Search size={16} />
+                      <span>Ir a Categorías</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 );
-              })}
-            </div>
+              }
+              
+              // Mapeo de iconos por categoría
+              const CATEGORY_ICON_MAP: Record<CategoryId, React.ReactNode> = {
+                catering: <Utensils size={36} />,
+                venue: <Building2 size={36} />,
+                photography: <Camera size={36} />,
+                video: <Video size={36} />,
+                dj: <Music size={36} />,
+                decoration: <Flower2 size={36} />,
+                entertainment: <PartyPopper size={36} />,
+                makeup: <Palette size={36} />,
+                cakes: <Cake size={36} />,
+                transport: <Car size={36} />,
+                invitations: <Send size={36} />,
+                dress: <Shirt size={36} />,
+                wedding_planner: <ClipboardList size={36} />,
+              };
+              
+              return (
+                <div className={styles.homeCategoriesGrid}>
+                  {completedCategories.map((categoryId) => {
+                    const categoryInfo = getCategoryInfo(categoryId);
+                    // Solo contar matches NO rechazados para el badge
+                    const categoryMatches = matches.filter(m => m.category === categoryId && m.status !== 'rejected');
+                    
+                    return (
+                      <Link 
+                        key={categoryId}
+                        href={`/dashboard/category/${categoryId}/matches`}
+                        className={`${styles.homeCategoryCard} ${styles.homeCategoryCardCompleted}`}
+                        style={{ position: 'relative' }}
+                      >
+                        {/* Badge de matches si hay - solo no rechazados */}
+                        {categoryMatches.length > 0 && (
+                          <span className={styles.homeCategoryMatchesBadge}>
+                            {categoryMatches.length}
+                          </span>
+                        )}
+                        
+                        <div className={styles.homeCategoryIcon}>
+                          {CATEGORY_ICON_MAP[categoryId]}
+                        </div>
+                        
+                        <span className={styles.homeCategoryName}>
+                          {categoryInfo?.name || getCategoryLabel(categoryId)}
+                        </span>
+                        
+                        <span className={styles.homeCategorySearchBtn}>
+                          <Eye size={14} />
+                          <span>Ver matches</span>
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
