@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, X, Copy, Check } from 'lucide-react';
+import { Mail, X, Copy, Check, BadgeCheck } from 'lucide-react';
 import styles from './DashboardHeader.module.css';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -10,6 +10,7 @@ interface DashboardHeaderProps {
   subtitle: string;
   userName?: string;
   showUserBadge?: boolean;
+  isVerified?: boolean; // NUEVO: Para mostrar badge de verificación
 }
 
 /**
@@ -23,7 +24,8 @@ export default function DashboardHeader({
   title, 
   subtitle, 
   userName, 
-  showUserBadge = false 
+  showUserBadge = false,
+  isVerified = false
 }: DashboardHeaderProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -62,9 +64,17 @@ export default function DashboardHeader({
             <span>Contáctanos</span>
           </button>
           
-          {/* Nombre destacado */}
+          {/* Nombre destacado con badge de verificación */}
           {showUserBadge && userName && (
-            <span className={styles.userNameHighlight}>{userName}</span>
+            <div className={styles.userNameContainer}>
+              <span className={styles.userNameHighlight}>{userName}</span>
+              {isVerified && (
+                <span className={styles.verifiedBadge}>
+                  <BadgeCheck size={14} />
+                  <span>Verificado</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
       </header>

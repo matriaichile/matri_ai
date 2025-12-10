@@ -181,6 +181,25 @@ export default function ProviderDashboardPage() {
   // Estados para filtros de leads
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'rejected'>('all');
   const [sortByEventDate, setSortByEventDate] = useState<'asc' | 'desc' | null>(null);
+  
+  // Estados para dropdowns personalizados
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  
+  // Cerrar dropdowns al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Si el click no es dentro de un dropdown, cerrar todos
+      if (!target.closest(`.${styles.customDropdown}`)) {
+        setIsStatusDropdownOpen(false);
+        setIsSortDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {
@@ -687,7 +706,8 @@ export default function ProviderDashboardPage() {
   })();
 
   // Agrupar leads por categoría para stats
-  const leadsByCategory = leads.reduce((acc, lead) => {
+  // CAMBIO: Usar visibleLeads en lugar de leads para mantener consistencia con el total
+  const leadsByCategory = visibleLeads.reduce((acc, lead) => {
     acc[lead.category] = (acc[lead.category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -744,6 +764,7 @@ export default function ProviderDashboardPage() {
         subtitle={headerConfig[activeSection].subtitle}
         userName={profile?.providerName}
         showUserBadge
+        isVerified={profile?.isVerified || false}
       />
 
       <div className={styles.content}>
@@ -793,57 +814,7 @@ export default function ProviderDashboardPage() {
               </div>
             </div>
 
-            {/* Métricas de visibilidad */}
-            {profile?.metrics && (
-              <div className={styles.metricsSection}>
-                <div className={styles.sectionHeader}>
-                  <h2>Tu visibilidad</h2>
-                  <span className={styles.sectionSubtitle}>Estadísticas de cómo te ven las parejas</span>
-                </div>
-                <div className={styles.metricsGrid}>
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricIcon}>
-                      <Eye size={20} />
-                    </div>
-                    <div className={styles.metricInfo}>
-                      <span className={styles.metricValue}>{profile.metrics.timesOffered || 0}</span>
-                      <span className={styles.metricLabel}>Veces mostrado</span>
-                    </div>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <div className={`${styles.metricIcon} ${styles.metricIconSuccess}`}>
-                      <Heart size={20} />
-                    </div>
-                    <div className={styles.metricInfo}>
-                      <span className={styles.metricValue}>{profile.metrics.timesInterested || 0}</span>
-                      <span className={styles.metricLabel}>Me interesa</span>
-                    </div>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <div className={`${styles.metricIcon} ${styles.metricIconDanger}`}>
-                      <XCircle size={20} />
-                    </div>
-                    <div className={styles.metricInfo}>
-                      <span className={styles.metricValue}>{profile.metrics.timesNotInterested || 0}</span>
-                      <span className={styles.metricLabel}>No me interesa</span>
-                    </div>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <div className={`${styles.metricIcon} ${styles.metricIconPrimary}`}>
-                      <BarChart3 size={20} />
-                    </div>
-                    <div className={styles.metricInfo}>
-                      <span className={styles.metricValue}>
-                        {profile.metrics.timesOffered > 0 
-                          ? Math.round((profile.metrics.timesInterested / profile.metrics.timesOffered) * 100) 
-                          : 0}%
-                      </span>
-                      <span className={styles.metricLabel}>Calidad de leads</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Sección de visibilidad ELIMINADA por solicitud del cliente */}
 
             {/* Leads por categoría */}
             {profile?.categories && profile.categories.length > 1 && (
@@ -970,32 +941,96 @@ export default function ProviderDashboardPage() {
               </div>
             )}
             
-            {/* NUEVO: Filtros adicionales por estado y fecha de evento */}
+            {/* Filtros adicionales por estado y fecha de evento - Dropdowns personalizados */}
             <div className={styles.leadsFilters}>
               <div className={styles.filterGroup}>
                 <label className={styles.filterLabel}>Estado:</label>
-                <select 
-                  className={styles.filterSelect}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'approved' | 'rejected')}
-                >
-                  <option value="all">Todos</option>
-                  <option value="approved">Interesado</option>
-                  <option value="rejected">Rechazado</option>
-                </select>
+                <div className={styles.customDropdown}>
+                  <button 
+                    className={styles.dropdownTrigger}
+                    onClick={() => {
+                      setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                      setIsSortDropdownOpen(false);
+                    }}
+                    type="button"
+                  >
+                    <span>
+                      {statusFilter === 'all' ? 'Todos' : 
+                       statusFilter === 'approved' ? 'Interesado' : 'Rechazado'}
+                    </span>
+                    <ChevronDown size={14} className={`${styles.dropdownIcon} ${isStatusDropdownOpen ? styles.dropdownIconOpen : ''}`} />
+                  </button>
+                  {isStatusDropdownOpen && (
+                    <div className={styles.dropdownMenu}>
+                      <button 
+                        className={`${styles.dropdownItem} ${statusFilter === 'all' ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setStatusFilter('all'); setIsStatusDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Todos
+                      </button>
+                      <button 
+                        className={`${styles.dropdownItem} ${statusFilter === 'approved' ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setStatusFilter('approved'); setIsStatusDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Interesado
+                      </button>
+                      <button 
+                        className={`${styles.dropdownItem} ${statusFilter === 'rejected' ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setStatusFilter('rejected'); setIsStatusDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Rechazado
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className={styles.filterGroup}>
                 <label className={styles.filterLabel}>Ordenar por fecha:</label>
-                <select 
-                  className={styles.filterSelect}
-                  value={sortByEventDate || ''}
-                  onChange={(e) => setSortByEventDate(e.target.value ? e.target.value as 'asc' | 'desc' : null)}
-                >
-                  <option value="">Sin ordenar</option>
-                  <option value="asc">Más próximos primero</option>
-                  <option value="desc">Más lejanos primero</option>
-                </select>
+                <div className={styles.customDropdown}>
+                  <button 
+                    className={styles.dropdownTrigger}
+                    onClick={() => {
+                      setIsSortDropdownOpen(!isSortDropdownOpen);
+                      setIsStatusDropdownOpen(false);
+                    }}
+                    type="button"
+                  >
+                    <span>
+                      {sortByEventDate === null ? 'Sin ordenar' : 
+                       sortByEventDate === 'asc' ? 'Más próximos primero' : 'Más lejanos primero'}
+                    </span>
+                    <ChevronDown size={14} className={`${styles.dropdownIcon} ${isSortDropdownOpen ? styles.dropdownIconOpen : ''}`} />
+                  </button>
+                  {isSortDropdownOpen && (
+                    <div className={styles.dropdownMenu}>
+                      <button 
+                        className={`${styles.dropdownItem} ${sortByEventDate === null ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setSortByEventDate(null); setIsSortDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Sin ordenar
+                      </button>
+                      <button 
+                        className={`${styles.dropdownItem} ${sortByEventDate === 'asc' ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setSortByEventDate('asc'); setIsSortDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Más próximos primero
+                      </button>
+                      <button 
+                        className={`${styles.dropdownItem} ${sortByEventDate === 'desc' ? styles.dropdownItemActive : ''}`}
+                        onClick={() => { setSortByEventDate('desc'); setIsSortDropdownOpen(false); }}
+                        type="button"
+                      >
+                        Más lejanos primero
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1577,6 +1612,18 @@ export default function ProviderDashboardPage() {
                       {profile?.status === 'active' ? 'Activo' : 
                        profile?.status === 'pending' ? 'Pendiente de aprobación' : 'Cerrado'}
                     </span>
+                  </div>
+                  {/* NUEVO: Badge de verificación en el perfil */}
+                  <div className={styles.profileField}>
+                    <span className={styles.fieldLabel}>Verificación</span>
+                    {profile?.isVerified ? (
+                      <span className={styles.verifiedBadgeProfile}>
+                        <Check size={12} />
+                        <span>Proveedor verificado</span>
+                      </span>
+                    ) : (
+                      <span className={styles.fieldValue}>No verificado</span>
+                    )}
                   </div>
                   <div className={styles.profileField}>
                     <span className={styles.fieldLabel}>Créditos totales</span>

@@ -734,10 +734,18 @@ export const createCategoryLead = async (
     const leadLimit = providerData.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
     const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
     
-    if (leadsUsed >= leadLimit) {
-      console.warn(`⚠️ Proveedor ${providerId} ha alcanzado su límite de leads para ${category} (${leadsUsed}/${leadLimit})`);
-      throw new Error(`El proveedor ha alcanzado su límite de leads para la categoría ${category}`);
+    // VALIDACIÓN MEJORADA: Verificar créditos disponibles
+    // Créditos disponibles = leadLimit - leadsUsed
+    // Si créditos disponibles <= 0, NO se puede crear el lead
+    const creditsAvailable = leadLimit - leadsUsed;
+    
+    if (creditsAvailable <= 0) {
+      console.warn(`🚫 BLOQUEO: Proveedor ${providerId} NO tiene créditos disponibles para ${category}`);
+      console.warn(`   - Límite: ${leadLimit}, Usados: ${leadsUsed}, Disponibles: ${creditsAvailable}`);
+      throw new Error(`El proveedor ha alcanzado su límite de créditos para la categoría ${category}`);
     }
+    
+    console.log(`✅ Créditos OK para ${providerId} en ${category}: ${creditsAvailable} disponibles (${leadsUsed}/${leadLimit})`);
     
     const now = Timestamp.now();
     
@@ -773,11 +781,18 @@ export const createCategoryLead = async (
     const docRef = await addDoc(collection(db, COLLECTIONS.LEADS), leadData);
     
     // Actualizar leadsUsed del proveedor para esta categoría
+    // IMPORTANTE: Usamos el valor que ya teníamos + 1 para evitar race conditions
+    const newLeadsUsedForCategory = leadsUsed + 1;
+    const currentTotalLeadsUsed = providerData.leadsUsed || 0;
+    const newTotalLeadsUsed = currentTotalLeadsUsed + 1;
+    
     await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
-      [`categoryLeadsUsed.${category}`]: (await getProviderCategoryLeadsUsed(providerId, category)) + 1,
-      leadsUsed: (await getProviderTotalLeadsUsed(providerId)) + 1, // Legacy
+      [`categoryLeadsUsed.${category}`]: newLeadsUsedForCategory,
+      leadsUsed: newTotalLeadsUsed, // Legacy
       updatedAt: now,
     });
+    
+    console.log(`📊 Actualizado créditos proveedor ${providerId}: ${category} = ${newLeadsUsedForCategory}/${leadLimit}, Total = ${newTotalLeadsUsed}`);
     
     return {
       id: docRef.id,
@@ -1339,10 +1354,16 @@ export const getAvailableProvidersForCategory = async (
       // Verificar región
       const regionMatch = p.workRegion === region || p.acceptsOutsideZone;
       
-      // Verificar leads disponibles para esta categoría
+      // VALIDACIÓN MEJORADA: Verificar créditos disponibles (leadLimit - leadsUsed > 0)
       const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
       const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
-      const hasLeadsAvailable = leadsUsed < leadLimit;
+      const creditsAvailable = leadLimit - leadsUsed;
+      const hasCreditsAvailable = creditsAvailable > 0;
+      
+      // Log para diagnóstico de problemas de créditos
+      if (!hasCreditsAvailable) {
+        console.log(`  🚫 ${p.providerName} EXCLUIDO: sin créditos (${leadsUsed}/${leadLimit}, disponibles: ${creditsAvailable})`);
+      }
       
       // Verificar que completó encuesta para esta categoría
       const surveyCompleted = p.categorySurveyStatus?.[category] === 'completed';
@@ -1350,7 +1371,7 @@ export const getAvailableProvidersForCategory = async (
       // NUEVO: Verificar disponibilidad en la fecha del evento (solo si fecha no es tentativa)
       const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
       
-      return regionMatch && hasLeadsAvailable && surveyCompleted && isAvailable;
+      return regionMatch && hasCreditsAvailable && surveyCompleted && isAvailable;
     });
     
     console.log(`✅ Proveedores que pasan todos los filtros: ${filteredProviders.length}`);
@@ -1441,24 +1462,25 @@ export const generateMatchesForUserSurvey = async (
         ...doc.data(),
       })) as ProviderProfile[];
       
-      // FILTRO CRÍTICO: Solo incluir proveedores que tengan leads disponibles y estén disponibles en la fecha
+      // FILTRO CRÍTICO: Solo incluir proveedores que tengan créditos disponibles y estén disponibles en la fecha
       const fallbackProviders = allProviders.filter(p => {
         const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
         const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
-        const hasLeadsAvailable = leadsUsed < leadLimit;
+        const creditsAvailable = leadLimit - leadsUsed;
+        const hasCreditsAvailable = creditsAvailable > 0;
         
         // NUEVO: También verificar disponibilidad en la fecha del evento
         const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
         
-        if (!hasLeadsAvailable) {
-          console.log(`⚠️ Proveedor ${p.providerName} excluido del fallback: sin leads disponibles (${leadsUsed}/${leadLimit})`);
+        if (!hasCreditsAvailable) {
+          console.log(`🚫 Proveedor ${p.providerName} excluido del fallback: sin créditos (${leadsUsed}/${leadLimit}, disponibles: ${creditsAvailable})`);
         }
         
         if (!isAvailable) {
           console.log(`⚠️ Proveedor ${p.providerName} excluido del fallback: no disponible en fecha ${eventDate}`);
         }
         
-        return hasLeadsAvailable && isAvailable;
+        return hasCreditsAvailable && isAvailable;
       });
       
       if (fallbackProviders.length === 0) {
@@ -1569,15 +1591,16 @@ export const generateMatchesForUserSurvey = async (
           email: userProfile.email,
           phone: (userProfile as UserProfile).phone || '',
         },
-        {
-          providerName: provider.providerName,
-          categories: provider.categories || [],
-          priceRange: provider.priceRange || '',
-        },
-        undefined, // matchCriteria
-        userSurvey.id, // userSurveyId - permite al proveedor acceder a la encuesta del usuario
-        providerSurveyId // providerSurveyId
-      );
+      {
+        providerName: provider.providerName,
+        categories: provider.categories || [],
+        priceRange: provider.priceRange || '',
+        isVerified: provider.isVerified || false, // Incluir verificación del proveedor
+      },
+      undefined, // matchCriteria
+      userSurvey.id, // userSurveyId - permite al proveedor acceder a la encuesta del usuario
+      providerSurveyId // providerSurveyId
+    );
 
       createdLeads.push(lead);
     }
@@ -1666,6 +1689,7 @@ async function generateMatchesWithWizardOnly(
         providerName: provider.providerName,
         categories: provider.categories || [],
         priceRange: provider.priceRange || '',
+        isVerified: provider.isVerified || false, // Incluir verificación del proveedor
       }
     );
 
@@ -1730,10 +1754,15 @@ export const generateNewMatchForUser = async (
 
       const providerData = providerDoc.data() as ProviderProfile;
       
-      // Verificar que tiene leads disponibles para esta categoría
-      const leadLimit = providerData.categoryLeadLimits?.[category] || 10;
+      // VALIDACIÓN MEJORADA: Verificar que tiene créditos disponibles para esta categoría
+      const leadLimit = providerData.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
       const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
-      if (leadsUsed >= leadLimit) continue;
+      const creditsAvailable = leadLimit - leadsUsed;
+      
+      if (creditsAvailable <= 0) {
+        console.log(`🚫 Proveedor ${providerData.providerName} excluido: sin créditos (${leadsUsed}/${leadLimit})`);
+        continue;
+      }
 
       // Calcular un score básico basado en compatibilidad de región y precio
       let score = 50; // Base score
@@ -1798,6 +1827,7 @@ export const generateNewMatchForUser = async (
         providerName: selectedProvider.data.providerName,
         categories: selectedProvider.data.categories || [],
         priceRange: selectedProvider.data.priceRange || '',
+        isVerified: selectedProvider.data.isVerified || false, // Incluir verificación del proveedor
       }
     );
 

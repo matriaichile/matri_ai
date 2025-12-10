@@ -93,6 +93,13 @@
   text-overflow: ellipsis;
 }
 
+/* Contenedor del nombre + badge de verificación */
+.userNameContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Nombre del proveedor destacado - sin flecha */
 .userNameHighlight {
   font-family: var(--font-body);
@@ -104,6 +111,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.01em;
+}
+
+/* Badge de proveedor verificado */
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 14px;
+  color: #3b82f6;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.verifiedBadge svg {
+  flex-shrink: 0;
 }
 
 /* Botón de contacto */

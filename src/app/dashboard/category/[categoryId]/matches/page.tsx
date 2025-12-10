@@ -106,7 +106,9 @@ export default function CategoryMatchesPage() {
     }
   }, [isAuthenticated, userType, isLoading, router]);
 
-  // Cargar matches de esta categoría
+  // Cargar matches de esta categoría Y los detalles de los proveedores
+  // CAMBIO: Cargamos los detalles del proveedor al mismo tiempo que los leads
+  // para que la info de verificación esté disponible desde el inicio
   useEffect(() => {
     const loadMatches = async () => {
       if (!firebaseUser?.uid || !categoryId) return;
@@ -114,7 +116,47 @@ export default function CategoryMatchesPage() {
       try {
         setLoadingMatches(true);
         const categoryMatches = await getUserLeadsByCategory(firebaseUser.uid, categoryId);
-        setMatches(categoryMatches);
+        
+        // Cargar detalles de todos los proveedores en paralelo
+        // Esto permite mostrar el badge de verificación desde el inicio
+        const providerIds = [...new Set(categoryMatches.map(m => m.providerId))];
+        
+        const providerDetailsPromises = providerIds.map(async (providerId) => {
+          try {
+            const providerDoc = await getDoc(doc(db, 'providers', providerId));
+            if (providerDoc.exists()) {
+              return {
+                id: providerId,
+                data: {
+                  id: providerDoc.id,
+                  type: 'provider' as const,
+                  ...providerDoc.data(),
+                } as ProviderProfile,
+              };
+            }
+          } catch (error) {
+            console.error(`Error cargando proveedor ${providerId}:`, error);
+          }
+          return null;
+        });
+        
+        const providerResults = await Promise.all(providerDetailsPromises);
+        
+        // Crear mapa de proveedores
+        const providersMap: Record<string, ProviderProfile> = {};
+        providerResults.forEach(result => {
+          if (result) {
+            providersMap[result.id] = result.data;
+          }
+        });
+        
+        // Enriquecer los matches con los detalles del proveedor
+        const enrichedMatches: ExtendedLead[] = categoryMatches.map(match => ({
+          ...match,
+          providerDetails: providersMap[match.providerId],
+        }));
+        
+        setMatches(enrichedMatches);
       } catch (error) {
         console.error('Error cargando matches:', error);
       } finally {
@@ -517,8 +559,8 @@ export default function CategoryMatchesPage() {
                           <h3 className={styles.providerName}>
                             {match.providerInfo.providerName}
                           </h3>
-                          {/* CAMBIO: Badge de verificación más prominente con texto en azul */}
-                          {match.providerDetails?.isVerified && (
+                          {/* CAMBIO: Badge de verificación - usa providerDetails o providerInfo como fallback */}
+                          {(match.providerDetails?.isVerified || match.providerInfo?.isVerified) && (
                             <span className={styles.verifiedBadgeText}>
                               <BadgeCheck size={12} />
                               <span>Proveedor verificado</span>
@@ -637,8 +679,8 @@ export default function CategoryMatchesPage() {
                           <h3 className={styles.providerName}>
                             {match.providerInfo.providerName}
                           </h3>
-                          {/* CAMBIO: Badge de verificación más prominente con texto en azul */}
-                          {match.providerDetails?.isVerified && (
+                          {/* CAMBIO: Badge de verificación - usa providerDetails o providerInfo como fallback */}
+                          {(match.providerDetails?.isVerified || match.providerInfo?.isVerified) && (
                             <span className={styles.verifiedBadgeText}>
                               <BadgeCheck size={12} />
                               <span>Proveedor verificado</span>
@@ -798,8 +840,8 @@ export default function CategoryMatchesPage() {
                   <h2 className={styles.detailsTitle}>
                     {selectedMatch.providerInfo.providerName}
                   </h2>
-                  {/* CAMBIO: Badge de verificación prominente con texto en azul */}
-                  {selectedMatch.providerDetails?.isVerified && (
+                  {/* CAMBIO: Badge de verificación - usa providerDetails o providerInfo como fallback */}
+                  {(selectedMatch.providerDetails?.isVerified || selectedMatch.providerInfo?.isVerified) && (
                     <span className={styles.verifiedBadgeTextLarge}>
                       <BadgeCheck size={14} />
                       <span>Proveedor verificado</span>

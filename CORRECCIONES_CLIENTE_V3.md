@@ -872,6 +872,87 @@ function isOnlyAvailabilityUpdate() {
 
 ---
 
+---
+
+## Cambios V3.4 - Detalle Técnico (10 Diciembre 2025)
+
+### 1. Fecha en Sidebar Novios - Formato DD-MM-AA ✅
+
+**Archivo:** `src/components/dashboard/Sidebar.tsx`
+
+**Cambio:** La fecha del evento en el sidebar de novios ahora se muestra en formato DD-MM-AA en lugar de mostrar el año completo primero.
+
+---
+
+### 2. Sección de Visibilidad Eliminada del Dashboard Proveedor ✅
+
+**Archivo:** `src/app/dashboard/provider/page.tsx`
+
+**Cambio:** Se eliminó completamente la sección "Tu visibilidad" del dashboard de resumen de proveedores, ya que el cliente solicitó quitarla.
+
+---
+
+### 3. Corrección de Conteo de Leads ✅
+
+**Archivo:** `src/app/dashboard/provider/page.tsx`
+
+**Problema:** El total de leads mostraba 9 pero la suma por categorías daba 11.
+
+**Causa:** `leadsByCategory` usaba `leads` (todos los leads incluyendo pending), mientras que `totalLeads` usaba `visibleLeads` (excluyendo pending).
+
+**Solución:** Ahora `leadsByCategory` usa `visibleLeads` para mantener consistencia con el total mostrado.
+
+---
+
+### 4. Estilos de Dropdowns Personalizados ✅
+
+**Archivo:** `src/app/dashboard/provider/page.module.css`
+
+**Cambio:** Los dropdowns de filtros en la sección de leads ahora tienen estilos personalizados que coinciden con el tema de la aplicación:
+
+- Fondo oscuro/claro según el tema
+- Iconos de flecha personalizados en color dorado
+- Bordes y sombras coherentes con el diseño
+
+---
+
+### 5. Badge de Verificación en Header y Perfil ✅
+
+**Archivos:**
+
+- `src/components/dashboard/DashboardHeader.tsx`
+- `src/components/dashboard/DashboardHeader.module.css`
+- `src/app/dashboard/provider/page.tsx`
+- `src/app/dashboard/provider/page.module.css`
+
+**Cambios:**
+
+- Se agregó prop `isVerified` al componente `DashboardHeader`
+- Cuando un proveedor está verificado, se muestra un badge azul "Verificado" junto a su nombre en el header
+- También se muestra el estado de verificación en la sección "Estado de cuenta" del perfil
+
+---
+
+### 6. CRÍTICO: Sistema de Créditos - Prevención de Leads con Créditos = 0 ✅
+
+**Archivo:** `src/lib/firebase/firestore.ts`
+
+**Problema:** Un proveedor con límite de 10 créditos tenía 11 leads, resultando en -1 créditos disponibles.
+
+**Cambios realizados:**
+
+1. **`createCategoryLead`**: Validación mejorada que verifica `creditsAvailable = leadLimit - leadsUsed > 0` antes de crear cualquier lead. Si no hay créditos, el lead NO se crea y se lanza un error.
+
+2. **`getAvailableProvidersForCategory`**: El filtrado ahora excluye proveedores donde `creditsAvailable <= 0`, con logging para diagnóstico.
+
+3. **`generateMatchesForUserSurvey` (fallback)**: Los proveedores sin créditos son excluidos del fallback también.
+
+4. **`generateNewMatchForUser`**: Validación mejorada para nuevos matches adicionales.
+
+**Logs agregados:** Se agregaron logs detallados (`🚫`, `✅`, `📊`) para poder diagnosticar problemas de créditos en producción.
+
+---
+
 _Documento creado: Diciembre 2025_  
-_Última actualización: 10 Diciembre 2025 (V3.3)_  
+_Última actualización: 10 Diciembre 2025 (V3.4)_  
 _Desarrollador: MatriMatch Development Team_

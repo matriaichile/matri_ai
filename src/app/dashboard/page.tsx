@@ -70,6 +70,7 @@ interface LeadMatch {
     providerName: string;
     categories: string[];
     priceRange: string;
+    isVerified?: boolean; // Verificación del proveedor (incluido en el lead)
   };
   // Datos completos del proveedor (cargados al abrir detalles)
   providerDetails?: ProviderProfile;
@@ -1171,8 +1172,8 @@ export default function UserDashboardPage() {
                   <h2 className={styles.providerModalTitle}>
                     {selectedMatch.providerInfo.providerName}
                   </h2>
-                  {/* CAMBIO: Badge de verificación prominente con texto en azul */}
-                  {providers[selectedMatch.providerId]?.isVerified && (
+                  {/* CAMBIO: Badge de verificación - usa providers o providerInfo como fallback */}
+                  {(providers[selectedMatch.providerId]?.isVerified || selectedMatch.providerInfo?.isVerified) && (
                     <span className={styles.verifiedBadgeTextLarge}>
                       <BadgeCheck size={14} />
                       <span>Proveedor verificado</span>

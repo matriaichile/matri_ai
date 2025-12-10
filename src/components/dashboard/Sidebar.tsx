@@ -113,7 +113,18 @@ export default function Sidebar(props: SidebarProps) {
               {profile?.eventDate && (
                 <p className={styles.profileDate}>
                   <Calendar size={10} />
-                  <span>{profile.eventDate}</span>
+                  <span>{(() => {
+                    // Formatear fecha a DD-MM-AA
+                    try {
+                      const date = new Date(profile.eventDate);
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const year = String(date.getFullYear()).slice(-2);
+                      return `${day}-${month}-${year}`;
+                    } catch {
+                      return profile.eventDate;
+                    }
+                  })()}</span>
                 </p>
               )}
             </div>
