@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Clock, Plus, AlertCircle, SearchX } from 'lucide-react';
 import { 
-  canShowMoreProviders, 
-  getRemainingSlots, 
+  canSearchMoreProviders, 
+  getRemainingSearches, 
   formatTimeUntilReset,
-  getProvidersShownCount,
-  MATCH_LIMIT_PER_CATEGORY,
-  INITIAL_MATCHES_COUNT,
-  EXTRA_MATCHES_ALLOWED,
+  getSearchesUsedCount,
+  DAILY_SEARCH_LIMIT,
   MAX_ACTIVE_MATCHES_PER_CATEGORY
 } from '@/utils/matchLimits';
 import styles from './ShowMoreButton.module.css';
@@ -19,46 +17,44 @@ interface ShowMoreButtonProps {
   categoryId: string;
   onRequestNewMatch: () => Promise<boolean>; // Retorna true si se generó un nuevo match
   isLoading?: boolean;
-  currentMatchesCount?: number; // Cantidad actual de matches (leads) en esta categoría
-  activeMatchesCount?: number; // NUEVO: cantidad de matches activos (approved + pending)
-  maxActiveMatches?: number; // NUEVO: máximo de matches activos permitidos
-  isBlocked?: boolean; // NUEVO: bloquear cuando hay otra acción de recuperación en curso
+  activeMatchesCount?: number; // Cantidad de matches activos (approved + pending)
+  maxActiveMatches?: number; // Máximo de matches activos permitidos
+  isBlocked?: boolean; // Bloquear cuando hay otra acción de recuperación en curso
 }
 
 /**
- * Botón para solicitar un nuevo match dentro del límite de 5 por categoría cada 24 horas.
- * Muestra el estado actual del límite y tiempo restante si se alcanzó.
- * CAMBIO: Ahora muestra x/5 donde x es la cantidad de matches (leads) reales, no proveedores vistos.
+ * Botón para solicitar un nuevo proveedor.
+ * Límite: 2 búsquedas por día por categoría.
+ * Los 3 leads iniciales de la encuesta NO cuentan contra este límite.
  */
 export default function ShowMoreButton({
   userId,
   categoryId,
   onRequestNewMatch,
   isLoading = false,
-  currentMatchesCount = 0,
   activeMatchesCount = 0,
   maxActiveMatches = MAX_ACTIVE_MATCHES_PER_CATEGORY,
   isBlocked = false,
 }: ShowMoreButtonProps) {
-  const [canShowMore, setCanShowMore] = useState(false);
-  const [remainingSlots, setRemainingSlots] = useState(0);
+  const [canSearch, setCanSearch] = useState(false);
+  const [remainingSearches, setRemainingSearches] = useState(0);
+  const [searchesUsed, setSearchesUsed] = useState(0);
   const [timeUntilReset, setTimeUntilReset] = useState('');
-  const [providersShown, setProvidersShown] = useState(0);
   const [requesting, setRequesting] = useState(false);
-  const [noMoreProviders, setNoMoreProviders] = useState(false); // Estado para cuando no hay más proveedores
+  const [noMoreProviders, setNoMoreProviders] = useState(false);
 
   // Actualizar estado de límites
   const updateLimitsState = () => {
     if (!userId || !categoryId) return;
     
-    const canShow = canShowMoreProviders(userId, categoryId);
-    const remaining = getRemainingSlots(userId, categoryId);
-    const shown = getProvidersShownCount(userId, categoryId);
+    const canDo = canSearchMoreProviders(userId, categoryId);
+    const remaining = getRemainingSearches(userId, categoryId);
+    const used = getSearchesUsedCount(userId, categoryId);
     const timeLeft = formatTimeUntilReset(userId, categoryId);
     
-    setCanShowMore(canShow);
-    setRemainingSlots(remaining);
-    setProvidersShown(shown);
+    setCanSearch(canDo);
+    setRemainingSearches(remaining);
+    setSearchesUsed(used);
     setTimeUntilReset(timeLeft);
   };
 
@@ -73,8 +69,7 @@ export default function ShowMoreButton({
 
   // Manejar click en el botón
   const handleClick = async () => {
-    // NUEVO: También verificar isBlocked para evitar acciones simultáneas
-    if (!canShowMore || requesting || isLoading || noMoreProviders || isBlocked) return;
+    if (!canSearch || requesting || isLoading || noMoreProviders || isBlocked) return;
     
     setRequesting(true);
     try {
@@ -94,7 +89,13 @@ export default function ShowMoreButton({
     }
   };
 
-  // Si no hay más proveedores disponibles
+  // Verificar si tiene el máximo de matches activos
+  const hasReachedActiveLimit = activeMatchesCount >= maxActiveMatches;
+  
+  // Puede buscar si: tiene búsquedas disponibles Y no tiene máximo de activos Y no está bloqueado
+  const canRequestNew = canSearch && !hasReachedActiveLimit && !isBlocked;
+
+  // Si no hay más proveedores disponibles en el sistema
   if (noMoreProviders) {
     return (
       <div className={styles.limitReached}>
@@ -102,7 +103,7 @@ export default function ShowMoreButton({
           <SearchX size={20} />
         </div>
         <div className={styles.limitContent}>
-          <p className={styles.limitTitle}>No se encontraron más proveedores disponibles</p>
+          <p className={styles.limitTitle}>No hay más proveedores disponibles</p>
           <p className={styles.limitText}>
             Ya has visto todos los proveedores que coinciden con tus preferencias en esta categoría.
           </p>
@@ -111,51 +112,39 @@ export default function ShowMoreButton({
     );
   }
 
-  // Si ya se alcanzó el límite diario
-  if (!canShowMore) {
+  // Si ya usó las 2 búsquedas del día
+  if (!canSearch) {
     return (
       <div className={styles.limitReached}>
         <div className={styles.limitIcon}>
           <Clock size={20} />
         </div>
         <div className={styles.limitContent}>
-          <p className={styles.limitTitle}>Límite alcanzado</p>
+          <p className={styles.limitTitle}>Búsquedas agotadas por hoy</p>
           <p className={styles.limitText}>
-            Has visto {MATCH_LIMIT_PER_CATEGORY} proveedores hoy en esta categoría.
+            Has usado tus {DAILY_SEARCH_LIMIT} búsquedas de hoy en esta categoría.
           </p>
           <p className={styles.limitTime}>
             <Clock size={14} />
-            <span>Podrás ver más en {timeUntilReset}</span>
+            <span>Podrás buscar más en {timeUntilReset}</span>
           </p>
         </div>
       </div>
     );
   }
 
-  // CAMBIO: Mostrar cantidad de matches reales (x/5) donde x es la cantidad de leads/matches
-  // Solo muestra 0/5 cuando se reinician los matches (cada 24 horas)
-  const displayCount = currentMatchesCount > 0 ? currentMatchesCount : providersShown;
-  
-  // CAMBIO: Calcular cuántos extras ya se han usado (matches actuales - 3 iniciales)
-  const extrasUsed = Math.max(0, currentMatchesCount - INITIAL_MATCHES_COUNT);
-  const extrasRemaining = EXTRA_MATCHES_ALLOWED - extrasUsed;
-  
-  // NUEVO: También verificar que no se exceda el límite de matches activos (3)
-  const hasReachedActiveLimit = activeMatchesCount >= maxActiveMatches;
-  // NUEVO: También bloquear si hay otra acción en curso (ej: recuperando un match)
-  const canRequestExtra = extrasRemaining > 0 && canShowMore && !hasReachedActiveLimit && !isBlocked;
-  
   return (
     <div className={styles.container}>
+      {/* Mostrar búsquedas disponibles */}
       <div className={styles.slotsInfo}>
         <span className={styles.slotsCount}>
-          {displayCount} / {MATCH_LIMIT_PER_CATEGORY}
+          {remainingSearches} / {DAILY_SEARCH_LIMIT}
         </span>
-        <span className={styles.slotsText}>matches en esta categoría</span>
+        <span className={styles.slotsText}>búsquedas disponibles hoy</span>
       </div>
       
-      {/* Solo mostrar botón si puede solicitar extras (máximo 2) */}
-      {canRequestExtra && (
+      {/* Botón para buscar nuevo proveedor */}
+      {canRequestNew && (
         <button
           type="button"
           className={styles.button}
@@ -176,7 +165,7 @@ export default function ShowMoreButton({
           ) : (
             <>
               <Plus size={18} />
-              <span>Mostrar nuevo proveedor ({extrasRemaining} disponible{extrasRemaining !== 1 ? 's' : ''})</span>
+              <span>Mostrar nuevo proveedor</span>
             </>
           )}
         </button>
@@ -187,14 +176,6 @@ export default function ShowMoreButton({
         <p className={styles.warning}>
           <AlertCircle size={14} />
           <span>Tienes {maxActiveMatches} proveedores activos. Descarta uno para ver más opciones.</span>
-        </p>
-      )}
-      
-      {/* Mensaje cuando no puede solicitar más extras por límite diario */}
-      {!canRequestExtra && !hasReachedActiveLimit && currentMatchesCount >= INITIAL_MATCHES_COUNT && (
-        <p className={styles.warning}>
-          <AlertCircle size={14} />
-          <span>Has alcanzado el máximo de {MATCH_LIMIT_PER_CATEGORY} proveedores en esta categoría</span>
         </p>
       )}
     </div>

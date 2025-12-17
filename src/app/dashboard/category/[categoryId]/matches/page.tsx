@@ -32,7 +32,7 @@ import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
 import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
-import { registerProviderShown, MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
+import { registerSearchUsed, forceResetCategory, MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
 import { calculateBackgroundStyles } from '@/utils/profileImage';
 import { REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES, PROVIDER_CATEGORIES } from '@/store/wizardStore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
@@ -169,7 +169,7 @@ export default function CategoryMatchesPage() {
     }
   }, [firebaseUser?.uid, categoryId]);
 
-  // Rehacer encuesta - elimina leads y restaura créditos a proveedores
+  // Rehacer encuesta - elimina leads, restaura créditos y resetea búsquedas
   const handleRedoSurvey = async () => {
     if (!firebaseUser?.uid) return;
     
@@ -179,7 +179,10 @@ export default function CategoryMatchesPage() {
       // Llamar a la función que elimina leads y restaura créditos
       const result = await resetCategorySurveyAndLeads(firebaseUser.uid, categoryId);
       
-      console.log(`✅ Encuesta reiniciada: ${result.deletedLeadsCount} leads eliminados, ${result.restoredCreditsToProviders.length} proveedores con créditos restaurados`);
+      // Resetear el contador de búsquedas diarias para esta categoría
+      forceResetCategory(firebaseUser.uid, categoryId);
+      
+      console.log(`✅ Encuesta reiniciada: ${result.deletedLeadsCount} leads eliminados, ${result.restoredCreditsToProviders.length} proveedores con créditos restaurados, búsquedas reseteadas`);
       
       // Redirigir a la encuesta
       router.push(`/dashboard/category/${categoryId}/survey`);
@@ -260,8 +263,8 @@ export default function CategoryMatchesPage() {
       const newLead = await generateNewMatchForUser(firebaseUser.uid, categoryId);
       
       if (newLead) {
-        // Registrar en localStorage que se mostró un nuevo proveedor
-        registerProviderShown(firebaseUser.uid, categoryId, newLead.providerId);
+        // Registrar que se usó una búsqueda (máximo 2 por día)
+        registerSearchUsed(firebaseUser.uid, categoryId);
         
         // Agregar el nuevo lead a la lista
         setMatches(prev => [newLead, ...prev]);
@@ -745,8 +748,7 @@ export default function CategoryMatchesPage() {
               </section>
             )}
             
-            {/* CAMBIO: Botón para agregar nuevos matches - SIEMPRE visible si hay espacio para más */}
-            {/* Ahora se muestra incluso si no hay matches pendientes, siempre que activeMatches < 3 */}
+            {/* Botón para buscar nuevo proveedor (máximo 2 por día) */}
             {firebaseUser?.uid && (
               <section className={styles.section}>
                 <ShowMoreButton
@@ -754,7 +756,6 @@ export default function CategoryMatchesPage() {
                   categoryId={categoryId}
                   onRequestNewMatch={handleRequestNewMatch}
                   isLoading={isGeneratingNew}
-                  currentMatchesCount={matches.filter(m => m.status !== 'rejected').length}
                   activeMatchesCount={activeMatchesCount}
                   maxActiveMatches={MAX_ACTIVE_MATCHES_PER_CATEGORY}
                   isBlocked={isModifyingActiveMatches}

@@ -1,30 +1,33 @@
 /**
- * Sistema de límites de matches por categoría cada 24 horas.
+ * Sistema de límites de "buscar nuevo proveedor" por categoría cada 24 horas.
  * Implementación 100% local con localStorage.
  * 
  * Reglas:
- * - Máximo 5 proveedores visibles por categoría cada 24 horas
- * - Los matches aprobados ("Me interesa") NO cuentan contra el límite
- * - El reset es automático después de 24 horas
- * - El reset es por categoría, no global
+ * - Al completar encuesta: se generan 3 leads iniciales (NO cuentan contra el límite)
+ * - Máximo 2 "buscar nuevo proveedor" por día por categoría
+ * - Máximo 3 matches ACTIVOS al mismo tiempo (approved + pending)
+ * - Al rehacer encuesta: se reinicia el contador de búsquedas para esa categoría
+ * - El reset automático es después de 24 horas
  */
 
 // Constantes del sistema
-// CAMBIO: 3 opciones iniciales + máximo 2 extras si rechaza = 5 total
-export const MATCH_LIMIT_PER_CATEGORY = 5;
-export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales por categoría
-export const EXTRA_MATCHES_ALLOWED = 2; // Máximo extras que puede solicitar
+export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales al completar encuesta (NO cuentan contra límite)
+export const DAILY_SEARCH_LIMIT = 2; // Máximo "buscar nuevo proveedor" por día por categoría
 export const RESET_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-// NUEVO: Máximo de matches ACTIVOS (approved + pending) que puede tener un usuario por categoría
+// Máximo de matches ACTIVOS (approved + pending) que puede tener un usuario por categoría
 // Los rejected NO cuentan. Si tiene 3 activos, NO puede agregar más ni recuperar descartados.
 export const MAX_ACTIVE_MATCHES_PER_CATEGORY = 3;
+
+// DEPRECADO: Mantener para compatibilidad, pero ya no se usa
+export const MATCH_LIMIT_PER_CATEGORY = DAILY_SEARCH_LIMIT;
+export const EXTRA_MATCHES_ALLOWED = DAILY_SEARCH_LIMIT;
 
 // Estructura de datos para límites por categoría
 export interface CategoryMatchLimit {
   categoryId: string;
-  providersShown: string[];  // IDs de proveedores mostrados (pendientes + rechazados)
-  lastResetTimestamp: number; // Unix timestamp de última búsqueda/reset
+  searchesUsed: number;  // Cantidad de "buscar nuevo proveedor" usados hoy
+  lastResetTimestamp: number; // Unix timestamp del último reset
 }
 
 // Estructura completa de límites por usuario
@@ -75,16 +78,25 @@ export function getMatchLimits(userId: string, categoryId: string): CategoryMatc
   
   let categoryLimit = allLimits[categoryId] || {
     categoryId,
-    providersShown: [],
+    searchesUsed: 0,
     lastResetTimestamp: Date.now(),
   };
+  
+  // Migración: si tiene el formato viejo (providersShown), convertir al nuevo
+  if ('providersShown' in categoryLimit && !('searchesUsed' in categoryLimit)) {
+    categoryLimit = {
+      categoryId,
+      searchesUsed: 0, // Reiniciar al migrar
+      lastResetTimestamp: Date.now(),
+    };
+  }
   
   // Verificar si pasaron 24 horas - RESET automático
   const timeSinceReset = Date.now() - categoryLimit.lastResetTimestamp;
   if (timeSinceReset >= RESET_INTERVAL_MS) {
     categoryLimit = {
       categoryId,
-      providersShown: [],
+      searchesUsed: 0,
       lastResetTimestamp: Date.now(),
     };
     
@@ -92,72 +104,73 @@ export function getMatchLimits(userId: string, categoryId: string): CategoryMatc
     allLimits[categoryId] = categoryLimit;
     saveAllLimits(userId, allLimits);
     
-    console.log(`✓ Reset automático de límites para categoría ${categoryId}`);
+    console.log(`✓ Reset automático de búsquedas para categoría ${categoryId}`);
   }
   
   return categoryLimit;
 }
 
 /**
- * Verificar si se pueden mostrar más proveedores en una categoría
+ * Verificar si puede buscar más proveedores hoy en una categoría
  */
-export function canShowMoreProviders(userId: string, categoryId: string): boolean {
+export function canSearchMoreProviders(userId: string, categoryId: string): boolean {
   const limits = getMatchLimits(userId, categoryId);
-  return limits.providersShown.length < MATCH_LIMIT_PER_CATEGORY;
+  return limits.searchesUsed < DAILY_SEARCH_LIMIT;
 }
 
+// Alias para compatibilidad
+export const canShowMoreProviders = canSearchMoreProviders;
+
 /**
- * Registrar que un proveedor fue mostrado al usuario.
- * Solo debe llamarse cuando el usuario VE al proveedor (pendiente o rechazado).
- * NO llamar cuando el proveedor es aprobado.
+ * Registrar que el usuario usó una búsqueda de "nuevo proveedor".
+ * Solo llamar cuando el usuario hace clic en "Mostrar nuevo proveedor".
+ * NO llamar para los 3 leads iniciales de la encuesta.
  */
-export function registerProviderShown(userId: string, categoryId: string, providerId: string): void {
+export function registerSearchUsed(userId: string, categoryId: string): void {
   const allLimits = getAllLimits(userId);
   const categoryLimit = getMatchLimits(userId, categoryId);
   
-  // Solo agregar si no está ya en la lista
-  if (!categoryLimit.providersShown.includes(providerId)) {
-    categoryLimit.providersShown.push(providerId);
-    allLimits[categoryId] = categoryLimit;
-    saveAllLimits(userId, allLimits);
-    
-    console.log(`✓ Proveedor ${providerId} registrado para ${categoryId} (${categoryLimit.providersShown.length}/${MATCH_LIMIT_PER_CATEGORY})`);
-  }
-}
-
-/**
- * Remover un proveedor de la lista de mostrados.
- * Útil cuando el usuario aprueba un match (no debería contar contra el límite).
- */
-export function unregisterProviderShown(userId: string, categoryId: string, providerId: string): void {
-  const allLimits = getAllLimits(userId);
-  const categoryLimit = getMatchLimits(userId, categoryId);
+  categoryLimit.searchesUsed += 1;
+  allLimits[categoryId] = categoryLimit;
+  saveAllLimits(userId, allLimits);
   
-  const index = categoryLimit.providersShown.indexOf(providerId);
-  if (index > -1) {
-    categoryLimit.providersShown.splice(index, 1);
-    allLimits[categoryId] = categoryLimit;
-    saveAllLimits(userId, allLimits);
-    
-    console.log(`✓ Proveedor ${providerId} removido del límite para ${categoryId}`);
-  }
+  console.log(`✓ Búsqueda registrada para ${categoryId} (${categoryLimit.searchesUsed}/${DAILY_SEARCH_LIMIT})`);
+}
+
+// Alias para compatibilidad (aunque ya no guarda providerId)
+export function registerProviderShown(userId: string, categoryId: string, _providerId: string): void {
+  registerSearchUsed(userId, categoryId);
 }
 
 /**
- * Obtener cantidad de slots restantes para una categoría
+ * Ya no necesitamos remover proveedores - las búsquedas no se "devuelven"
+ * Mantener función vacía para compatibilidad
  */
-export function getRemainingSlots(userId: string, categoryId: string): number {
-  const limits = getMatchLimits(userId, categoryId);
-  return Math.max(0, MATCH_LIMIT_PER_CATEGORY - limits.providersShown.length);
+export function unregisterProviderShown(_userId: string, _categoryId: string, _providerId: string): void {
+  // No hacer nada - las búsquedas usadas no se devuelven
 }
 
 /**
- * Obtener cantidad de proveedores ya mostrados
+ * Obtener cantidad de búsquedas restantes para hoy
  */
-export function getProvidersShownCount(userId: string, categoryId: string): number {
+export function getRemainingSearches(userId: string, categoryId: string): number {
   const limits = getMatchLimits(userId, categoryId);
-  return limits.providersShown.length;
+  return Math.max(0, DAILY_SEARCH_LIMIT - limits.searchesUsed);
 }
+
+// Alias para compatibilidad
+export const getRemainingSlots = getRemainingSearches;
+
+/**
+ * Obtener cantidad de búsquedas usadas hoy
+ */
+export function getSearchesUsedCount(userId: string, categoryId: string): number {
+  const limits = getMatchLimits(userId, categoryId);
+  return limits.searchesUsed;
+}
+
+// Alias para compatibilidad
+export const getProvidersShownCount = getSearchesUsedCount;
 
 /**
  * Obtener tiempo restante hasta el próximo reset (en milisegundos)
@@ -186,27 +199,27 @@ export function formatTimeUntilReset(userId: string, categoryId: string): string
 }
 
 /**
- * Verificar si un proveedor específico ya fue mostrado
+ * Ya no rastreamos proveedores individuales - mantener para compatibilidad
  */
-export function wasProviderShown(userId: string, categoryId: string, providerId: string): boolean {
-  const limits = getMatchLimits(userId, categoryId);
-  return limits.providersShown.includes(providerId);
+export function wasProviderShown(_userId: string, _categoryId: string, _providerId: string): boolean {
+  return false; // Ya no rastreamos esto
 }
 
 /**
- * Forzar reset de límites para una categoría (para testing/admin)
+ * Forzar reset de búsquedas para una categoría.
+ * Útil cuando el usuario rehace la encuesta.
  */
 export function forceResetCategory(userId: string, categoryId: string): void {
   const allLimits = getAllLimits(userId);
   
   allLimits[categoryId] = {
     categoryId,
-    providersShown: [],
+    searchesUsed: 0,
     lastResetTimestamp: Date.now(),
   };
   
   saveAllLimits(userId, allLimits);
-  console.log(`✓ Reset forzado de límites para categoría ${categoryId}`);
+  console.log(`✓ Reset de búsquedas para categoría ${categoryId}`);
 }
 
 /**
