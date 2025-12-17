@@ -1671,13 +1671,14 @@ export const generateMatchesForUserSurvey = async (
         categories: provider.categories || [],
       };
 
-      // Calcular score combinado
+      // Calcular score combinado (incluye bonus de verificación +10 puntos, máximo 100)
       const result = calculateCombinedMatchScore(
         userSurvey.responses,
         survey?.responses || {},
         userWizardProfile,
         providerWizardProfile,
-        category
+        category,
+        provider.isVerified || false // Pasar flag de verificación para bonus
       );
 
       matchResults.push({
@@ -1847,6 +1848,15 @@ async function generateMatchesWithWizardOnly(
 /**
  * Genera UN NUEVO match adicional para un usuario en una categoría.
  * Busca proveedores que no hayan sido mostrados aún al usuario.
+ * IMPORTANTE: Usa el mismo sistema de matching que generateMatchesForUserSurvey
+ * para garantizar que SIEMPRE se muestre el mejor match disponible (por score).
+ * 
+ * MEJORAS APLICADAS:
+ * - Usa calculateCombinedMatchScore para calcular el score real (no básico)
+ * - Aplica bonus de verificación (+10 puntos, máximo 100)
+ * - NO usa variación aleatoria - SIEMPRE el mejor match primero
+ * - Ordena estrictamente por matchScore descendente
+ * 
  * @returns El nuevo lead creado, o null si no hay más proveedores disponibles
  */
 export const generateNewMatchForUser = async (
@@ -1859,9 +1869,12 @@ export const generateNewMatchForUser = async (
     if (!userDoc.exists()) {
       throw new Error('Usuario no encontrado');
     }
-    const userProfile = userDoc.data();
+    const userProfile = userDoc.data() as UserProfile;
 
-    // 2. Obtener los leads existentes del usuario para esta categoría
+    // 2. Obtener la encuesta del usuario para esta categoría (necesaria para calcular match real)
+    const userSurvey = await getUserCategorySurvey(userId, category);
+
+    // 3. Obtener los leads existentes del usuario para esta categoría
     const existingLeadsQuery = query(
       collection(db, COLLECTIONS.LEADS),
       where('userId', '==', userId),
@@ -1872,7 +1885,7 @@ export const generateNewMatchForUser = async (
       existingLeadsSnap.docs.map(doc => doc.data().providerId)
     );
 
-    // 3. Obtener proveedores activos de esta categoría que no hayan sido mostrados
+    // 4. Obtener proveedores activos de esta categoría que no hayan sido mostrados
     const providersQuery = query(
       collection(db, COLLECTIONS.PROVIDERS),
       where('status', '==', 'active'),
@@ -1880,14 +1893,29 @@ export const generateNewMatchForUser = async (
     );
     const providersSnap = await getDocs(providersQuery);
 
-    // 4. Filtrar proveedores que no hayan sido mostrados y tengan leads disponibles
+    // 5. Importar el servicio de matching para calcular scores reales
+    const { calculateCombinedMatchScore } = await import('@/lib/matching/matchingService');
+
+    // 6. Preparar datos del wizard del usuario
+    const userWizardProfile = {
+      budget: userProfile.budget || '',
+      guestCount: userProfile.guestCount || '',
+      region: userProfile.region || '',
+      eventStyle: userProfile.eventStyle || '',
+      ceremonyTypes: userProfile.ceremonyTypes || [],
+      priorityCategories: userProfile.priorityCategories || [],
+      involvementLevel: userProfile.involvementLevel || '',
+    };
+
+    // 7. Filtrar proveedores y calcular score REAL
     const availableProviders: Array<{
       id: string;
       data: ProviderProfile;
       score: number;
+      isVerified: boolean;
     }> = [];
 
-    console.log(`\n🔍 ========== GENERANDO NUEVO MATCH ==========`);
+    console.log(`\n🔍 ========== GENERANDO NUEVO MATCH (OPTIMIZADO) ==========`);
     console.log(`📌 Usuario: ${userId}, Categoría: ${category}`);
     console.log(`📊 Proveedores ya mostrados: ${existingProviderIds.size}`);
     console.log(`📊 Proveedores activos en categoría: ${providersSnap.docs.length}`);
@@ -1897,7 +1925,7 @@ export const generateNewMatchForUser = async (
 
     for (const providerDoc of providersSnap.docs) {
       const providerId = providerDoc.id;
-      const providerData = providerDoc.data();
+      const providerData = providerDoc.data() as ProviderProfile;
       const providerName = providerData.providerName || providerId;
       
       // Saltar si ya fue mostrado
@@ -1911,55 +1939,48 @@ export const generateNewMatchForUser = async (
       const leadsUsed = providerData.leadsUsed ?? 0;
       const creditsAvailable = leadLimit - leadsUsed;
       
-      console.log(`   📋 ${providerName}: créditos ${leadsUsed}/${leadLimit} (disponibles: ${creditsAvailable})`);
-      
       // CRÍTICO: Excluir si no hay créditos disponibles
-      // Verificamos TRES condiciones para estar 100% seguros:
-      // 1. creditsAvailable <= 0
-      // 2. leadsUsed >= leadLimit
-      // 3. leadsUsed es negativo (datos corruptos)
       if (creditsAvailable <= 0 || leadsUsed >= leadLimit || leadsUsed < 0) {
-        console.log(`   🚫 ${providerName} EXCLUIDO: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit}, disponible: ${creditsAvailable})`);
+        console.log(`   🚫 ${providerName} EXCLUIDO: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit})`);
         excludedByCredits++;
         continue;
       }
 
-      // Calcular un score básico basado en compatibilidad de región y precio
-      let score = 50; // Base score
-      
-      // Bonus por región coincidente
-      if (providerData.workRegion === userProfile.region) {
-        score += 20;
-      } else if (providerData.acceptsOutsideZone) {
-        score += 10;
-      }
-
-      // Bonus por rango de precio compatible
-      const priceCompatibility: Record<string, string[]> = {
-        'under_5m': ['budget'],
-        '5m_10m': ['budget', 'mid'],
-        '10m_15m': ['mid'],
-        '15m_20m': ['mid', 'premium'],
-        '20m_30m': ['premium'],
-        '30m_50m': ['premium', 'luxury'],
-        'over_50m': ['luxury'],
+      // Preparar datos del wizard del proveedor
+      const providerWizardProfile = {
+        serviceStyle: providerData.serviceStyle || '',
+        priceRange: providerData.priceRange || '',
+        workRegion: providerData.workRegion || '',
+        acceptsOutsideZone: providerData.acceptsOutsideZone || false,
+        categories: providerData.categories || [],
       };
-      const compatibleRanges = priceCompatibility[userProfile.budget] || [];
-      if (compatibleRanges.includes(providerData.priceRange)) {
-        score += 20;
-      }
 
-      // Agregar algo de variación aleatoria para que no siempre salgan los mismos
-      score += Math.random() * 10;
+      // Obtener encuesta del proveedor (si existe)
+      const providerSurvey = await getProviderCategorySurvey(providerId, category);
+
+      // Calcular score REAL usando el servicio de matching completo
+      // Incluye bonus de verificación (+10 puntos, máximo 100)
+      const matchResult = calculateCombinedMatchScore(
+        userSurvey?.responses || {},
+        providerSurvey?.responses || {},
+        userWizardProfile,
+        providerWizardProfile,
+        category,
+        providerData.isVerified || false // Pasar flag de verificación
+      );
+
+      const isVerified = providerData.isVerified || false;
+      console.log(`   📋 ${providerName}: score=${matchResult.score}${isVerified ? ' ⭐ VERIFICADO (+10)' : ''} (créditos: ${creditsAvailable})`);
 
       availableProviders.push({
         id: providerId,
         data: providerData,
-        score,
+        score: matchResult.score,
+        isVerified,
       });
     }
 
-    // 5. Si no hay proveedores disponibles, retornar null
+    // 8. Si no hay proveedores disponibles, retornar null
     console.log(`\n📊 Resumen de filtrado:`);
     console.log(`   - Total proveedores en categoría: ${providersSnap.docs.length}`);
     console.log(`   - Excluidos por ya mostrados: ${excludedByAlreadyShown}`);
@@ -1971,18 +1992,26 @@ export const generateNewMatchForUser = async (
       return null;
     }
 
-    // 6. Ordenar por score y tomar el mejor
+    // 9. Ordenar ESTRICTAMENTE por score descendente (SIN variación aleatoria)
+    // Esto garantiza que SIEMPRE se muestre el mejor match disponible
     availableProviders.sort((a, b) => b.score - a.score);
+    
+    // Log de los top 3 para debugging
+    console.log(`\n📊 Top 3 proveedores disponibles (por score):`);
+    availableProviders.slice(0, 3).forEach((p, i) => {
+      console.log(`   ${i + 1}. ${p.data.providerName}: ${p.score}%${p.isVerified ? ' ⭐' : ''}`);
+    });
+    
     const selectedProvider = availableProviders[0];
     
-    console.log(`\n✅ Proveedor seleccionado: ${selectedProvider.data.providerName} (score: ${Math.round(selectedProvider.score)})`);
+    console.log(`\n✅ Proveedor seleccionado: ${selectedProvider.data.providerName} (score: ${selectedProvider.score}${selectedProvider.isVerified ? ' ⭐ VERIFICADO' : ''})`);
 
-    // 7. Crear el nuevo lead - createCategoryLead re-valida los créditos con datos frescos
+    // 10. Crear el nuevo lead - createCategoryLead re-valida los créditos con datos frescos
     const newLead = await createCategoryLead(
       userId,
       selectedProvider.id,
       category,
-      Math.round(selectedProvider.score),
+      selectedProvider.score, // Usar score ya calculado (incluye bonus verificación)
       {
         coupleNames: userProfile.coupleNames || 'Pareja',
         eventDate: userProfile.eventDate || 'Por definir',
@@ -1995,14 +2024,14 @@ export const generateNewMatchForUser = async (
         providerName: selectedProvider.data.providerName,
         categories: selectedProvider.data.categories || [],
         priceRange: selectedProvider.data.priceRange || '',
-        isVerified: selectedProvider.data.isVerified || false, // Incluir verificación del proveedor
+        isVerified: selectedProvider.isVerified,
       }
     );
 
-    // 8. Incrementar métrica de timesOffered del proveedor
+    // 11. Incrementar métrica de timesOffered del proveedor
     await incrementProviderMetric(selectedProvider.id, 'timesOffered');
 
-    console.log(`✓ Nuevo match generado: ${selectedProvider.data.providerName} (score: ${Math.round(selectedProvider.score)})`);
+    console.log(`✓ Nuevo match generado: ${selectedProvider.data.providerName} (score: ${selectedProvider.score})`);
     return newLead;
   } catch (error) {
     console.error('Error generando nuevo match:', error);

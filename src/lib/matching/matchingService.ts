@@ -1781,13 +1781,16 @@ export function calculateWizardMatchScore(
 
 /**
  * Calcula el score de matching COMBINADO (wizard + mini-encuesta)
+ * IMPORTANTE: Esta función aplica el bonus de verificación al final
+ * Proveedores verificados obtienen +10 puntos (máximo 100)
  */
 export function calculateCombinedMatchScore(
   userSurveyResponses: SurveyResponses,
   providerSurveyResponses: SurveyResponses,
   userProfile: UserWizardProfile | null,
   providerProfile: ProviderWizardProfile | null,
-  category: CategoryId
+  category: CategoryId,
+  isVerified: boolean = false // NUEVO: Flag para bonus de verificación
 ): { 
   score: number; 
   surveyScore: number;
@@ -1796,6 +1799,7 @@ export function calculateCombinedMatchScore(
   wizardDetails: WizardMatchDetail[];
   specificityBonus: number;
   coverageScore: number;
+  verifiedBonus: number; // NUEVO: Bonus aplicado por verificación
 } {
   const surveyResult = calculateMatchScore(
     userSurveyResponses,
@@ -1821,19 +1825,25 @@ export function calculateCombinedMatchScore(
     wizardWeight = 60;
   }
   
-  const combinedScore = Math.round(
+  let combinedScore = Math.round(
     (surveyResult.score * (surveyWeight / 100)) + 
     (wizardResult.score * (wizardWeight / 100))
   );
 
+  // NUEVO: Aplicar bonus de verificación (+10 puntos, máximo 100)
+  // Los proveedores verificados tienen un pequeño privilegio en el ranking
+  const verifiedBonus = isVerified ? 10 : 0;
+  const finalScore = Math.min(100, combinedScore + verifiedBonus);
+
   return {
-    score: combinedScore,
+    score: finalScore,
     surveyScore: surveyResult.score,
     wizardScore: wizardResult.score,
     surveyDetails: surveyResult.details,
     wizardDetails: wizardResult.details,
     specificityBonus: surveyResult.specificityBonus,
     coverageScore: surveyResult.coverageScore,
+    verifiedBonus, // Retornamos el bonus aplicado para debugging
   };
 }
 
