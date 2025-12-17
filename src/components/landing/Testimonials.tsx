@@ -10,7 +10,7 @@ const testimonials = [
     names: "Camila & Roberto",
     date: "Nov 2024",
     text: "MatriMatch entendió exactamente lo que queríamos. Encontraron al fotógrafo perfecto en minutos. ¡Increíble!",
-    image: "https://images.unsplash.com/photo-1511285560982-1351cdeb9821?auto=format&fit=crop&w=800&q=80"
+    image: "/MATRIMATCH.jpg"
   },
   {
     id: 2,

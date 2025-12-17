@@ -711,6 +711,8 @@ export const getAllProviderCategorySurveys = async (providerId: string): Promise
 
 /**
  * Crear un nuevo lead para una categoría específica
+ * CRÍTICO: Esta función valida créditos y previene créditos negativos
+ * IMPORTANTE: Siempre re-valida los créditos con datos frescos de Firestore
  */
 export const createCategoryLead = async (
   userId: string,
@@ -723,29 +725,52 @@ export const createCategoryLead = async (
   userSurveyId?: string,
   providerSurveyId?: string
 ): Promise<Lead> => {
+  console.log(`\n📝 ========== CREANDO LEAD ==========`);
+  console.log(`📌 Usuario: ${userId}`);
+  console.log(`📌 Proveedor: ${providerId}`);
+  console.log(`📌 Categoría: ${category}`);
+  
   try {
-    // VALIDACIÓN CRÍTICA: Verificar que el proveedor tiene leads disponibles para esta categoría
+    // VALIDACIÓN CRÍTICA: Siempre obtener datos FRESCOS del proveedor
     const providerDoc = await getDoc(doc(db, COLLECTIONS.PROVIDERS, providerId));
     if (!providerDoc.exists()) {
       throw new Error(`Proveedor ${providerId} no encontrado`);
     }
     
     const providerData = providerDoc.data();
-    const leadLimit = providerData.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
-    const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
+    const providerName = providerData.providerName || providerId;
     
-    // VALIDACIÓN MEJORADA: Verificar créditos disponibles
-    // Créditos disponibles = leadLimit - leadsUsed
-    // Si créditos disponibles <= 0, NO se puede crear el lead
+    // Obtener límites y uso actual - usar campos GLOBALES (no por categoría)
+    const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
+    const leadsUsed = providerData.leadsUsed ?? 0;
+    
+    // Calcular créditos disponibles
     const creditsAvailable = leadLimit - leadsUsed;
     
+    console.log(`📊 Estado de créditos de ${providerName}:`);
+    console.log(`   - Límite para ${category}: ${leadLimit}`);
+    console.log(`   - Usados en ${category}: ${leadsUsed}`);
+    console.log(`   - Disponibles: ${creditsAvailable}`);
+    
+    // BLOQUEO ABSOLUTO: Si no hay créditos, NO crear el lead bajo ninguna circunstancia
     if (creditsAvailable <= 0) {
-      console.warn(`🚫 BLOQUEO: Proveedor ${providerId} NO tiene créditos disponibles para ${category}`);
-      console.warn(`   - Límite: ${leadLimit}, Usados: ${leadsUsed}, Disponibles: ${creditsAvailable}`);
-      throw new Error(`El proveedor ha alcanzado su límite de créditos para la categoría ${category}`);
+      console.error(`\n🚫🚫🚫 BLOQUEO ABSOLUTO 🚫🚫🚫`);
+      console.error(`Proveedor: ${providerName} (${providerId})`);
+      console.error(`Categoría: ${category}`);
+      console.error(`Créditos disponibles: ${creditsAvailable} (${leadsUsed}/${leadLimit})`);
+      console.error(`NO SE PUEDE CREAR EL LEAD`);
+      throw new Error(`BLOQUEO: ${providerName} no tiene créditos disponibles para ${category} (${leadsUsed}/${leadLimit})`);
     }
     
-    console.log(`✅ Créditos OK para ${providerId} en ${category}: ${creditsAvailable} disponibles (${leadsUsed}/${leadLimit})`);
+    // Segunda verificación por si acaso
+    if (leadsUsed >= leadLimit) {
+      console.error(`\n🚫🚫🚫 BLOQUEO POR LÍMITE ALCANZADO 🚫🚫🚫`);
+      console.error(`Proveedor: ${providerName} (${providerId})`);
+      console.error(`leadsUsed (${leadsUsed}) >= leadLimit (${leadLimit})`);
+      throw new Error(`BLOQUEO: ${providerName} ha alcanzado su límite de leads (${leadsUsed}/${leadLimit})`);
+    }
+    
+    console.log(`✅ Créditos OK para ${providerName}: ${creditsAvailable} disponibles`);
     
     const now = Timestamp.now();
     
@@ -780,19 +805,15 @@ export const createCategoryLead = async (
     
     const docRef = await addDoc(collection(db, COLLECTIONS.LEADS), leadData);
     
-    // Actualizar leadsUsed del proveedor para esta categoría
-    // IMPORTANTE: Usamos el valor que ya teníamos + 1 para evitar race conditions
-    const newLeadsUsedForCategory = leadsUsed + 1;
-    const currentTotalLeadsUsed = providerData.leadsUsed || 0;
-    const newTotalLeadsUsed = currentTotalLeadsUsed + 1;
+    // Actualizar leadsUsed del proveedor (campo global)
+    const newLeadsUsed = leadsUsed + 1;
     
     await updateDoc(doc(db, COLLECTIONS.PROVIDERS, providerId), {
-      [`categoryLeadsUsed.${category}`]: newLeadsUsedForCategory,
-      leadsUsed: newTotalLeadsUsed, // Legacy
+      leadsUsed: newLeadsUsed,
       updatedAt: now,
     });
     
-    console.log(`📊 Actualizado créditos proveedor ${providerId}: ${category} = ${newLeadsUsedForCategory}/${leadLimit}, Total = ${newTotalLeadsUsed}`);
+    console.log(`📊 Actualizado créditos proveedor ${providerId}: ${newLeadsUsed}/${leadLimit}`);
     
     return {
       id: docRef.id,
@@ -957,16 +978,65 @@ export const getProviderLeadsByCategory = async (providerId: string, category: C
 
 /**
  * Actualizar estado de un lead
+ * CRÍTICO: Maneja créditos correctamente cuando se recupera un lead rechazado
+ * - rejected → pending: Volver a consumir crédito (fue restaurado al rechazar)
+ * - approved → pending: No cambiar créditos (nunca se restauraron)
  */
 export const updateLeadStatus = async (
   leadId: string,
   status: LeadStatus
 ): Promise<void> => {
   try {
+    const now = Timestamp.now();
+    
+    // Obtener el lead para saber el estado anterior, providerId y categoría
+    const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    if (!leadDoc.exists()) {
+      throw new Error('Lead no encontrado');
+    }
+    
+    const leadData = leadDoc.data();
+    const previousStatus = leadData.status as LeadStatus;
+    const providerId = leadData.providerId;
+    const category = leadData.category as CategoryId;
+    
+    // Actualizar el lead
     await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
       status,
-      updatedAt: Timestamp.now(),
+      updatedAt: now,
     });
+    
+    // CRÍTICO: Si se recupera un lead rechazado (rejected → pending),
+    // debemos volver a consumir el crédito porque fue restaurado al rechazar
+    if (previousStatus === 'rejected' && status === 'pending') {
+      const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+      const providerSnap = await getDoc(providerRef);
+      
+      if (providerSnap.exists()) {
+        const providerData = providerSnap.data();
+        const currentLeadsUsed = providerData.leadsUsed ?? 0;
+        const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
+        
+        // Verificar que hay créditos disponibles antes de consumir
+        const creditsAvailable = leadLimit - currentLeadsUsed;
+        
+        if (creditsAvailable > 0) {
+          // Consumir el crédito de nuevo
+          const newLeadsUsed = currentLeadsUsed + 1;
+          
+          await updateDoc(providerRef, {
+            leadsUsed: newLeadsUsed,
+            updatedAt: now,
+          });
+          
+          console.log(`💰 Crédito consumido al recuperar lead (${currentLeadsUsed} → ${newLeadsUsed})`);
+        } else {
+          console.log(`⚠️ Proveedor ${providerId} sin créditos disponibles al recuperar lead, pero lead recuperado igual`);
+        }
+      }
+    }
+    // Para otros cambios de estado (approved → pending), no modificamos créditos
+    
   } catch (error) {
     console.error('Error al actualizar estado del lead:', error);
     throw error;
@@ -977,6 +1047,7 @@ export const updateLeadStatus = async (
  * Rechazar un lead con justificación
  * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
  * Si el usuario cambia de opinión (aprobado -> rechazado), decrementamos "me interesa" e incrementamos "no me interesa"
+ * CRÍTICO: Cuando se rechaza desde 'pending', se restauran los créditos del proveedor
  */
 export const rejectLeadWithReason = async (
   leadId: string,
@@ -986,7 +1057,7 @@ export const rejectLeadWithReason = async (
   try {
     const now = Timestamp.now();
     
-    // Obtener el lead para saber el providerId y estado anterior
+    // Obtener el lead para saber el providerId, categoría y estado anterior
     const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
     if (!leadDoc.exists()) {
       throw new Error('Lead no encontrado');
@@ -994,6 +1065,7 @@ export const rejectLeadWithReason = async (
     
     const leadData = leadDoc.data();
     const providerId = leadData.providerId;
+    const category = leadData.category as CategoryId;
     const previousStatus = leadData.status as LeadStatus;
     
     // Actualizar el lead con el motivo de rechazo
@@ -1005,18 +1077,40 @@ export const rejectLeadWithReason = async (
       updatedAt: now,
     });
     
-    // CAMBIO: Solo actualizar métricas basándose en la decisión final
-    // Si estaba aprobado y ahora se rechaza, decrementar "me interesa" e incrementar "no me interesa"
-    if (previousStatus === 'approved') {
-      await decrementProviderMetric(providerId, 'timesInterested');
-      await incrementProviderMetric(providerId, 'timesNotInterested');
-      console.log(`✓ Lead ${leadId} cambió de aprobado a rechazado - métricas ajustadas`);
-    } else if (previousStatus === 'pending') {
-      // Solo si es la primera decisión, incrementar "no me interesa"
+    // CRÍTICO: Si se rechaza desde 'pending', restaurar el crédito del proveedor
+    // El usuario no mostró interés, así que el proveedor no debería "pagar" por este lead
+    if (previousStatus === 'pending') {
+      // Obtener datos actuales del proveedor para restaurar créditos
+      const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+      const providerSnap = await getDoc(providerRef);
+      
+      if (providerSnap.exists()) {
+        const providerData = providerSnap.data();
+        const currentLeadsUsed = providerData.leadsUsed ?? 0;
+        
+        // Decrementar (restaurar crédito), pero nunca ir a negativo
+        const newLeadsUsed = Math.max(0, currentLeadsUsed - 1);
+        
+        await updateDoc(providerRef, {
+          leadsUsed: newLeadsUsed,
+          updatedAt: now,
+        });
+        
+        console.log(`💰 Crédito restaurado a proveedor ${providerId} (${currentLeadsUsed} → ${newLeadsUsed})`);
+      }
+      
+      // Incrementar métrica de "no me interesa"
       await incrementProviderMetric(providerId, 'timesNotInterested');
       console.log(`✓ Lead ${leadId} rechazado (primera decisión) con motivo: ${reason}`);
+    } else if (previousStatus === 'approved') {
+      // Si estaba aprobado y ahora se rechaza:
+      // - NO restauramos créditos (el lead ya fue "consumido" cuando el usuario mostró interés)
+      // - Ajustamos métricas
+      await decrementProviderMetric(providerId, 'timesInterested');
+      await incrementProviderMetric(providerId, 'timesNotInterested');
+      console.log(`✓ Lead ${leadId} cambió de aprobado a rechazado - métricas ajustadas (créditos NO restaurados)`);
     }
-    // Si ya estaba rechazado, no hacemos nada con las métricas
+    // Si ya estaba rechazado, no hacemos nada
   } catch (error) {
     console.error('Error al rechazar lead:', error);
     throw error;
@@ -1027,12 +1121,13 @@ export const rejectLeadWithReason = async (
  * Aprobar un lead (marcar como interesado)
  * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
  * Si el usuario cambia de opinión (rechazado -> aprobado), decrementamos "no me interesa" e incrementamos "me interesa"
+ * CRÍTICO: Si se aprueba desde 'rejected', se vuelve a consumir el crédito (fue restaurado al rechazar)
  */
 export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
   try {
     const now = Timestamp.now();
     
-    // Obtener el lead para saber el providerId y estado anterior
+    // Obtener el lead para saber el providerId, categoría y estado anterior
     const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
     if (!leadDoc.exists()) {
       throw new Error('Lead no encontrado');
@@ -1040,6 +1135,7 @@ export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
     
     const leadData = leadDoc.data();
     const providerId = leadData.providerId;
+    const category = leadData.category as CategoryId;
     const previousStatus = leadData.status as LeadStatus;
     
     // Actualizar el lead
@@ -1048,18 +1144,46 @@ export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
       updatedAt: now,
     });
     
-    // CAMBIO: Solo actualizar métricas basándose en la decisión final
-    // Si estaba rechazado y ahora se aprueba, decrementar "no me interesa" e incrementar "me interesa"
+    // CRÍTICO: Si se aprueba desde 'rejected', volver a consumir el crédito
+    // porque el crédito fue restaurado cuando se rechazó
     if (previousStatus === 'rejected') {
+      // Obtener datos del proveedor para verificar límites
+      const providerRef = doc(db, COLLECTIONS.PROVIDERS, providerId);
+      const providerSnap = await getDoc(providerRef);
+      
+      if (providerSnap.exists()) {
+        const providerData = providerSnap.data();
+        const currentLeadsUsed = providerData.leadsUsed ?? 0;
+        const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
+        
+        // Verificar que aún hay créditos disponibles
+        const creditsAvailable = leadLimit - currentLeadsUsed;
+        
+        if (creditsAvailable > 0) {
+          // Consumir el crédito de nuevo
+          const newLeadsUsed = currentLeadsUsed + 1;
+          
+          await updateDoc(providerRef, {
+            leadsUsed: newLeadsUsed,
+            updatedAt: now,
+          });
+          
+          console.log(`💰 Crédito consumido para proveedor ${providerId} (${currentLeadsUsed} → ${newLeadsUsed})`);
+        } else {
+          console.log(`⚠️ Proveedor ${providerId} sin créditos disponibles, pero lead aprobado igual`);
+        }
+      }
+      
+      // Ajustar métricas
       await decrementProviderMetric(providerId, 'timesNotInterested');
       await incrementProviderMetric(providerId, 'timesInterested');
       console.log(`✓ Lead ${leadId} cambió de rechazado a aprobado - métricas ajustadas`);
     } else if (previousStatus === 'pending') {
-      // Solo si es la primera decisión, incrementar "me interesa"
+      // Primera decisión - el crédito ya fue consumido al crear el lead, solo ajustar métricas
       await incrementProviderMetric(providerId, 'timesInterested');
       console.log(`✓ Lead ${leadId} aprobado (primera decisión)`);
     }
-    // Si ya estaba aprobado, no hacemos nada con las métricas
+    // Si ya estaba aprobado, no hacemos nada
   } catch (error) {
     console.error('Error al aprobar lead:', error);
     throw error;
@@ -1330,8 +1454,9 @@ export const getAvailableProvidersForCategory = async (
     // Log detallado de cada proveedor para diagnóstico
     allProviders.forEach((p) => {
       const regionMatch = p.workRegion === region || p.acceptsOutsideZone;
-      const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
-      const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
+      // Usar campos globales (leadLimit y leadsUsed) - NO hay límites por categoría
+      const leadLimit = p.leadLimit ?? DEFAULT_LEAD_LIMIT;
+      const leadsUsed = p.leadsUsed ?? 0;
       const hasLeadsAvailable = leadsUsed < leadLimit;
       const surveyStatus = p.categorySurveyStatus?.[category];
       const surveyCompleted = surveyStatus === 'completed';
@@ -1354,21 +1479,23 @@ export const getAvailableProvidersForCategory = async (
       // Verificar región
       const regionMatch = p.workRegion === region || p.acceptsOutsideZone;
       
-      // VALIDACIÓN MEJORADA: Verificar créditos disponibles (leadLimit - leadsUsed > 0)
-      const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
-      const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
+      // VALIDACIÓN ESTRICTA: Verificar créditos disponibles
+      // Usar campos GLOBALES (leadLimit y leadsUsed) - NO hay límites por categoría
+      const leadLimit = p.leadLimit ?? DEFAULT_LEAD_LIMIT;
+      const leadsUsed = p.leadsUsed ?? 0;
+      
       const creditsAvailable = leadLimit - leadsUsed;
-      const hasCreditsAvailable = creditsAvailable > 0;
+      const hasCreditsAvailable = creditsAvailable > 0 && leadsUsed < leadLimit;
       
       // Log para diagnóstico de problemas de créditos
       if (!hasCreditsAvailable) {
-        console.log(`  🚫 ${p.providerName} EXCLUIDO: sin créditos (${leadsUsed}/${leadLimit}, disponibles: ${creditsAvailable})`);
+        console.log(`  🚫 ${p.providerName} EXCLUIDO: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit}, disponibles: ${creditsAvailable})`);
       }
       
       // Verificar que completó encuesta para esta categoría
       const surveyCompleted = p.categorySurveyStatus?.[category] === 'completed';
       
-      // NUEVO: Verificar disponibilidad en la fecha del evento (solo si fecha no es tentativa)
+      // Verificar disponibilidad en la fecha del evento (solo si fecha no es tentativa)
       const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
       
       return regionMatch && hasCreditsAvailable && surveyCompleted && isAvailable;
@@ -1462,18 +1589,20 @@ export const generateMatchesForUserSurvey = async (
         ...doc.data(),
       })) as ProviderProfile[];
       
-      // FILTRO CRÍTICO: Solo incluir proveedores que tengan créditos disponibles y estén disponibles en la fecha
+      // FILTRO ESTRICTO: Solo incluir proveedores que tengan créditos disponibles y estén disponibles en la fecha
       const fallbackProviders = allProviders.filter(p => {
-        const leadLimit = p.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
-        const leadsUsed = p.categoryLeadsUsed?.[category] || 0;
-        const creditsAvailable = leadLimit - leadsUsed;
-        const hasCreditsAvailable = creditsAvailable > 0;
+        // Usar campos GLOBALES (no por categoría)
+        const leadLimit = p.leadLimit ?? DEFAULT_LEAD_LIMIT;
+        const leadsUsed = p.leadsUsed ?? 0;
         
-        // NUEVO: También verificar disponibilidad en la fecha del evento
+        const creditsAvailable = leadLimit - leadsUsed;
+        const hasCreditsAvailable = creditsAvailable > 0 && leadsUsed < leadLimit;
+        
+        // También verificar disponibilidad en la fecha del evento
         const isAvailable = isProviderAvailableOnDate(p, eventDate, isDateTentative);
         
         if (!hasCreditsAvailable) {
-          console.log(`🚫 Proveedor ${p.providerName} excluido del fallback: sin créditos (${leadsUsed}/${leadLimit}, disponibles: ${creditsAvailable})`);
+          console.log(`🚫 Proveedor ${p.providerName} excluido del fallback: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit}, disponibles: ${creditsAvailable})`);
         }
         
         if (!isAvailable) {
@@ -1568,41 +1697,47 @@ export const generateMatchesForUserSurvey = async (
     console.log(`📊 Seleccionados ${topMatches.length} mejores matches (máximo permitido: ${effectiveMaxMatches})`);
 
     // 9. Crear leads para cada match
+    // IMPORTANTE: Cada createCategoryLead valida créditos con datos frescos
+    // Si un proveedor no tiene créditos, lo saltamos y continuamos con el siguiente
     const createdLeads: Lead[] = [];
 
     for (const { provider, score } of topMatches) {
-      // Obtener el ID de la encuesta del proveedor si existe
-      const providerSurveyData = providerSurveys.find(ps => ps.provider.id === provider.id);
-      const providerSurveyId = providerSurveyData?.survey?.id;
-      
-      // Siempre crear leads para los mejores matches
-      // Mostramos al menos los 3 mejores aunque el score sea bajo
-      // Incluimos userSurveyId y providerSurveyId para que el proveedor pueda acceder a la encuesta
-      const lead = await createCategoryLead(
-        userId,
-        provider.id,
-        category,
-        score,
-        {
-          coupleNames: (userProfile as UserProfile).coupleNames || 'Pareja',
-          eventDate: (userProfile as UserProfile).eventDate || 'Por definir',
-          budget: (userProfile as UserProfile).budget || '',
-          region: (userProfile as UserProfile).region || region,
-          email: userProfile.email,
-          phone: (userProfile as UserProfile).phone || '',
-        },
-      {
-        providerName: provider.providerName,
-        categories: provider.categories || [],
-        priceRange: provider.priceRange || '',
-        isVerified: provider.isVerified || false, // Incluir verificación del proveedor
-      },
-      undefined, // matchCriteria
-      userSurvey.id, // userSurveyId - permite al proveedor acceder a la encuesta del usuario
-      providerSurveyId // providerSurveyId
-    );
+      try {
+        // Obtener el ID de la encuesta del proveedor si existe
+        const providerSurveyData = providerSurveys.find(ps => ps.provider.id === provider.id);
+        const providerSurveyId = providerSurveyData?.survey?.id;
+        
+        // Crear lead - la función valida créditos con datos frescos
+        const lead = await createCategoryLead(
+          userId,
+          provider.id,
+          category,
+          score,
+          {
+            coupleNames: (userProfile as UserProfile).coupleNames || 'Pareja',
+            eventDate: (userProfile as UserProfile).eventDate || 'Por definir',
+            budget: (userProfile as UserProfile).budget || '',
+            region: (userProfile as UserProfile).region || region,
+            email: userProfile.email,
+            phone: (userProfile as UserProfile).phone || '',
+          },
+          {
+            providerName: provider.providerName,
+            categories: provider.categories || [],
+            priceRange: provider.priceRange || '',
+            isVerified: provider.isVerified || false,
+          },
+          undefined, // matchCriteria
+          userSurvey.id, // userSurveyId
+          providerSurveyId
+        );
 
-      createdLeads.push(lead);
+        createdLeads.push(lead);
+      } catch (leadError) {
+        // Si falla la creación del lead (ej: sin créditos), continuamos con el siguiente
+        console.warn(`⚠️ No se pudo crear lead para ${provider.providerName}: ${leadError}`);
+        continue;
+      }
     }
 
     // 10. Marcar la encuesta como con matches generados
@@ -1668,32 +1803,38 @@ async function generateMatchesWithWizardOnly(
   const effectiveMaxMatches = Math.min(maxMatches, MAX_LEADS_PER_CATEGORY);
   const topMatches = matchResults.slice(0, effectiveMaxMatches);
 
-  // Crear leads
+  // Crear leads - cada uno valida créditos con datos frescos
   const createdLeads: Lead[] = [];
 
   for (const { provider, score } of topMatches) {
-    const lead = await createCategoryLead(
-      userId,
-      provider.id,
-      category,
-      score,
-      {
-        coupleNames: userProfile.coupleNames || 'Pareja',
-        eventDate: userProfile.eventDate || 'Por definir',
-        budget: userProfile.budget || '',
-        region: userProfile.region || '',
-        email: userProfile.email,
-        phone: userProfile.phone || '',
-      },
-      {
-        providerName: provider.providerName,
-        categories: provider.categories || [],
-        priceRange: provider.priceRange || '',
-        isVerified: provider.isVerified || false, // Incluir verificación del proveedor
-      }
-    );
+    try {
+      const lead = await createCategoryLead(
+        userId,
+        provider.id,
+        category,
+        score,
+        {
+          coupleNames: userProfile.coupleNames || 'Pareja',
+          eventDate: userProfile.eventDate || 'Por definir',
+          budget: userProfile.budget || '',
+          region: userProfile.region || '',
+          email: userProfile.email,
+          phone: userProfile.phone || '',
+        },
+        {
+          providerName: provider.providerName,
+          categories: provider.categories || [],
+          priceRange: provider.priceRange || '',
+          isVerified: provider.isVerified || false,
+        }
+      );
 
-    createdLeads.push(lead);
+      createdLeads.push(lead);
+    } catch (leadError) {
+      // Si falla la creación del lead (ej: sin créditos), continuamos con el siguiente
+      console.warn(`⚠️ No se pudo crear lead para ${provider.providerName}: ${leadError}`);
+      continue;
+    }
   }
 
   // Marcar encuesta
@@ -1746,21 +1887,40 @@ export const generateNewMatchForUser = async (
       score: number;
     }> = [];
 
+    console.log(`\n🔍 ========== GENERANDO NUEVO MATCH ==========`);
+    console.log(`📌 Usuario: ${userId}, Categoría: ${category}`);
+    console.log(`📊 Proveedores ya mostrados: ${existingProviderIds.size}`);
+    console.log(`📊 Proveedores activos en categoría: ${providersSnap.docs.length}`);
+    
+    let excludedByCredits = 0;
+    let excludedByAlreadyShown = 0;
+
     for (const providerDoc of providersSnap.docs) {
       const providerId = providerDoc.id;
+      const providerData = providerDoc.data();
+      const providerName = providerData.providerName || providerId;
       
       // Saltar si ya fue mostrado
-      if (existingProviderIds.has(providerId)) continue;
+      if (existingProviderIds.has(providerId)) {
+        excludedByAlreadyShown++;
+        continue;
+      }
 
-      const providerData = providerDoc.data() as ProviderProfile;
-      
-      // VALIDACIÓN MEJORADA: Verificar que tiene créditos disponibles para esta categoría
-      const leadLimit = providerData.categoryLeadLimits?.[category] || DEFAULT_LEAD_LIMIT;
-      const leadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
+      // VALIDACIÓN ESTRICTA: Usar campos GLOBALES (no por categoría)
+      const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
+      const leadsUsed = providerData.leadsUsed ?? 0;
       const creditsAvailable = leadLimit - leadsUsed;
       
-      if (creditsAvailable <= 0) {
-        console.log(`🚫 Proveedor ${providerData.providerName} excluido: sin créditos (${leadsUsed}/${leadLimit})`);
+      console.log(`   📋 ${providerName}: créditos ${leadsUsed}/${leadLimit} (disponibles: ${creditsAvailable})`);
+      
+      // CRÍTICO: Excluir si no hay créditos disponibles
+      // Verificamos TRES condiciones para estar 100% seguros:
+      // 1. creditsAvailable <= 0
+      // 2. leadsUsed >= leadLimit
+      // 3. leadsUsed es negativo (datos corruptos)
+      if (creditsAvailable <= 0 || leadsUsed >= leadLimit || leadsUsed < 0) {
+        console.log(`   🚫 ${providerName} EXCLUIDO: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit}, disponible: ${creditsAvailable})`);
+        excludedByCredits++;
         continue;
       }
 
@@ -1800,16 +1960,24 @@ export const generateNewMatchForUser = async (
     }
 
     // 5. Si no hay proveedores disponibles, retornar null
+    console.log(`\n📊 Resumen de filtrado:`);
+    console.log(`   - Total proveedores en categoría: ${providersSnap.docs.length}`);
+    console.log(`   - Excluidos por ya mostrados: ${excludedByAlreadyShown}`);
+    console.log(`   - Excluidos por sin créditos: ${excludedByCredits}`);
+    console.log(`   - Disponibles para mostrar: ${availableProviders.length}`);
+    
     if (availableProviders.length === 0) {
-      console.log(`No hay más proveedores disponibles para ${category}`);
+      console.log(`❌ No hay más proveedores disponibles para ${category}`);
       return null;
     }
 
     // 6. Ordenar por score y tomar el mejor
     availableProviders.sort((a, b) => b.score - a.score);
     const selectedProvider = availableProviders[0];
+    
+    console.log(`\n✅ Proveedor seleccionado: ${selectedProvider.data.providerName} (score: ${Math.round(selectedProvider.score)})`);
 
-    // 7. Crear el nuevo lead
+    // 7. Crear el nuevo lead - createCategoryLead re-valida los créditos con datos frescos
     const newLead = await createCategoryLead(
       userId,
       selectedProvider.id,
@@ -1893,22 +2061,19 @@ export const resetCategorySurveyAndLeads = async (
         if (providerSnap.exists()) {
           const providerData = providerSnap.data();
           
-          // Calcular nuevos valores (decrementar)
-          const currentCategoryLeadsUsed = providerData.categoryLeadsUsed?.[category] || 0;
-          const currentTotalLeadsUsed = providerData.leadsUsed || 0;
+          // Calcular nuevo valor (decrementar)
+          const currentLeadsUsed = providerData.leadsUsed ?? 0;
           
           // Solo decrementar si hay leads usados (evitar negativos)
-          const newCategoryLeadsUsed = Math.max(0, currentCategoryLeadsUsed - 1);
-          const newTotalLeadsUsed = Math.max(0, currentTotalLeadsUsed - 1);
+          const newLeadsUsed = Math.max(0, currentLeadsUsed - 1);
           
           // Actualizar proveedor - restaurar crédito
           await updateDoc(providerRef, {
-            [`categoryLeadsUsed.${category}`]: newCategoryLeadsUsed,
-            leadsUsed: newTotalLeadsUsed,
+            leadsUsed: newLeadsUsed,
             updatedAt: now,
           });
           
-          console.log(`✅ Crédito restaurado a proveedor ${providerId} (${category}: ${currentCategoryLeadsUsed} → ${newCategoryLeadsUsed})`);
+          console.log(`✅ Crédito restaurado a proveedor ${providerId} (${currentLeadsUsed} → ${newLeadsUsed})`);
           
           if (!result.restoredCreditsToProviders.includes(providerId)) {
             result.restoredCreditsToProviders.push(providerId);

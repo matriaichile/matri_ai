@@ -742,21 +742,23 @@ export default function CategoryMatchesPage() {
                     );
                   })}
                 </div>
-                
-                {/* Botón para mostrar nuevo proveedor */}
-                {/* CAMBIO: Pasar cantidad de matches activos para validar límite de 3 */}
-                {firebaseUser?.uid && (
-                  <ShowMoreButton
-                    userId={firebaseUser.uid}
-                    categoryId={categoryId}
-                    onRequestNewMatch={handleRequestNewMatch}
-                    isLoading={isGeneratingNew}
-                    currentMatchesCount={matches.filter(m => m.status !== 'rejected').length}
-                    activeMatchesCount={activeMatchesCount}
-                    maxActiveMatches={MAX_ACTIVE_MATCHES_PER_CATEGORY}
-                    isBlocked={isModifyingActiveMatches}
-                  />
-                )}
+              </section>
+            )}
+            
+            {/* CAMBIO: Botón para agregar nuevos matches - SIEMPRE visible si hay espacio para más */}
+            {/* Ahora se muestra incluso si no hay matches pendientes, siempre que activeMatches < 3 */}
+            {firebaseUser?.uid && (
+              <section className={styles.section}>
+                <ShowMoreButton
+                  userId={firebaseUser.uid}
+                  categoryId={categoryId}
+                  onRequestNewMatch={handleRequestNewMatch}
+                  isLoading={isGeneratingNew}
+                  currentMatchesCount={matches.filter(m => m.status !== 'rejected').length}
+                  activeMatchesCount={activeMatchesCount}
+                  maxActiveMatches={MAX_ACTIVE_MATCHES_PER_CATEGORY}
+                  isBlocked={isModifyingActiveMatches}
+                />
               </section>
             )}
 

@@ -904,15 +904,22 @@ function isOnlyAvailabilityUpdate() {
 
 ---
 
-### 4. Estilos de Dropdowns Personalizados ✅
+### 4. Dropdowns Personalizados (No nativos del navegador) ✅
 
-**Archivo:** `src/app/dashboard/provider/page.module.css`
+**Archivos:**
 
-**Cambio:** Los dropdowns de filtros en la sección de leads ahora tienen estilos personalizados que coinciden con el tema de la aplicación:
+- `src/app/dashboard/provider/page.tsx`
+- `src/app/dashboard/provider/page.module.css`
 
+**Cambio:** Los dropdowns de filtros en la sección de leads ahora son componentes completamente personalizados, no usan el elemento `<select>` nativo del navegador:
+
+- Botón trigger con icono de flecha que rota al abrir
+- Menú desplegable con animación de fade-in
+- Opciones estilizadas con hover y estado activo
+- Se cierra automáticamente al hacer click fuera
 - Fondo oscuro/claro según el tema
-- Iconos de flecha personalizados en color dorado
-- Bordes y sombras coherentes con el diseño
+- Iconos de flecha en color dorado
+- Bordes y sombras coherentes con el diseño de la app
 
 ---
 
