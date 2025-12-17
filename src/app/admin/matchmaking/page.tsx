@@ -163,11 +163,54 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'makeup_u_touch_ups', questionLabel: 'Retoques', weight: 4, isExcluding: false },
     { questionId: 'makeup_u_bridesmaids', questionLabel: 'Damas de honor', weight: 5, isExcluding: false },
   ],
-  entertainment: [],
-  cakes: [],
-  transport: [],
-  invitations: [],
-  dress: [],
+  entertainment: [
+    { questionId: 'ent_u_type', questionLabel: 'Tipo de entretenimiento', weight: 30, isExcluding: false },
+    { questionId: 'ent_u_moment', questionLabel: 'Momento del evento', weight: 15, isExcluding: false },
+    { questionId: 'ent_u_duration', questionLabel: 'Duración del show', weight: 10, isExcluding: false },
+    { questionId: 'ent_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
+    { questionId: 'ent_u_style', questionLabel: 'Estilo de entretenimiento', weight: 10, isExcluding: false },
+    { questionId: 'ent_u_audience', questionLabel: 'Tipo de audiencia', weight: 10, isExcluding: false },
+    { questionId: 'ent_u_equipment', questionLabel: 'Equipo de sonido', weight: 5, isExcluding: false },
+  ],
+  cakes: [
+    { questionId: 'cakes_u_type', questionLabel: 'Tipo de torta/dulces', weight: 25, isExcluding: false },
+    { questionId: 'cakes_u_servings', questionLabel: 'Cantidad de porciones', weight: 15, isExcluding: false },
+    { questionId: 'cakes_u_tiers', questionLabel: 'Pisos de la torta', weight: 10, isExcluding: false },
+    { questionId: 'cakes_u_flavor', questionLabel: 'Sabores', weight: 15, isExcluding: false },
+    { questionId: 'cakes_u_style', questionLabel: 'Estilo de decoración', weight: 15, isExcluding: false },
+    { questionId: 'cakes_u_budget', questionLabel: 'Presupuesto', weight: 15, isExcluding: false },
+    { questionId: 'cakes_u_dietary', questionLabel: 'Opciones dietéticas', weight: 5, isExcluding: true },
+    { questionId: 'cakes_u_tasting', questionLabel: 'Degustación previa', weight: 5, isExcluding: false },
+    { questionId: 'cakes_u_delivery', questionLabel: 'Entrega y montaje', weight: 5, isExcluding: false },
+  ],
+  transport: [
+    { questionId: 'transport_u_vehicle_type', questionLabel: 'Tipo de vehículo', weight: 25, isExcluding: false },
+    { questionId: 'transport_u_hours', questionLabel: 'Horas de servicio', weight: 20, isExcluding: false },
+    { questionId: 'transport_u_budget', questionLabel: 'Presupuesto', weight: 25, isExcluding: false },
+    { questionId: 'transport_u_decoration', questionLabel: 'Decoración del vehículo', weight: 15, isExcluding: false },
+    { questionId: 'transport_u_driver', questionLabel: 'Chofer profesional', weight: 15, isExcluding: false },
+  ],
+  invitations: [
+    { questionId: 'inv_u_type', questionLabel: 'Tipo de invitaciones', weight: 25, isExcluding: false },
+    { questionId: 'inv_u_style', questionLabel: 'Estilo de diseño', weight: 20, isExcluding: false },
+    { questionId: 'inv_u_extras', questionLabel: 'Papelería adicional', weight: 15, isExcluding: false },
+    { questionId: 'inv_u_budget', questionLabel: 'Presupuesto', weight: 15, isExcluding: false },
+    { questionId: 'inv_u_paper', questionLabel: 'Tipo de papel', weight: 5, isExcluding: false },
+    { questionId: 'inv_u_printing', questionLabel: 'Técnica de impresión', weight: 5, isExcluding: false },
+    { questionId: 'inv_u_timeline', questionLabel: 'Tiempo de entrega', weight: 10, isExcluding: false },
+    { questionId: 'inv_u_quantity', questionLabel: 'Cantidad de invitaciones', weight: 5, isExcluding: false },
+  ],
+  dress: [
+    { questionId: 'dress_u_need', questionLabel: 'Qué necesitas', weight: 25, isExcluding: false },
+    { questionId: 'dress_u_bride_style', questionLabel: 'Estilo vestido novia', weight: 15, isExcluding: false },
+    { questionId: 'dress_u_bride_silhouette', questionLabel: 'Silueta vestido novia', weight: 10, isExcluding: false },
+    { questionId: 'dress_u_groom_style', questionLabel: 'Estilo traje novio', weight: 10, isExcluding: false },
+    { questionId: 'dress_u_service_type', questionLabel: 'Tipo de servicio', weight: 15, isExcluding: false },
+    { questionId: 'dress_u_budget_bride', questionLabel: 'Presupuesto vestido novia', weight: 15, isExcluding: false },
+    { questionId: 'dress_u_budget_groom', questionLabel: 'Presupuesto traje novio', weight: 5, isExcluding: false },
+    { questionId: 'dress_u_accessories', questionLabel: 'Accesorios', weight: 5, isExcluding: false },
+    { questionId: 'dress_u_fitting', questionLabel: 'Pruebas y ajustes', weight: 5, isExcluding: false },
+  ],
 };
 
 /**
@@ -218,11 +261,26 @@ export default function MatchmakingConfigPage() {
       
       if (configSnap.exists()) {
         const savedConfigs = configSnap.data() as Record<CategoryId, QuestionMatchingConfig[]>;
-        // Combinar con defaults para categorías no guardadas
-        setConfigs(prev => ({
-          ...prev,
-          ...savedConfigs,
-        }));
+        // Combinar inteligentemente: solo usar config guardada si tiene preguntas
+        // Si la config guardada está vacía pero el default tiene preguntas, usar default
+        setConfigs(() => {
+          const merged: Record<CategoryId, QuestionMatchingConfig[]> = { ...DEFAULT_MATCHING_CONFIGS };
+          
+          for (const catId of Object.keys(savedConfigs) as CategoryId[]) {
+            const savedCat = savedConfigs[catId];
+            const defaultCat = DEFAULT_MATCHING_CONFIGS[catId];
+            
+            // Usar la config guardada SOLO si tiene preguntas
+            // Si está vacía y el default tiene preguntas, usar el default
+            if (Array.isArray(savedCat) && savedCat.length > 0) {
+              merged[catId] = savedCat;
+            } else if (Array.isArray(defaultCat) && defaultCat.length > 0) {
+              merged[catId] = defaultCat;
+            }
+          }
+          
+          return merged;
+        });
       }
     } catch (error) {
       console.error('Error cargando configuración:', error);

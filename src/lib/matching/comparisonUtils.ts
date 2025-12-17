@@ -172,8 +172,66 @@ const MAKEUP_CRITERIA: MatchCriterion[] = [
   { userQuestionId: 'makeup_u_bridesmaids', providerQuestionId: 'makeup_p_max_clients', weight: 5, matchType: 'threshold_at_least', userRangeMapping: { 'no': { min: 1, max: 1 }, 'some': { min: 2, max: 5 }, 'full': { min: 5, max: 15 } } },
 ];
 
+// Criterios para ENTRETENIMIENTO
+const ENTERTAINMENT_CRITERIA: MatchCriterion[] = [
+  { userQuestionId: 'ent_u_type', providerQuestionId: 'ent_p_types', weight: 30, matchType: 'contains' },
+  { userQuestionId: 'ent_u_moment', providerQuestionId: 'ent_p_moments', weight: 15, matchType: 'contains' },
+  { userQuestionId: 'ent_u_duration', providerQuestionId: 'ent_p_duration_min', providerQuestionIdMax: 'ent_p_duration_max', weight: 10, matchType: 'threshold_can_accommodate', userRangeMapping: { '30min': { min: 30, max: 30 }, '1hr': { min: 60, max: 60 }, '2hr': { min: 120, max: 120 }, '3hr': { min: 180, max: 180 }, 'full_event': { min: 240, max: 480 }, 'flexible': { min: 30, max: 480 } } },
+  { userQuestionId: 'ent_u_budget', providerQuestionId: 'ent_p_price_min', providerQuestionIdMax: 'ent_p_price_max', weight: 20, matchType: 'range_overlap', userRangeMapping: { 'under_300k': { min: 0, max: 300000 }, '300k_500k': { min: 300000, max: 500000 }, '500k_800k': { min: 500000, max: 800000 }, '800k_1500k': { min: 800000, max: 1500000 }, 'over_1500k': { min: 1500000, max: 10000000 }, 'skip': { min: 0, max: 10000000 } } },
+  { userQuestionId: 'ent_u_style', providerQuestionId: 'ent_p_styles', weight: 10, matchType: 'single_in_multiple' },
+  { userQuestionId: 'ent_u_audience', providerQuestionId: 'ent_p_audience', weight: 10, matchType: 'single_in_multiple' },
+  { userQuestionId: 'ent_u_equipment', providerQuestionId: 'ent_p_equipment', weight: 5, matchType: 'preference_match', preferenceMapping: { 'sound': 1.0, 'lighting': 0.8, 'props': 0.7, 'stage': 0.9, 'none': 0.3 } },
+];
+
+// Criterios para TORTAS & DULCES
+const CAKES_CRITERIA: MatchCriterion[] = [
+  { userQuestionId: 'cakes_u_type', providerQuestionId: 'cakes_p_types', weight: 25, matchType: 'contains' },
+  { userQuestionId: 'cakes_u_servings', providerQuestionId: 'cakes_p_servings_min', providerQuestionIdMax: 'cakes_p_servings_max', weight: 15, matchType: 'threshold_can_accommodate', userRangeMapping: { 'under_50': { min: 30, max: 50 }, '50_100': { min: 50, max: 100 }, '100_150': { min: 100, max: 150 }, '150_200': { min: 150, max: 200 }, 'over_200': { min: 200, max: 500 }, 'skip': { min: 30, max: 500 } } },
+  { userQuestionId: 'cakes_u_tiers', providerQuestionId: 'cakes_p_tiers_max', weight: 10, matchType: 'threshold_at_least', userRangeMapping: { '1': { min: 1, max: 1 }, '2': { min: 2, max: 2 }, '3': { min: 3, max: 3 }, '4_plus': { min: 4, max: 5 }, 'no_preference': { min: 1, max: 1 } }, orderedMapping: { '1': 1, '2': 2, '3': 3, '4': 4, '5_plus': 5 } },
+  { userQuestionId: 'cakes_u_flavor', providerQuestionId: 'cakes_p_flavors', weight: 15, matchType: 'contains' },
+  { userQuestionId: 'cakes_u_style', providerQuestionId: 'cakes_p_styles', weight: 15, matchType: 'single_in_multiple' },
+  { userQuestionId: 'cakes_u_budget', providerQuestionId: 'cakes_p_price_min', providerQuestionIdMax: 'cakes_p_price_max', weight: 15, matchType: 'range_overlap', userRangeMapping: { 'under_100k': { min: 0, max: 100000 }, '100k_200k': { min: 100000, max: 200000 }, '200k_400k': { min: 200000, max: 400000 }, '400k_600k': { min: 400000, max: 600000 }, 'over_600k': { min: 600000, max: 2000000 }, 'skip': { min: 0, max: 2000000 } } },
+  { userQuestionId: 'cakes_u_dietary', providerQuestionId: 'cakes_p_dietary', weight: 5, matchType: 'contains' },
+  { userQuestionId: 'cakes_u_tasting', providerQuestionId: 'cakes_p_tasting', weight: 5, matchType: 'preference_match', preferenceMapping: { 'yes_free': 1.0, 'yes_paid': 0.7, 'no': 0.2 } },
+  { userQuestionId: 'cakes_u_delivery', providerQuestionId: 'cakes_p_delivery', weight: 5, matchType: 'preference_match', preferenceMapping: { 'yes_included': 1.0, 'yes_extra': 0.8, 'delivery_only': 0.6, 'no': 0.3 } },
+];
+
+// Criterios para TRANSPORTE
+const TRANSPORT_CRITERIA: MatchCriterion[] = [
+  { userQuestionId: 'transport_u_vehicle_type', providerQuestionId: 'transport_p_vehicle_types', weight: 25, matchType: 'single_in_multiple' },
+  { userQuestionId: 'transport_u_hours', providerQuestionId: 'transport_p_hours_min', providerQuestionIdMax: 'transport_p_hours_max', weight: 20, matchType: 'threshold_can_accommodate', userRangeMapping: { '2': { min: 2, max: 2 }, '4': { min: 4, max: 4 }, '6': { min: 6, max: 6 }, '8': { min: 8, max: 8 }, 'full_day': { min: 10, max: 24 } } },
+  { userQuestionId: 'transport_u_budget', providerQuestionId: 'transport_p_price_min', providerQuestionIdMax: 'transport_p_price_max', weight: 25, matchType: 'range_overlap', userRangeMapping: { 'under_200k': { min: 0, max: 200000 }, '200k_400k': { min: 200000, max: 400000 }, '400k_700k': { min: 400000, max: 700000 }, '700k_1200k': { min: 700000, max: 1200000 }, 'over_1200k': { min: 1200000, max: 5000000 }, 'skip': { min: 0, max: 5000000 } } },
+  { userQuestionId: 'transport_u_decoration', providerQuestionId: 'transport_p_decoration', weight: 15, matchType: 'preference_match', preferenceMapping: { 'yes_included': 1.0, 'yes_extra': 0.8, 'no': 0.3 } },
+  { userQuestionId: 'transport_u_driver', providerQuestionId: 'transport_p_driver', weight: 15, matchType: 'preference_match', preferenceMapping: { 'yes_formal': 1.0, 'yes_casual': 0.9, 'optional': 0.7, 'no': 0.3 } },
+];
+
+// Criterios para INVITACIONES
+const INVITATIONS_CRITERIA: MatchCriterion[] = [
+  { userQuestionId: 'inv_u_type', providerQuestionId: 'inv_p_types', weight: 25, matchType: 'contains' },
+  { userQuestionId: 'inv_u_style', providerQuestionId: 'inv_p_styles', weight: 20, matchType: 'single_in_multiple' },
+  { userQuestionId: 'inv_u_extras', providerQuestionId: 'inv_p_extras', weight: 15, matchType: 'contains' },
+  { userQuestionId: 'inv_u_budget', providerQuestionId: 'inv_p_price_min', providerQuestionIdMax: 'inv_p_price_max', weight: 15, matchType: 'range_overlap', userRangeMapping: { 'under_100k': { min: 0, max: 1000 }, '100k_200k': { min: 1000, max: 2000 }, '200k_400k': { min: 2000, max: 4000 }, '400k_600k': { min: 4000, max: 6000 }, 'over_600k': { min: 6000, max: 50000 }, 'skip': { min: 0, max: 50000 } } },
+  { userQuestionId: 'inv_u_paper', providerQuestionId: 'inv_p_papers', weight: 5, matchType: 'single_in_multiple' },
+  { userQuestionId: 'inv_u_printing', providerQuestionId: 'inv_p_printing', weight: 5, matchType: 'single_in_multiple' },
+  { userQuestionId: 'inv_u_timeline', providerQuestionId: 'inv_p_lead_time', weight: 10, matchType: 'threshold_at_most', orderedMapping: { '1_week': 7, '2_weeks': 14, '3_weeks': 21, '1_month': 30, '2_months': 60, '3_months': 90, 'over_1_month': 45, 'flexible': 365 } },
+  { userQuestionId: 'inv_u_quantity', providerQuestionId: 'inv_p_min_quantity', weight: 5, matchType: 'threshold_at_least', userRangeMapping: { 'under_50': { min: 30, max: 50 }, '50_100': { min: 50, max: 100 }, '100_150': { min: 100, max: 150 }, '150_200': { min: 150, max: 200 }, 'over_200': { min: 200, max: 500 }, 'skip': { min: 50, max: 500 } } },
+];
+
+// Criterios para VESTIDOS & TRAJES
+const DRESS_CRITERIA: MatchCriterion[] = [
+  { userQuestionId: 'dress_u_need', providerQuestionId: 'dress_p_services', weight: 25, matchType: 'contains' },
+  { userQuestionId: 'dress_u_bride_style', providerQuestionId: 'dress_p_bride_styles', weight: 15, matchType: 'contains' },
+  { userQuestionId: 'dress_u_bride_silhouette', providerQuestionId: 'dress_p_silhouettes', weight: 10, matchType: 'contains' },
+  { userQuestionId: 'dress_u_groom_style', providerQuestionId: 'dress_p_groom_styles', weight: 10, matchType: 'single_in_multiple' },
+  { userQuestionId: 'dress_u_service_type', providerQuestionId: 'dress_p_service_types', weight: 15, matchType: 'single_in_multiple' },
+  { userQuestionId: 'dress_u_budget_bride', providerQuestionId: 'dress_p_price_bride_min', providerQuestionIdMax: 'dress_p_price_bride_max', weight: 15, matchType: 'range_overlap', userRangeMapping: { 'under_500k': { min: 0, max: 500000 }, '500k_1m': { min: 500000, max: 1000000 }, '1m_2m': { min: 1000000, max: 2000000 }, '2m_3m': { min: 2000000, max: 3000000 }, '3m_5m': { min: 3000000, max: 5000000 }, 'over_5m': { min: 5000000, max: 20000000 }, 'skip': { min: 0, max: 20000000 } } },
+  { userQuestionId: 'dress_u_budget_groom', providerQuestionId: 'dress_p_price_groom_min', providerQuestionIdMax: 'dress_p_price_groom_max', weight: 5, matchType: 'range_overlap', userRangeMapping: { 'under_200k': { min: 0, max: 200000 }, '200k_400k': { min: 200000, max: 400000 }, '400k_700k': { min: 400000, max: 700000 }, '700k_1m': { min: 700000, max: 1000000 }, 'over_1m': { min: 1000000, max: 5000000 }, 'skip': { min: 0, max: 5000000 } } },
+  { userQuestionId: 'dress_u_accessories', providerQuestionId: 'dress_p_accessories', weight: 5, matchType: 'contains' },
+  { userQuestionId: 'dress_u_fitting', providerQuestionId: 'dress_p_fittings', weight: 5, matchType: 'preference_match', preferenceMapping: { '1': 0.5, '2': 0.7, '3': 0.9, 'unlimited': 1.0, 'extra_cost': 0.6 } },
+];
+
 // Mapa de criterios exportado
-// Nota: Las categorías sin criterios específicos usan un array vacío y caen al fallback
+// Todas las categorías ahora tienen criterios específicos de matchmaking
 export const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, MatchCriterion[]> = {
   photography: PHOTOGRAPHY_CRITERIA,
   video: VIDEO_CRITERIA,
@@ -183,12 +241,11 @@ export const CATEGORY_MATCHING_CRITERIA: Record<CategoryId, MatchCriterion[]> = 
   decoration: DECORATION_CRITERIA,
   wedding_planner: WEDDING_PLANNER_CRITERIA,
   makeup: MAKEUP_CRITERIA,
-  // Categorías pendientes de implementar criterios específicos
-  entertainment: [],
-  cakes: [],
-  transport: [],
-  invitations: [],
-  dress: [],
+  entertainment: ENTERTAINMENT_CRITERIA,
+  cakes: CAKES_CRITERIA,
+  transport: TRANSPORT_CRITERIA,
+  invitations: INVITATIONS_CRITERIA,
+  dress: DRESS_CRITERIA,
 };
 
 // ============================================
