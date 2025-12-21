@@ -35,6 +35,7 @@ export default {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://192.168.1.82:3000',
+      'http://192.168.1.81:3000',
       'https://matrimatch.cl',
       'https://www.matrimatch.cl',
       'https://app.matrimatch.cl',

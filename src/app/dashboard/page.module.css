@@ -2734,11 +2734,11 @@
 .providerModalContent {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: 90vh;
   background: #0c0c0c;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -2792,10 +2792,13 @@
 }
 
 .providerModalHeader {
-  padding: 1.5rem 1.75rem 1.25rem;
+  padding: 2rem 2rem 1.5rem;
   text-align: center;
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.04), transparent);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.06), transparent);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Badge grande para modal */
@@ -2843,19 +2846,20 @@
 
 .providerModalTitle {
   font-family: var(--font-display);
-  font-size: 1.65rem;
-  font-weight: 500;
+  font-size: 2rem;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin: 0.75rem 0 0.5rem;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .providerModalCategory {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--color-text-muted);
+  margin-top: 0.25rem;
 }
 
 .providerModalBody {

@@ -469,33 +469,39 @@ export default function ProviderDashboardPage() {
   }, []);
 
   // Handlers para el portafolio
+  // NOTA: Usamos useAuthStore.getState() para obtener el estado más reciente
+  // y evitar problemas de stale closure cuando se suben múltiples archivos
   const handlePortfolioImageUploaded = useCallback((newImage: PortfolioImage) => {
-    if (!userProfile || userProfile.type !== 'provider') return;
+    // Obtener el estado más reciente del store (evita stale closure)
+    const latestProfile = useAuthStore.getState().userProfile;
+    if (!latestProfile || latestProfile.type !== 'provider') return;
     
-    const currentImages = (userProfile as ProviderProfile).portfolioImages || [];
+    const currentImages = (latestProfile as ProviderProfile).portfolioImages || [];
     const updatedImages = [...currentImages, newImage];
     
     // Actualizar el store local
     setUserProfile({
-      ...userProfile,
+      ...latestProfile,
       portfolioImages: updatedImages,
     } as ProviderProfile);
-  }, [userProfile, setUserProfile]);
+  }, [setUserProfile]);
 
   const handlePortfolioImageDeleted = useCallback((key: string) => {
-    if (!userProfile || userProfile.type !== 'provider') return;
+    // Obtener el estado más reciente del store (evita stale closure)
+    const latestProfile = useAuthStore.getState().userProfile;
+    if (!latestProfile || latestProfile.type !== 'provider') return;
     
-    const currentImages = (userProfile as ProviderProfile).portfolioImages || [];
+    const currentImages = (latestProfile as ProviderProfile).portfolioImages || [];
     const updatedImages = currentImages
       .filter(img => img.key !== key)
       .map((img, index) => ({ ...img, order: index }));
     
     // Actualizar el store local
     setUserProfile({
-      ...userProfile,
+      ...latestProfile,
       portfolioImages: updatedImages,
     } as ProviderProfile);
-  }, [userProfile, setUserProfile]);
+  }, [setUserProfile]);
 
   const handlePortfolioImagesReordered = useCallback(async (reorderedImages: PortfolioImage[]) => {
     if (!userProfile || userProfile.type !== 'provider' || !firebaseUser?.uid) return;
