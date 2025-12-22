@@ -119,16 +119,19 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'catering_u_staff', questionLabel: 'Nivel de servicio', weight: 5, isExcluding: false },
   ],
   venue: [
-    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 20, isExcluding: false },
-    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 15, isExcluding: false },
-    { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
-    { questionId: 'venue_u_capacity', questionLabel: 'Capacidad', weight: 15, isExcluding: true }, // Excluyente
-    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 3, isExcluding: false },
-    { questionId: 'venue_u_catering_policy', questionLabel: 'Política catering', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
+    // === CRITERIOS DE ZONA Y UBICACIÓN (PRIORITARIOS) ===
+    { questionId: 'venue_u_zone', questionLabel: 'Zona deseada', weight: 25, isExcluding: false },
+    { questionId: 'venue_u_environment', questionLabel: 'Tipo de entorno', weight: 20, isExcluding: false },
+    { questionId: 'venue_u_travel_willingness', questionLabel: 'Disposición a viajar', weight: 15, isExcluding: false },
+    // === FIN CRITERIOS DE ZONA ===
+    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 10, isExcluding: false },
+    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 8, isExcluding: false },
+    { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 10, isExcluding: false },
+    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 3, isExcluding: false },
+    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 3, isExcluding: false },
+    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_catering_policy', questionLabel: 'Política catering', weight: 2, isExcluding: false },
   ],
   decoration: [
     { questionId: 'deco_u_style', questionLabel: 'Estilo de decoración', weight: 25, isExcluding: false },

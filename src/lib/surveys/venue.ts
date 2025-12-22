@@ -9,6 +9,47 @@ import { SurveyQuestion } from './types';
 
 // Preguntas para USUARIOS sobre centro de eventos
 export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
+  // ========== PREGUNTAS DE ZONA Y UBICACIÓN (INICIO) ==========
+  {
+    id: 'venue_u_zone',
+    question: '¿Dónde te gustaría hacer tu matrimonio?',
+    type: 'multiple', // Selección múltiple - preferencia principal
+    options: [
+      { id: 'cajon_del_maipo', label: 'Cajón del Maipo', description: 'Montaña y naturaleza' },
+      { id: 'valle_del_maipo', label: 'Valle del Maipo', description: 'Viñedos y campo' },
+      { id: 'costa', label: 'Costa', description: 'Valparaíso y alrededores' },
+      { id: 'santiago_urbano', label: 'Santiago', description: 'Zona urbana' }, // ID coincide con proveedor
+      { id: 'no_preference', label: 'No tengo preferencia', description: 'Estoy abierto/a a opciones' },
+    ],
+    required: true,
+    weight: 25, // Peso alto - campo principal para matching
+  },
+  {
+    id: 'venue_u_environment',
+    question: '¿Qué tipo de entorno buscas?',
+    type: 'single', // Selección única
+    options: [
+      { id: 'city', label: 'Ciudad', description: 'Entorno urbano' },
+      { id: 'countryside', label: 'Campo / viñedos', description: 'Naturaleza y tranquilidad' },
+      { id: 'mountain', label: 'Montaña / naturaleza', description: 'Paisajes naturales' },
+    ],
+    required: true,
+    weight: 20, // Peso importante para matching
+  },
+  {
+    id: 'venue_u_travel_willingness',
+    question: '¿Cuánto estarían dispuestos a viajar?',
+    type: 'single', // Selección única
+    options: [
+      { id: 'santiago_only', label: 'Solo dentro de Santiago', description: 'Sin desplazamiento' },
+      { id: 'up_to_1hr', label: 'Hasta 1 hora', description: 'Distancia corta' },
+      { id: 'up_to_2hr', label: 'Hasta 2 horas', description: 'Distancia media' },
+      { id: 'no_limit', label: 'La distancia no es problema', description: 'Abierto a cualquier ubicación' },
+    ],
+    required: true,
+    weight: 15, // Peso para validar distancia máxima
+  },
+  // ========== FIN PREGUNTAS DE ZONA ==========
   {
     id: 'venue_u_type',
     question: '¿Qué tipo de lugar prefieres?',
@@ -25,7 +66,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'mansion', label: 'Casona / Mansión', description: 'Elegancia clásica' },
     ],
     required: true,
-    weight: 20,
+    weight: 15, // Reducido de 20 para dar espacio a las nuevas preguntas
   },
   {
     id: 'venue_u_setting',
@@ -153,6 +194,47 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
 
 // Preguntas para PROVEEDORES de centro de eventos
 export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
+  // ========== PREGUNTAS DE ZONA Y UBICACIÓN (INICIO) ==========
+  {
+    id: 'venue_p_zone',
+    question: '¿En qué zona se encuentra tu centro de eventos?',
+    type: 'single', // Selección única - campo principal para matching
+    options: [
+      { id: 'santiago_urbano', label: 'Santiago Urbano', description: 'Dentro de la ciudad' },
+      { id: 'cajon_del_maipo', label: 'Cajón del Maipo', description: 'Zona montañosa' },
+      { id: 'valle_del_maipo', label: 'Valle del Maipo', description: 'Viñedos y campo' },
+      { id: 'costa', label: 'Costa (Valparaíso y alrededores)', description: 'Zona costera' },
+      { id: 'otra_zona', label: 'Otra zona', description: 'Otra ubicación' },
+    ],
+    required: true,
+    weight: 25, // Peso alto - campo principal para matching
+  },
+  {
+    id: 'venue_p_environment',
+    question: '¿Cómo describirías el entorno del centro?',
+    type: 'single', // Selección única
+    options: [
+      { id: 'city', label: 'Ciudad', description: 'Entorno urbano' },
+      { id: 'countryside', label: 'Campo / viñedos', description: 'Entorno natural campestre' },
+      { id: 'mountain', label: 'Montaña / naturaleza', description: 'Rodeado de naturaleza' },
+    ],
+    required: true,
+    weight: 20, // Peso importante para matching
+  },
+  {
+    id: 'venue_p_distance_from_santiago',
+    question: '¿A qué distancia está desde Santiago?',
+    type: 'single', // Selección única
+    options: [
+      { id: 'within_santiago', label: 'Dentro de Santiago', description: 'Sin desplazamiento' },
+      { id: 'up_to_1hr', label: 'Hasta 1 hora', description: 'Distancia corta' },
+      { id: 'up_to_2hr', label: 'Hasta 2 horas', description: 'Distancia media' },
+      { id: 'over_2hr', label: 'Más de 2 horas', description: 'Distancia larga' },
+    ],
+    required: true,
+    weight: 15, // Peso para validar distancia
+  },
+  // ========== FIN PREGUNTAS DE ZONA ==========
   {
     id: 'venue_p_type',
     question: '¿Qué tipo de lugar eres?',
@@ -169,7 +251,7 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'mansion', label: 'Casona / Mansión' },
     ],
     required: true,
-    weight: 20,
+    weight: 15, // Reducido de 20 para dar espacio a las nuevas preguntas
   },
   {
     id: 'venue_p_settings',

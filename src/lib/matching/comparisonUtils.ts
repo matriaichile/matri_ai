@@ -122,19 +122,35 @@ const CATERING_CRITERIA: MatchCriterion[] = [
   { userQuestionId: 'catering_u_setup', providerQuestionId: 'catering_p_setup', weight: 2, matchType: 'boolean_match' },
 ];
 
+// Mapeo de distancia para matching de zona
+const DISTANCE_ORDER: Record<string, number> = {
+  'within_santiago': 0,
+  'santiago_only': 0,
+  'up_to_1hr': 1,
+  'up_to_2hr': 2,
+  'over_2hr': 3,
+  'no_limit': 4,
+};
+
 const VENUE_CRITERIA: MatchCriterion[] = [
-  { userQuestionId: 'venue_u_type', providerQuestionId: 'venue_p_type', weight: 20, matchType: 'exact' },
-  { userQuestionId: 'venue_u_setting', providerQuestionId: 'venue_p_settings', weight: 15, matchType: 'single_in_multiple' },
-  { userQuestionId: 'venue_u_budget', providerQuestionId: 'venue_p_price_min', providerQuestionIdMax: 'venue_p_price_max', weight: 20, matchType: 'range_overlap', userRangeMapping: { 'under_1m': { min: 0, max: 1000000 }, '1m_2m': { min: 1000000, max: 2000000 }, '2m_4m': { min: 2000000, max: 4000000 }, '4m_7m': { min: 4000000, max: 7000000 }, 'over_7m': { min: 7000000, max: 20000000 } } },
-  { userQuestionId: 'venue_u_capacity', providerQuestionId: 'venue_p_capacity_min', providerQuestionIdMax: 'venue_p_capacity_max', weight: 15, matchType: 'threshold_can_accommodate', userRangeMapping: { 'under_50': { min: 30, max: 50 }, '50_100': { min: 50, max: 100 }, '100_150': { min: 100, max: 150 }, '150_200': { min: 150, max: 200 }, '200_300': { min: 200, max: 300 }, 'over_300': { min: 300, max: 1000 } } },
-  { userQuestionId: 'venue_u_exclusivity', providerQuestionId: 'venue_p_exclusivity', weight: 5, matchType: 'preference_match', preferenceMapping: { 'true': 1.0, 'false': 0.0 } },
-  { userQuestionId: 'venue_u_ceremony_space', providerQuestionId: 'venue_p_ceremony_space', weight: 5, matchType: 'boolean_match' },
-  { userQuestionId: 'venue_u_parking', providerQuestionId: 'venue_p_parking', weight: 5, matchType: 'preference_match', preferenceMapping: { 'yes_free': 1.0, 'yes_paid': 0.8, 'valet': 0.9, 'no': 0.0 } },
-  { userQuestionId: 'venue_u_accommodation', providerQuestionId: 'venue_p_accommodation', weight: 3, matchType: 'preference_match', preferenceMapping: { 'yes': 1.0, 'nearby': 0.7, 'no': 0.0 } },
-  { userQuestionId: 'venue_u_catering_policy', providerQuestionId: 'venue_p_catering_policy', weight: 5, matchType: 'exact' },
-  { userQuestionId: 'venue_u_end_time', providerQuestionId: 'venue_p_end_time', weight: 5, matchType: 'threshold_at_least', orderedMapping: END_TIME_ORDER },
-  { userQuestionId: 'venue_u_accessibility', providerQuestionId: 'venue_p_accessibility', weight: 2, matchType: 'boolean_match' },
+  // === CRITERIOS DE ZONA Y UBICACIÓN (PRIORITARIOS - 60%) ===
+  { userQuestionId: 'venue_u_zone', providerQuestionId: 'venue_p_zone', weight: 25, matchType: 'contains' },
+  { userQuestionId: 'venue_u_environment', providerQuestionId: 'venue_p_environment', weight: 20, matchType: 'exact' },
+  { userQuestionId: 'venue_u_travel_willingness', providerQuestionId: 'venue_p_distance_from_santiago', weight: 15, matchType: 'threshold_at_most', orderedMapping: DISTANCE_ORDER },
+  // === FIN CRITERIOS DE ZONA ===
+  { userQuestionId: 'venue_u_type', providerQuestionId: 'venue_p_type', weight: 8, matchType: 'contains' },
+  { userQuestionId: 'venue_u_setting', providerQuestionId: 'venue_p_settings', weight: 7, matchType: 'single_in_multiple' },
+  { userQuestionId: 'venue_u_budget', providerQuestionId: 'venue_p_price_min', providerQuestionIdMax: 'venue_p_price_max', weight: 12, matchType: 'range_overlap', userRangeMapping: { 'under_1m': { min: 0, max: 1000000 }, '1m_2m': { min: 1000000, max: 2000000 }, '2m_4m': { min: 2000000, max: 4000000 }, '4m_7m': { min: 4000000, max: 7000000 }, 'over_7m': { min: 7000000, max: 20000000 } } },
+  // NOTA: venue_u_capacity fue eliminado - se pregunta en el wizard de registro
+  { userQuestionId: 'venue_u_exclusivity', providerQuestionId: 'venue_p_exclusivity', weight: 2, matchType: 'preference_match', preferenceMapping: { 'true': 1.0, 'false': 0.0 } },
+  { userQuestionId: 'venue_u_ceremony_space', providerQuestionId: 'venue_p_ceremony_space', weight: 2, matchType: 'boolean_match' },
+  { userQuestionId: 'venue_u_parking', providerQuestionId: 'venue_p_parking', weight: 2, matchType: 'preference_match', preferenceMapping: { 'yes_free': 1.0, 'yes_paid': 0.8, 'valet': 0.9, 'no': 0.0 } },
+  { userQuestionId: 'venue_u_accommodation', providerQuestionId: 'venue_p_accommodation', weight: 2, matchType: 'preference_match', preferenceMapping: { 'yes': 1.0, 'nearby': 0.7, 'no': 0.0 } },
+  { userQuestionId: 'venue_u_catering_policy', providerQuestionId: 'venue_p_catering_policy', weight: 2, matchType: 'exact' },
+  { userQuestionId: 'venue_u_end_time', providerQuestionId: 'venue_p_end_time', weight: 2, matchType: 'threshold_at_least', orderedMapping: END_TIME_ORDER },
+  { userQuestionId: 'venue_u_accessibility', providerQuestionId: 'venue_p_accessibility', weight: 1, matchType: 'boolean_match' },
 ];
+// TOTAL PESOS: 25+20+15+8+7+12+2+2+2+2+2+2+1 = 100%
 
 const DECORATION_CRITERIA: MatchCriterion[] = [
   { userQuestionId: 'deco_u_style', providerQuestionId: 'deco_p_styles', weight: 25, matchType: 'single_in_multiple' },
