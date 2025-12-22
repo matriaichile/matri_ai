@@ -289,22 +289,42 @@ export default function MatchmakingConfigPage() {
       
       if (configSnap.exists()) {
         const savedConfigs = configSnap.data() as Record<CategoryId, QuestionMatchingConfig[]>;
-        // Combinar inteligentemente: solo usar config guardada si tiene preguntas
-        // Si la config guardada está vacía pero el default tiene preguntas, usar default
+        // Combinar inteligentemente:
+        // 1. Mantener configuraciones guardadas (pesos personalizados)
+        // 2. AGREGAR preguntas nuevas del default que no existan en guardado
+        // 3. ELIMINAR preguntas obsoletas que ya no existen en default
         setConfigs(() => {
           const merged: Record<CategoryId, QuestionMatchingConfig[]> = { ...DEFAULT_MATCHING_CONFIGS };
           
-          for (const catId of Object.keys(savedConfigs) as CategoryId[]) {
-            const savedCat = savedConfigs[catId];
-            const defaultCat = DEFAULT_MATCHING_CONFIGS[catId];
+          for (const catId of Object.keys(DEFAULT_MATCHING_CONFIGS) as CategoryId[]) {
+            const savedCat = savedConfigs[catId] || [];
+            const defaultCat = DEFAULT_MATCHING_CONFIGS[catId] || [];
             
-            // Usar la config guardada SOLO si tiene preguntas
-            // Si está vacía y el default tiene preguntas, usar el default
-            if (Array.isArray(savedCat) && savedCat.length > 0) {
-              merged[catId] = savedCat;
-            } else if (Array.isArray(defaultCat) && defaultCat.length > 0) {
-              merged[catId] = defaultCat;
+            if (!Array.isArray(defaultCat) || defaultCat.length === 0) {
+              continue;
             }
+            
+            // Crear un mapa de IDs de preguntas válidas (del default)
+            const validQuestionIds = new Set(defaultCat.map(q => q.questionId));
+            
+            // Crear un mapa de preguntas guardadas por ID
+            const savedQuestionsMap = new Map(
+              (Array.isArray(savedCat) ? savedCat : [])
+                .filter(q => validQuestionIds.has(q.questionId)) // Solo mantener preguntas válidas
+                .map(q => [q.questionId, q])
+            );
+            
+            // Combinar: usar valores guardados si existen, sino usar default
+            // Mantener el ORDEN del default (preguntas nuevas van donde corresponden)
+            merged[catId] = defaultCat.map(defaultQ => {
+              const savedQ = savedQuestionsMap.get(defaultQ.questionId);
+              if (savedQ) {
+                // Mantener peso y configuración guardada
+                return savedQ;
+              }
+              // Pregunta nueva: usar valores por defecto
+              return defaultQ;
+            });
           }
           
           return merged;
