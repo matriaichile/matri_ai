@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, Clock, Plus, AlertCircle, SearchX } from 'lucide-react';
+import { RefreshCw, Plus, AlertCircle, SearchX } from 'lucide-react';
 import { 
   canSearchMoreProviders, 
   getRemainingSearches, 
-  formatTimeUntilReset,
   getSearchesUsedCount,
-  DAILY_SEARCH_LIMIT,
+  EXTRA_SEARCH_LIMIT,
   MAX_ACTIVE_MATCHES_PER_CATEGORY
 } from '@/utils/matchLimits';
 import styles from './ShowMoreButton.module.css';
@@ -26,7 +25,7 @@ interface ShowMoreButtonProps {
 
 /**
  * Botón para solicitar un nuevo proveedor.
- * Límite: 2 búsquedas por día por categoría.
+ * Límite: 2 búsquedas extra por categoría (PERMANENTE, solo se resetea al rehacer encuesta).
  * Los 3 leads iniciales de la encuesta NO cuentan contra este límite.
  */
 export default function ShowMoreButton({
@@ -43,11 +42,10 @@ export default function ShowMoreButton({
   const [canSearch, setCanSearch] = useState(false);
   const [remainingSearches, setRemainingSearches] = useState(0);
   const [searchesUsed, setSearchesUsed] = useState(0);
-  const [timeUntilReset, setTimeUntilReset] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [noMoreProviders, setNoMoreProviders] = useState(false);
   
-  // NUEVO: Determinar si hay proveedores disponibles basado en el conteo externo
+  // Determinar si hay proveedores disponibles basado en el conteo externo
   // Si availableProvidersCount es undefined, aún no sabemos (compatibilidad hacia atrás)
   // Si es 0, definitivamente no hay más proveedores
   const hasAvailableProviders = availableProvidersCount === undefined || availableProvidersCount > 0;
@@ -59,21 +57,15 @@ export default function ShowMoreButton({
     const canDo = canSearchMoreProviders(userId, categoryId);
     const remaining = getRemainingSearches(userId, categoryId);
     const used = getSearchesUsedCount(userId, categoryId);
-    const timeLeft = formatTimeUntilReset(userId, categoryId);
     
     setCanSearch(canDo);
     setRemainingSearches(remaining);
     setSearchesUsed(used);
-    setTimeUntilReset(timeLeft);
   };
 
   // Actualizar al montar y cuando cambian las props
   useEffect(() => {
     updateLimitsState();
-    
-    // Actualizar cada minuto para el contador de tiempo
-    const interval = setInterval(updateLimitsState, 60000);
-    return () => clearInterval(interval);
   }, [userId, categoryId]);
 
   // Manejar click en el botón
@@ -134,21 +126,20 @@ export default function ShowMoreButton({
     );
   }
 
-  // Si ya usó las 2 búsquedas del día
+  // Si ya usó las 2 búsquedas extra permitidas
   if (!canSearch) {
     return (
       <div className={styles.limitReached}>
         <div className={styles.limitIcon}>
-          <Clock size={20} />
+          <AlertCircle size={20} />
         </div>
         <div className={styles.limitContent}>
-          <p className={styles.limitTitle}>Búsquedas agotadas por hoy</p>
+          <p className={styles.limitTitle}>Búsquedas extra agotadas</p>
           <p className={styles.limitText}>
-            Has usado tus {DAILY_SEARCH_LIMIT} búsquedas de hoy en esta categoría.
+            Has usado tus {EXTRA_SEARCH_LIMIT} búsquedas extra en esta categoría.
           </p>
-          <p className={styles.limitTime}>
-            <Clock size={14} />
-            <span>Podrás buscar más en {timeUntilReset}</span>
+          <p className={styles.limitText}>
+            Para obtener más búsquedas, puedes <strong>rehacer la encuesta</strong> desde el botón en la parte superior.
           </p>
         </div>
       </div>
@@ -160,9 +151,9 @@ export default function ShowMoreButton({
       {/* Mostrar búsquedas disponibles */}
       <div className={styles.slotsInfo}>
         <span className={styles.slotsCount}>
-          {remainingSearches} / {DAILY_SEARCH_LIMIT}
+          {remainingSearches} / {EXTRA_SEARCH_LIMIT}
         </span>
-        <span className={styles.slotsText}>búsquedas disponibles hoy</span>
+        <span className={styles.slotsText}>búsquedas extra disponibles</span>
       </div>
       
       {/* Botón para buscar nuevo proveedor */}

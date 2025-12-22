@@ -1,33 +1,33 @@
 /**
- * Sistema de límites de "buscar nuevo proveedor" por categoría cada 24 horas.
+ * Sistema de límites de "buscar nuevo proveedor" por categoría.
  * Implementación 100% local con localStorage.
  * 
  * Reglas:
  * - Al completar encuesta: se generan 3 leads iniciales (NO cuentan contra el límite)
- * - Máximo 2 "buscar nuevo proveedor" por día por categoría
+ * - Máximo 2 "buscar nuevo proveedor" por categoría (PERMANENTE, no se resetea por tiempo)
  * - Máximo 3 matches ACTIVOS al mismo tiempo (approved + pending)
  * - Al rehacer encuesta: se reinicia el contador de búsquedas para esa categoría
- * - El reset automático es después de 24 horas
+ * - NO hay reset automático por tiempo - solo al rehacer encuesta
  */
 
 // Constantes del sistema
 export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales al completar encuesta (NO cuentan contra límite)
-export const DAILY_SEARCH_LIMIT = 2; // Máximo "buscar nuevo proveedor" por día por categoría
-export const RESET_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 horas
+export const EXTRA_SEARCH_LIMIT = 2; // Máximo "buscar nuevo proveedor" por categoría (PERMANENTE)
 
 // Máximo de matches ACTIVOS (approved + pending) que puede tener un usuario por categoría
 // Los rejected NO cuentan. Si tiene 3 activos, NO puede agregar más ni recuperar descartados.
 export const MAX_ACTIVE_MATCHES_PER_CATEGORY = 3;
 
-// DEPRECADO: Mantener para compatibilidad, pero ya no se usa
-export const MATCH_LIMIT_PER_CATEGORY = DAILY_SEARCH_LIMIT;
-export const EXTRA_MATCHES_ALLOWED = DAILY_SEARCH_LIMIT;
+// DEPRECADO: Mantener para compatibilidad hacia atrás
+export const DAILY_SEARCH_LIMIT = EXTRA_SEARCH_LIMIT;
+export const MATCH_LIMIT_PER_CATEGORY = EXTRA_SEARCH_LIMIT;
+export const EXTRA_MATCHES_ALLOWED = EXTRA_SEARCH_LIMIT;
+export const RESET_INTERVAL_MS = 0; // Ya no se usa - mantener para compatibilidad
 
 // Estructura de datos para límites por categoría
 export interface CategoryMatchLimit {
   categoryId: string;
-  searchesUsed: number;  // Cantidad de "buscar nuevo proveedor" usados hoy
-  lastResetTimestamp: number; // Unix timestamp del último reset
+  searchesUsed: number;  // Cantidad de "buscar nuevo proveedor" usados (PERMANENTE)
 }
 
 // Estructura completa de límites por usuario
@@ -71,7 +71,7 @@ function saveAllLimits(userId: string, limits: UserMatchLimits): void {
 
 /**
  * Obtener límites de una categoría específica.
- * Si pasaron 24 horas, hace reset automático.
+ * NO hay reset automático por tiempo - solo se resetea al rehacer encuesta.
  */
 export function getMatchLimits(userId: string, categoryId: string): CategoryMatchLimit {
   const allLimits = getAllLimits(userId);
@@ -79,43 +79,31 @@ export function getMatchLimits(userId: string, categoryId: string): CategoryMatc
   let categoryLimit = allLimits[categoryId] || {
     categoryId,
     searchesUsed: 0,
-    lastResetTimestamp: Date.now(),
   };
   
-  // Migración: si tiene el formato viejo (providersShown), convertir al nuevo
-  if ('providersShown' in categoryLimit && !('searchesUsed' in categoryLimit)) {
+  // Migración: si tiene el formato viejo (providersShown o lastResetTimestamp), convertir al nuevo
+  // IMPORTANTE: Mantener searchesUsed actual, solo limpiar campos obsoletos
+  if ('providersShown' in categoryLimit || 'lastResetTimestamp' in categoryLimit) {
+    const currentSearchesUsed = (categoryLimit as { searchesUsed?: number }).searchesUsed ?? 0;
     categoryLimit = {
       categoryId,
-      searchesUsed: 0, // Reiniciar al migrar
-      lastResetTimestamp: Date.now(),
+      searchesUsed: currentSearchesUsed,
     };
-  }
-  
-  // Verificar si pasaron 24 horas - RESET automático
-  const timeSinceReset = Date.now() - categoryLimit.lastResetTimestamp;
-  if (timeSinceReset >= RESET_INTERVAL_MS) {
-    categoryLimit = {
-      categoryId,
-      searchesUsed: 0,
-      lastResetTimestamp: Date.now(),
-    };
-    
-    // Guardar el reset
+    // Guardar la migración
     allLimits[categoryId] = categoryLimit;
     saveAllLimits(userId, allLimits);
-    
-    console.log(`✓ Reset automático de búsquedas para categoría ${categoryId}`);
   }
   
   return categoryLimit;
 }
 
 /**
- * Verificar si puede buscar más proveedores hoy en una categoría
+ * Verificar si puede buscar más proveedores en una categoría.
+ * El límite es PERMANENTE (no se resetea por tiempo, solo al rehacer encuesta).
  */
 export function canSearchMoreProviders(userId: string, categoryId: string): boolean {
   const limits = getMatchLimits(userId, categoryId);
-  return limits.searchesUsed < DAILY_SEARCH_LIMIT;
+  return limits.searchesUsed < EXTRA_SEARCH_LIMIT;
 }
 
 // Alias para compatibilidad
@@ -134,7 +122,7 @@ export function registerSearchUsed(userId: string, categoryId: string): void {
   allLimits[categoryId] = categoryLimit;
   saveAllLimits(userId, allLimits);
   
-  console.log(`✓ Búsqueda registrada para ${categoryId} (${categoryLimit.searchesUsed}/${DAILY_SEARCH_LIMIT})`);
+  console.log(`✓ Búsqueda registrada para ${categoryId} (${categoryLimit.searchesUsed}/${EXTRA_SEARCH_LIMIT}) - PERMANENTE`);
 }
 
 // Alias para compatibilidad (aunque ya no guarda providerId)
@@ -151,18 +139,19 @@ export function unregisterProviderShown(_userId: string, _categoryId: string, _p
 }
 
 /**
- * Obtener cantidad de búsquedas restantes para hoy
+ * Obtener cantidad de búsquedas restantes para esta categoría.
+ * El límite es PERMANENTE hasta rehacer encuesta.
  */
 export function getRemainingSearches(userId: string, categoryId: string): number {
   const limits = getMatchLimits(userId, categoryId);
-  return Math.max(0, DAILY_SEARCH_LIMIT - limits.searchesUsed);
+  return Math.max(0, EXTRA_SEARCH_LIMIT - limits.searchesUsed);
 }
 
 // Alias para compatibilidad
 export const getRemainingSlots = getRemainingSearches;
 
 /**
- * Obtener cantidad de búsquedas usadas hoy
+ * Obtener cantidad de búsquedas usadas en esta categoría
  */
 export function getSearchesUsedCount(userId: string, categoryId: string): number {
   const limits = getMatchLimits(userId, categoryId);
@@ -173,29 +162,19 @@ export function getSearchesUsedCount(userId: string, categoryId: string): number
 export const getProvidersShownCount = getSearchesUsedCount;
 
 /**
- * Obtener tiempo restante hasta el próximo reset (en milisegundos)
+ * DEPRECADO: Ya no hay reset por tiempo.
+ * Mantener para compatibilidad - siempre retorna 0.
  */
-export function getTimeUntilReset(userId: string, categoryId: string): number {
-  const limits = getMatchLimits(userId, categoryId);
-  const elapsed = Date.now() - limits.lastResetTimestamp;
-  return Math.max(0, RESET_INTERVAL_MS - elapsed);
+export function getTimeUntilReset(_userId: string, _categoryId: string): number {
+  return 0; // Ya no hay reset por tiempo
 }
 
 /**
- * Formatear tiempo restante a string legible
+ * DEPRECADO: Ya no hay reset por tiempo.
+ * Mantener para compatibilidad - siempre retorna mensaje indicando que debe rehacer encuesta.
  */
-export function formatTimeUntilReset(userId: string, categoryId: string): string {
-  const ms = getTimeUntilReset(userId, categoryId);
-  
-  if (ms <= 0) return 'Disponible ahora';
-  
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes} minutos`;
+export function formatTimeUntilReset(_userId: string, _categoryId: string): string {
+  return 'Rehaz la encuesta para obtener más búsquedas';
 }
 
 /**
@@ -207,7 +186,8 @@ export function wasProviderShown(_userId: string, _categoryId: string, _provider
 
 /**
  * Forzar reset de búsquedas para una categoría.
- * Útil cuando el usuario rehace la encuesta.
+ * Se llama cuando el usuario rehace la encuesta.
+ * Esta es la ÚNICA forma de recuperar las búsquedas extra.
  */
 export function forceResetCategory(userId: string, categoryId: string): void {
   const allLimits = getAllLimits(userId);
@@ -215,11 +195,10 @@ export function forceResetCategory(userId: string, categoryId: string): void {
   allLimits[categoryId] = {
     categoryId,
     searchesUsed: 0,
-    lastResetTimestamp: Date.now(),
   };
   
   saveAllLimits(userId, allLimits);
-  console.log(`✓ Reset de búsquedas para categoría ${categoryId}`);
+  console.log(`✓ Reset de búsquedas para categoría ${categoryId} (usuario rehizo encuesta)`);
 }
 
 /**
@@ -235,8 +214,3 @@ export function clearAllLimits(userId: string): void {
     console.error('Error eliminando límites:', error);
   }
 }
-
-
-
-
-

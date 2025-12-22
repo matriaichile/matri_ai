@@ -607,12 +607,12 @@ export default function ProviderDashboardPage() {
     return result;
   })();
 
-  // Estadísticas - basadas en leads visibles (excluyendo pendientes)
+  // Estadísticas - basadas en leads visibles (excluyendo los que tienen status 'pending' en Firestore)
   const totalLeads = visibleLeads.length;
   const approvedLeads = visibleLeads.filter(l => l.status === 'approved').length;
   const rejectedLeads = visibleLeads.filter(l => l.status === 'rejected').length;
-  // Pendientes se calculan del array original de leads (no de visibleLeads)
-  const pendingLeads = leads.filter(l => l.status === 'pending').length;
+  // Pendientes son los leads visibles que no han sido aprobados ni rechazados (contacted o sin decisión del proveedor)
+  const pendingLeads = totalLeads - approvedLeads - rejectedLeads;
   const matchRate = totalLeads > 0 ? Math.round((approvedLeads / totalLeads) * 100) : 0;
 
   // Calcular encuestas completadas por categoría
