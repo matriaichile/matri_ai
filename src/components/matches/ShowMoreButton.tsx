@@ -20,6 +20,8 @@ interface ShowMoreButtonProps {
   activeMatchesCount?: number; // Cantidad de matches activos (approved + pending)
   maxActiveMatches?: number; // Máximo de matches activos permitidos
   isBlocked?: boolean; // Bloquear cuando hay otra acción de recuperación en curso
+  availableProvidersCount?: number; // Cantidad de proveedores disponibles que aún no se han mostrado
+  isLoadingAvailableCount?: boolean; // Si está cargando el conteo de proveedores disponibles
 }
 
 /**
@@ -35,6 +37,8 @@ export default function ShowMoreButton({
   activeMatchesCount = 0,
   maxActiveMatches = MAX_ACTIVE_MATCHES_PER_CATEGORY,
   isBlocked = false,
+  availableProvidersCount,
+  isLoadingAvailableCount = false,
 }: ShowMoreButtonProps) {
   const [canSearch, setCanSearch] = useState(false);
   const [remainingSearches, setRemainingSearches] = useState(0);
@@ -42,6 +46,11 @@ export default function ShowMoreButton({
   const [timeUntilReset, setTimeUntilReset] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [noMoreProviders, setNoMoreProviders] = useState(false);
+  
+  // NUEVO: Determinar si hay proveedores disponibles basado en el conteo externo
+  // Si availableProvidersCount es undefined, aún no sabemos (compatibilidad hacia atrás)
+  // Si es 0, definitivamente no hay más proveedores
+  const hasAvailableProviders = availableProvidersCount === undefined || availableProvidersCount > 0;
 
   // Actualizar estado de límites
   const updateLimitsState = () => {
@@ -92,11 +101,24 @@ export default function ShowMoreButton({
   // Verificar si tiene el máximo de matches activos
   const hasReachedActiveLimit = activeMatchesCount >= maxActiveMatches;
   
-  // Puede buscar si: tiene búsquedas disponibles Y no tiene máximo de activos Y no está bloqueado
-  const canRequestNew = canSearch && !hasReachedActiveLimit && !isBlocked;
+  // Puede buscar si: tiene búsquedas disponibles Y no tiene máximo de activos Y no está bloqueado Y hay proveedores disponibles
+  const canRequestNew = canSearch && !hasReachedActiveLimit && !isBlocked && hasAvailableProviders;
 
-  // Si no hay más proveedores disponibles en el sistema
-  if (noMoreProviders) {
+  // NUEVO: Si está cargando el conteo de proveedores disponibles, mostrar loading
+  if (isLoadingAvailableCount) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.slotsInfo}>
+          <RefreshCw size={16} className={styles.spinning} />
+          <span className={styles.slotsText}>Verificando proveedores disponibles...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // NUEVO: Si sabemos que no hay más proveedores disponibles (conteo = 0), no mostrar el botón
+  // Esto evita que el usuario gaste búsquedas innecesariamente
+  if (availableProvidersCount === 0 || noMoreProviders) {
     return (
       <div className={styles.limitReached}>
         <div className={styles.limitIcon}>

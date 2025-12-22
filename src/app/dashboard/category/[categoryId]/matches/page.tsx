@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile, ProfileImageData } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
-import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads } from '@/lib/firebase/firestore';
+import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads, getAvailableProvidersCountForUser } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
 import { registerSearchUsed, forceResetCategory, MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
@@ -94,6 +94,10 @@ export default function CategoryMatchesPage() {
   
   // NUEVO: Estado para modal de límite de matches activos alcanzado
   const [showLimitModal, setShowLimitModal] = useState(false);
+  
+  // NUEVO: Estado para conteo de proveedores disponibles
+  const [availableProvidersCount, setAvailableProvidersCount] = useState<number | undefined>(undefined);
+  const [isLoadingAvailableCount, setIsLoadingAvailableCount] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
@@ -168,6 +172,27 @@ export default function CategoryMatchesPage() {
       loadMatches();
     }
   }, [firebaseUser?.uid, categoryId]);
+
+  // NUEVO: Cargar conteo de proveedores disponibles
+  // Se ejecuta después de cargar los matches y cada vez que cambian
+  useEffect(() => {
+    const loadAvailableCount = async () => {
+      if (!firebaseUser?.uid || !categoryId || loadingMatches) return;
+      
+      try {
+        setIsLoadingAvailableCount(true);
+        const count = await getAvailableProvidersCountForUser(firebaseUser.uid, categoryId);
+        setAvailableProvidersCount(count);
+      } catch (error) {
+        console.error('Error cargando conteo de proveedores disponibles:', error);
+        setAvailableProvidersCount(undefined); // En caso de error, no sabemos cuántos hay
+      } finally {
+        setIsLoadingAvailableCount(false);
+      }
+    };
+    
+    loadAvailableCount();
+  }, [firebaseUser?.uid, categoryId, loadingMatches, matches.length]); // Se recarga cuando cambian los matches
 
   // Rehacer encuesta - elimina leads, restaura créditos y resetea búsquedas
   const handleRedoSurvey = async () => {
@@ -268,8 +293,15 @@ export default function CategoryMatchesPage() {
         
         // Agregar el nuevo lead a la lista
         setMatches(prev => [newLead, ...prev]);
+        
+        // NUEVO: Decrementar el conteo de proveedores disponibles
+        // (el useEffect también lo recargará, pero esto da feedback inmediato)
+        setAvailableProvidersCount(prev => prev !== undefined ? Math.max(0, prev - 1) : undefined);
+        
         return true;
       }
+      // NUEVO: Si no se encontró un nuevo match, significa que no hay más proveedores
+      setAvailableProvidersCount(0);
       return false;
     } catch (error) {
       console.error('Error generando nuevo match:', error);
@@ -759,6 +791,8 @@ export default function CategoryMatchesPage() {
                   activeMatchesCount={activeMatchesCount}
                   maxActiveMatches={MAX_ACTIVE_MATCHES_PER_CATEGORY}
                   isBlocked={isModifyingActiveMatches}
+                  availableProvidersCount={availableProvidersCount}
+                  isLoadingAvailableCount={isLoadingAvailableCount}
                 />
               </section>
             )}

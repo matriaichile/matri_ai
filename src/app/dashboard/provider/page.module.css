@@ -114,6 +114,11 @@
   color: var(--color-warning);
 }
 
+.statIconRejected {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
 .statIconSuccess {
   background: var(--color-success-bg);
   color: var(--color-success);

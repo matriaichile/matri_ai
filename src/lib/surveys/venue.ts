@@ -132,14 +132,14 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
   },
   {
     id: 'venue_u_dance_floor',
-    question: '¿Tiene pista de baile?',
+    question: '¿Necesitas que el lugar tenga pista de baile?',
     type: 'boolean',
     required: true,
     weight: 5,
   },
   {
     id: 'venue_u_bridal_suite',
-    question: '¿Tiene pieza para novia y novio?',
+    question: '¿Necesitas que tenga pieza de novios?',
     type: 'single',
     options: [
       { id: 'yes', label: 'Sí' },

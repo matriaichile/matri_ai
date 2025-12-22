@@ -1905,6 +1905,13 @@ export const generateNewMatchForUser = async (
       throw new Error('Usuario no encontrado');
     }
     const userProfile = userDoc.data() as UserProfile;
+    
+    // Obtener región del usuario para filtrar proveedores
+    const userRegion = userProfile.region || '';
+    
+    // NUEVO: Obtener fecha del evento y si es tentativa (igual que generateMatchesForUserSurvey)
+    const eventDate = userProfile.eventDate || null;
+    const isDateTentative = userProfile.isDateTentative !== false; // Por defecto true
 
     // 2. Obtener la encuesta del usuario para esta categoría (necesaria para calcular match real)
     const userSurvey = await getUserCategorySurvey(userId, category);
@@ -1935,7 +1942,7 @@ export const generateNewMatchForUser = async (
     const userWizardProfile = {
       budget: userProfile.budget || '',
       guestCount: userProfile.guestCount || '',
-      region: userProfile.region || '',
+      region: userRegion,
       eventStyle: userProfile.eventStyle || '',
       ceremonyTypes: userProfile.ceremonyTypes || [],
       priorityCategories: userProfile.priorityCategories || [],
@@ -1943,6 +1950,7 @@ export const generateNewMatchForUser = async (
     };
 
     // 7. Filtrar proveedores y calcular score REAL
+    // CRÍTICO: Aplicar los MISMOS filtros que generateMatchesForUserSurvey
     const availableProviders: Array<{
       id: string;
       data: ProviderProfile;
@@ -1950,13 +1958,19 @@ export const generateNewMatchForUser = async (
       isVerified: boolean;
     }> = [];
 
-    console.log(`\n🔍 ========== GENERANDO NUEVO MATCH (OPTIMIZADO) ==========`);
+    console.log(`\n🔍 ========== GENERANDO NUEVO MATCH (CON FILTROS CONSISTENTES) ==========`);
     console.log(`📌 Usuario: ${userId}, Categoría: ${category}`);
+    console.log(`📌 Región del usuario: ${userRegion}`);
+    console.log(`📌 Fecha del evento: ${eventDate || 'No especificada'}`);
+    console.log(`📌 ¿Fecha tentativa?: ${isDateTentative ? 'Sí (NO se filtra por disponibilidad)' : 'No (SE FILTRA por disponibilidad)'}`);
     console.log(`📊 Proveedores ya mostrados: ${existingProviderIds.size}`);
     console.log(`📊 Proveedores activos en categoría: ${providersSnap.docs.length}`);
     
     let excludedByCredits = 0;
     let excludedByAlreadyShown = 0;
+    let excludedByRegion = 0;
+    let excludedByAvailability = 0;
+    let excludedBySurvey = 0;
 
     for (const providerDoc of providersSnap.docs) {
       const providerId = providerDoc.id;
@@ -1969,12 +1983,35 @@ export const generateNewMatchForUser = async (
         continue;
       }
 
-      // VALIDACIÓN ESTRICTA: Usar campos GLOBALES (no por categoría)
+      // FILTRO 1: Región (igual que getAvailableProvidersForCategory)
+      const regionMatch = providerData.workRegion === userRegion || providerData.acceptsOutsideZone === true;
+      if (!regionMatch) {
+        console.log(`   🌍 ${providerName} EXCLUIDO: región no coincide (proveedor: ${providerData.workRegion}, usuario: ${userRegion}, acceptsOutside: ${providerData.acceptsOutsideZone})`);
+        excludedByRegion++;
+        continue;
+      }
+
+      // FILTRO 2: Disponibilidad en fecha del evento (igual que getAvailableProvidersForCategory)
+      const isAvailable = isProviderAvailableOnDate(providerData, eventDate, isDateTentative);
+      if (!isAvailable) {
+        console.log(`   📅 ${providerName} EXCLUIDO: no disponible en fecha ${eventDate}`);
+        excludedByAvailability++;
+        continue;
+      }
+
+      // FILTRO 3: Encuesta completada (igual que getAvailableProvidersForCategory)
+      const surveyCompleted = providerData.categorySurveyStatus?.[category] === 'completed';
+      if (!surveyCompleted) {
+        console.log(`   📝 ${providerName} EXCLUIDO: encuesta de ${category} no completada (status: ${providerData.categorySurveyStatus?.[category] || 'none'})`);
+        excludedBySurvey++;
+        continue;
+      }
+
+      // FILTRO 4: Créditos disponibles (VALIDACIÓN ESTRICTA)
       const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
       const leadsUsed = providerData.leadsUsed ?? 0;
       const creditsAvailable = leadLimit - leadsUsed;
       
-      // CRÍTICO: Excluir si no hay créditos disponibles
       if (creditsAvailable <= 0 || leadsUsed >= leadLimit || leadsUsed < 0) {
         console.log(`   🚫 ${providerName} EXCLUIDO: sin créditos (usado: ${leadsUsed}, límite: ${leadLimit})`);
         excludedByCredits++;
@@ -1990,7 +2027,7 @@ export const generateNewMatchForUser = async (
         categories: providerData.categories || [],
       };
 
-      // Obtener encuesta del proveedor (si existe)
+      // Obtener encuesta del proveedor (ya sabemos que está completada)
       const providerSurvey = await getProviderCategorySurvey(providerId, category);
 
       // Calcular score REAL usando el servicio de matching completo
@@ -2005,7 +2042,7 @@ export const generateNewMatchForUser = async (
       );
 
       const isVerified = providerData.isVerified || false;
-      console.log(`   📋 ${providerName}: score=${matchResult.score}${isVerified ? ' ⭐ VERIFICADO (+10)' : ''} (créditos: ${creditsAvailable})`);
+      console.log(`   ✅ ${providerName}: score=${matchResult.score}${isVerified ? ' ⭐ VERIFICADO (+10)' : ''} (créditos: ${creditsAvailable})`);
 
       availableProviders.push({
         id: providerId,
@@ -2019,6 +2056,9 @@ export const generateNewMatchForUser = async (
     console.log(`\n📊 Resumen de filtrado:`);
     console.log(`   - Total proveedores en categoría: ${providersSnap.docs.length}`);
     console.log(`   - Excluidos por ya mostrados: ${excludedByAlreadyShown}`);
+    console.log(`   - Excluidos por región: ${excludedByRegion}`);
+    console.log(`   - Excluidos por disponibilidad: ${excludedByAvailability}`);
+    console.log(`   - Excluidos por encuesta no completada: ${excludedBySurvey}`);
     console.log(`   - Excluidos por sin créditos: ${excludedByCredits}`);
     console.log(`   - Disponibles para mostrar: ${availableProviders.length}`);
     
@@ -2071,6 +2111,103 @@ export const generateNewMatchForUser = async (
   } catch (error) {
     console.error('Error generando nuevo match:', error);
     throw error;
+  }
+};
+
+/**
+ * Cuenta cuántos proveedores disponibles hay para un usuario en una categoría.
+ * Aplica los MISMOS filtros que generateNewMatchForUser para garantizar consistencia.
+ * 
+ * Esta función es útil para:
+ * - Saber si mostrar el botón "Buscar nuevo proveedor"
+ * - Informar al usuario cuántos proveedores más podría ver
+ * 
+ * @returns Cantidad de proveedores disponibles que NO han sido mostrados al usuario
+ */
+export const getAvailableProvidersCountForUser = async (
+  userId: string,
+  category: CategoryId
+): Promise<number> => {
+  try {
+    // 1. Obtener el perfil del usuario
+    const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
+    if (!userDoc.exists()) {
+      return 0;
+    }
+    const userProfile = userDoc.data() as UserProfile;
+    
+    // Obtener región del usuario y fecha del evento
+    const userRegion = userProfile.region || '';
+    const eventDate = userProfile.eventDate || null;
+    const isDateTentative = userProfile.isDateTentative !== false;
+
+    // 2. Obtener los leads existentes del usuario para esta categoría
+    const existingLeadsQuery = query(
+      collection(db, COLLECTIONS.LEADS),
+      where('userId', '==', userId),
+      where('category', '==', category)
+    );
+    const existingLeadsSnap = await getDocs(existingLeadsQuery);
+    const existingProviderIds = new Set(
+      existingLeadsSnap.docs.map(doc => doc.data().providerId)
+    );
+
+    // 3. Obtener proveedores activos de esta categoría
+    const providersQuery = query(
+      collection(db, COLLECTIONS.PROVIDERS),
+      where('status', '==', 'active'),
+      where('categories', 'array-contains', category)
+    );
+    const providersSnap = await getDocs(providersQuery);
+
+    // 4. Contar proveedores que pasan TODOS los filtros (igual que generateNewMatchForUser)
+    let availableCount = 0;
+
+    for (const providerDoc of providersSnap.docs) {
+      const providerId = providerDoc.id;
+      const providerData = providerDoc.data() as ProviderProfile;
+      
+      // Saltar si ya fue mostrado
+      if (existingProviderIds.has(providerId)) {
+        continue;
+      }
+
+      // FILTRO 1: Región
+      const regionMatch = providerData.workRegion === userRegion || providerData.acceptsOutsideZone === true;
+      if (!regionMatch) {
+        continue;
+      }
+
+      // FILTRO 2: Disponibilidad en fecha del evento
+      const isAvailable = isProviderAvailableOnDate(providerData, eventDate, isDateTentative);
+      if (!isAvailable) {
+        continue;
+      }
+
+      // FILTRO 3: Encuesta completada
+      const surveyCompleted = providerData.categorySurveyStatus?.[category] === 'completed';
+      if (!surveyCompleted) {
+        continue;
+      }
+
+      // FILTRO 4: Créditos disponibles
+      const leadLimit = providerData.leadLimit ?? DEFAULT_LEAD_LIMIT;
+      const leadsUsed = providerData.leadsUsed ?? 0;
+      const creditsAvailable = leadLimit - leadsUsed;
+      
+      if (creditsAvailable <= 0 || leadsUsed >= leadLimit || leadsUsed < 0) {
+        continue;
+      }
+
+      // Este proveedor pasa todos los filtros
+      availableCount++;
+    }
+
+    console.log(`📊 Proveedores disponibles para ${userId} en ${category}: ${availableCount}`);
+    return availableCount;
+  } catch (error) {
+    console.error('Error contando proveedores disponibles:', error);
+    return 0;
   }
 };
 

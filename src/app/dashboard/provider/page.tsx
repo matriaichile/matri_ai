@@ -611,6 +611,8 @@ export default function ProviderDashboardPage() {
   const totalLeads = visibleLeads.length;
   const approvedLeads = visibleLeads.filter(l => l.status === 'approved').length;
   const rejectedLeads = visibleLeads.filter(l => l.status === 'rejected').length;
+  // Pendientes se calculan del array original de leads (no de visibleLeads)
+  const pendingLeads = leads.filter(l => l.status === 'pending').length;
   const matchRate = totalLeads > 0 ? Math.round((approvedLeads / totalLeads) * 100) : 0;
 
   // Calcular encuestas completadas por categoría
@@ -792,6 +794,16 @@ export default function ProviderDashboardPage() {
               <div className={styles.statCard}>
                 <div className={`${styles.statIcon} ${styles.statIconPending}`}>
                   <Clock size={24} />
+                </div>
+                <div className={styles.statInfo}>
+                  <span className={styles.statValue}>{pendingLeads}</span>
+                  <span className={styles.statLabel}>Pendientes</span>
+                </div>
+              </div>
+
+              <div className={styles.statCard}>
+                <div className={`${styles.statIcon} ${styles.statIconRejected}`}>
+                  <XCircle size={24} />
                 </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>{rejectedLeads}</span>
