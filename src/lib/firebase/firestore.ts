@@ -1122,6 +1122,8 @@ export const rejectLeadWithReason = async (
  * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
  * Si el usuario cambia de opinión (rechazado -> aprobado), decrementamos "no me interesa" e incrementamos "me interesa"
  * CRÍTICO: Si se aprueba desde 'rejected', se vuelve a consumir el crédito (fue restaurado al rechazar)
+ * 
+ * NUEVO: Envía email de notificación al proveedor (solo 1 por usuario/proveedor/categoría)
  */
 export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
   try {
@@ -1184,6 +1186,39 @@ export const approveLeadWithMetrics = async (leadId: string): Promise<void> => {
       console.log(`✓ Lead ${leadId} aprobado (primera decisión)`);
     }
     // Si ya estaba aprobado, no hacemos nada
+    
+    // NUEVO: Enviar email de notificación al proveedor via API (en background, no bloquea)
+    // Solo se envía UN email por usuario/proveedor/categoría (la API maneja la lógica de duplicados)
+    // IMPORTANTE: Usamos fetch a la API porque el email se envía desde el servidor (necesita RESEND_KEY)
+    try {
+      // Llamar a la API de envío de email de forma asíncrona
+      // No esperamos el resultado para no bloquear la UI
+      fetch('/api/send-interest-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ leadId }),
+      }).then(async (response) => {
+        const result = await response.json();
+        if (result.success) {
+          if (result.alreadySent) {
+            console.log(`📧 Email no enviado (ya enviado previamente)`);
+          } else {
+            console.log(`📧 Email de notificación enviado al proveedor ${providerId}`);
+          }
+        } else {
+          console.error('Error en API de email:', result.error);
+        }
+      }).catch((fetchError) => {
+        // No bloqueamos el flujo principal si falla el email
+        console.error('Error llamando API de email:', fetchError);
+      });
+      
+    } catch (emailError) {
+      // No bloqueamos el flujo principal si falla el email
+      console.error('Error preparando llamada a API de email:', emailError);
+    }
   } catch (error) {
     console.error('Error al aprobar lead:', error);
     throw error;
