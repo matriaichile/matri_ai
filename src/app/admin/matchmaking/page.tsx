@@ -69,61 +69,65 @@ interface CategoryMatchingConfig {
 // Configuración de preguntas por defecto para cada categoría
 // Basado en el archivo matchingService.ts
 const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
+  // === FOTOGRAFÍA - Todas las preguntas de PHOTOGRAPHY_USER_QUESTIONS ===
   photography: [
-    { questionId: 'photo_u_style', questionLabel: 'Estilo de fotografía', weight: 25, isExcluding: false },
+    { questionId: 'photo_u_style', questionLabel: 'Estilo de fotografía', weight: 15, isExcluding: false },
     { questionId: 'photo_u_hours', questionLabel: 'Horas de cobertura', weight: 15, isExcluding: false },
     { questionId: 'photo_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
     { questionId: 'photo_u_preboda', questionLabel: 'Pre-boda', weight: 5, isExcluding: false },
     { questionId: 'photo_u_postboda', questionLabel: 'Post-boda', weight: 5, isExcluding: false },
-    { questionId: 'photo_u_second_shooter', questionLabel: 'Segundo fotógrafo', weight: 5, isExcluding: false },
-    { questionId: 'photo_u_delivery_time', questionLabel: 'Tiempo de entrega', weight: 5, isExcluding: false },
+    { questionId: 'photo_u_second_shooter', questionLabel: 'Segundo fotógrafo', weight: 10, isExcluding: false },
+    { questionId: 'photo_u_delivery_time', questionLabel: 'Tiempo de entrega', weight: 10, isExcluding: false },
     { questionId: 'photo_u_delivery_format', questionLabel: 'Formato de entrega', weight: 5, isExcluding: false },
     { questionId: 'photo_u_photo_count', questionLabel: 'Cantidad de fotos', weight: 5, isExcluding: false },
     { questionId: 'photo_u_retouching', questionLabel: 'Nivel de retoque', weight: 5, isExcluding: false },
   ],
+  // === VIDEO - Todas las preguntas de VIDEO_USER_QUESTIONS (actualizado) ===
   video: [
-    { questionId: 'video_u_style', questionLabel: 'Estilo de video', weight: 25, isExcluding: false },
+    { questionId: 'video_u_style', questionLabel: 'Estilo de video', weight: 10, isExcluding: false },
     { questionId: 'video_u_duration', questionLabel: 'Duración del video', weight: 15, isExcluding: false },
     { questionId: 'video_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
     { questionId: 'video_u_hours', questionLabel: 'Horas de cobertura', weight: 10, isExcluding: false },
     { questionId: 'video_u_second_camera', questionLabel: 'Segunda cámara', weight: 5, isExcluding: false },
-    { questionId: 'video_u_drone', questionLabel: 'Drone', weight: 5, isExcluding: false },
-    { questionId: 'video_u_same_day_edit', questionLabel: 'Edición mismo día', weight: 5, isExcluding: false },
-    { questionId: 'video_u_raw_footage', questionLabel: 'Material crudo', weight: 3, isExcluding: false },
-    { questionId: 'video_u_social_reel', questionLabel: 'Reel para redes', weight: 5, isExcluding: false },
-    { questionId: 'video_u_delivery_time', questionLabel: 'Tiempo de entrega', weight: 5, isExcluding: false },
+    { questionId: 'video_u_drone', questionLabel: 'Drone', weight: 10, isExcluding: false },
+    { questionId: 'video_u_same_day_edit', questionLabel: 'Edición mismo día', weight: 10, isExcluding: false },
+    { questionId: 'video_u_delivery_time', questionLabel: 'Tiempo de entrega', weight: 10, isExcluding: false },
   ],
+  // === DJ - Todas las preguntas de DJ_USER_QUESTIONS ===
   dj: [
-    { questionId: 'dj_u_genres', questionLabel: 'Géneros musicales', weight: 25, isExcluding: false },
-    { questionId: 'dj_u_style', questionLabel: 'Estilo de fiesta', weight: 15, isExcluding: false },
-    { questionId: 'dj_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
+    { questionId: 'dj_u_genres', questionLabel: 'Géneros musicales', weight: 10, isExcluding: false },
+    { questionId: 'dj_u_style', questionLabel: 'Estilo de fiesta', weight: 10, isExcluding: false },
+    { questionId: 'dj_u_budget', questionLabel: 'Presupuesto', weight: 25, isExcluding: false },
     { questionId: 'dj_u_hours', questionLabel: 'Horas de servicio', weight: 10, isExcluding: false },
-    { questionId: 'dj_u_ceremony_music', questionLabel: 'Música ceremonia', weight: 5, isExcluding: false },
+    { questionId: 'dj_u_ceremony_music', questionLabel: 'Música ceremonia', weight: 10, isExcluding: false },
     { questionId: 'dj_u_cocktail_music', questionLabel: 'Música cóctel', weight: 3, isExcluding: false },
     { questionId: 'dj_u_mc', questionLabel: 'Nivel de animación', weight: 10, isExcluding: false },
     { questionId: 'dj_u_lighting', questionLabel: 'Iluminación', weight: 5, isExcluding: false },
-    { questionId: 'dj_u_effects', questionLabel: 'Efectos especiales', weight: 3, isExcluding: false },
+    { questionId: 'dj_u_effects', questionLabel: 'Efectos especiales', weight: 8, isExcluding: false },
     { questionId: 'dj_u_karaoke', questionLabel: 'Karaoke', weight: 2, isExcluding: false },
+    { questionId: 'dj_u_requests', questionLabel: 'Solicitudes de invitados', weight: 2, isExcluding: false },
   ],
+  // === CATERING - Todas las preguntas de CATERING_USER_QUESTIONS (actualizado) ===
   catering: [
     { questionId: 'catering_u_service_type', questionLabel: 'Tipo de servicio', weight: 20, isExcluding: false },
     { questionId: 'catering_u_cuisine', questionLabel: 'Tipo de cocina', weight: 15, isExcluding: false },
     { questionId: 'catering_u_budget_pp', questionLabel: 'Presupuesto por persona', weight: 20, isExcluding: false },
-    { questionId: 'catering_u_guest_count', questionLabel: 'Cantidad de invitados', weight: 10, isExcluding: false },
     { questionId: 'catering_u_courses', questionLabel: 'Tiempos de comida', weight: 5, isExcluding: false },
-    { questionId: 'catering_u_cocktail', questionLabel: 'Cóctel', weight: 5, isExcluding: false },
-    { questionId: 'catering_u_dietary', questionLabel: 'Opciones dietéticas', weight: 5, isExcluding: true }, // Excluyente
+    { questionId: 'catering_u_dietary', questionLabel: 'Opciones dietéticas', weight: 5, isExcluding: true },
     { questionId: 'catering_u_beverages', questionLabel: 'Bebestibles', weight: 5, isExcluding: false },
     { questionId: 'catering_u_tasting', questionLabel: 'Degustación', weight: 3, isExcluding: false },
     { questionId: 'catering_u_cake', questionLabel: 'Torta', weight: 5, isExcluding: false },
     { questionId: 'catering_u_staff', questionLabel: 'Nivel de servicio', weight: 5, isExcluding: false },
+    { questionId: 'catering_u_setup', questionLabel: 'Montaje de mesas', weight: 2, isExcluding: false },
+    { questionId: 'catering_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
   ],
+  // === VENUE - Todas las preguntas de VENUE_USER_QUESTIONS ===
   venue: [
-    // === CRITERIOS DE ZONA Y UBICACIÓN (PRIORITARIOS) ===
+    // Criterios de zona y ubicación (prioritarios)
     { questionId: 'venue_u_zone', questionLabel: 'Zona deseada', weight: 25, isExcluding: false },
     { questionId: 'venue_u_environment', questionLabel: 'Tipo de entorno', weight: 20, isExcluding: false },
     { questionId: 'venue_u_travel_willingness', questionLabel: 'Disposición a viajar', weight: 15, isExcluding: false },
-    // === FIN CRITERIOS DE ZONA ===
+    // Resto de criterios
     { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 10, isExcluding: false },
     { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 8, isExcluding: false },
     { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 10, isExcluding: false },
@@ -132,9 +136,16 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 2, isExcluding: false },
     { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 2, isExcluding: false },
     { questionId: 'venue_u_catering_policy', questionLabel: 'Política catering', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_accessibility', questionLabel: 'Accesibilidad', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_dance_floor', questionLabel: 'Pista de baile', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_bridal_suite', questionLabel: 'Pieza de novios', weight: 3, isExcluding: false },
   ],
+  // === DECORATION - Todas las preguntas de DECORATION_USER_QUESTIONS ===
   decoration: [
-    { questionId: 'deco_u_style', questionLabel: 'Estilo de decoración', weight: 25, isExcluding: false },
+    { questionId: 'deco_u_service_types', questionLabel: 'Tipo de servicios', weight: 20, isExcluding: false },
+    { questionId: 'deco_u_cocktail_packs', questionLabel: 'Elementos para cóctel', weight: 10, isExcluding: false },
+    { questionId: 'deco_u_style', questionLabel: 'Estilo de decoración', weight: 15, isExcluding: false },
     { questionId: 'deco_u_colors', questionLabel: 'Paleta de colores', weight: 15, isExcluding: false },
     { questionId: 'deco_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
     { questionId: 'deco_u_flowers', questionLabel: 'Tipos de flores', weight: 10, isExcluding: false },
@@ -145,16 +156,20 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'deco_u_extras', questionLabel: 'Extras', weight: 5, isExcluding: false },
     { questionId: 'deco_u_rental', questionLabel: 'Arriendo mobiliario', weight: 5, isExcluding: false },
   ],
+  // === WEDDING PLANNER - Todas las preguntas de WEDDING_PLANNER_USER_QUESTIONS ===
   wedding_planner: [
     { questionId: 'wp_u_service_level', questionLabel: 'Nivel de servicio', weight: 25, isExcluding: false },
     { questionId: 'wp_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
+    { questionId: 'wp_u_months_until', questionLabel: 'Meses para la boda', weight: 10, isExcluding: false },
     { questionId: 'wp_u_vendor_help', questionLabel: 'Ayuda con proveedores', weight: 15, isExcluding: false },
     { questionId: 'wp_u_design_help', questionLabel: 'Diseño/Estilo', weight: 10, isExcluding: false },
     { questionId: 'wp_u_budget_management', questionLabel: 'Gestión presupuesto', weight: 5, isExcluding: false },
     { questionId: 'wp_u_timeline_management', questionLabel: 'Gestión timeline', weight: 5, isExcluding: false },
     { questionId: 'wp_u_guest_management', questionLabel: 'Gestión invitados', weight: 5, isExcluding: false },
     { questionId: 'wp_u_rehearsal', questionLabel: 'Ensayo', weight: 3, isExcluding: false },
+    { questionId: 'wp_u_communication_style', questionLabel: 'Estilo comunicación', weight: 2, isExcluding: false },
   ],
+  // === MAKEUP - Todas las preguntas de MAKEUP_USER_QUESTIONS ===
   makeup: [
     { questionId: 'makeup_u_style', questionLabel: 'Estilo de maquillaje', weight: 25, isExcluding: false },
     { questionId: 'makeup_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
@@ -163,18 +178,23 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'makeup_u_hair_style', questionLabel: 'Estilo de peinado', weight: 10, isExcluding: false },
     { questionId: 'makeup_u_extensions', questionLabel: 'Extensiones', weight: 3, isExcluding: false },
     { questionId: 'makeup_u_lashes', questionLabel: 'Pestañas', weight: 5, isExcluding: false },
-    { questionId: 'makeup_u_touch_ups', questionLabel: 'Retoques', weight: 4, isExcluding: false },
     { questionId: 'makeup_u_bridesmaids', questionLabel: 'Damas de honor', weight: 5, isExcluding: false },
+    { questionId: 'makeup_u_bridesmaids_count', questionLabel: 'Cantidad de damas', weight: 0, isExcluding: false },
+    { questionId: 'makeup_u_mothers', questionLabel: 'Incluir madres', weight: 3, isExcluding: false },
+    { questionId: 'makeup_u_touch_ups', questionLabel: 'Retoques', weight: 4, isExcluding: false },
   ],
+  // === ENTERTAINMENT - Todas las preguntas de ENTERTAINMENT_USER_QUESTIONS ===
   entertainment: [
     { questionId: 'ent_u_type', questionLabel: 'Tipo de entretenimiento', weight: 30, isExcluding: false },
     { questionId: 'ent_u_moment', questionLabel: 'Momento del evento', weight: 15, isExcluding: false },
     { questionId: 'ent_u_duration', questionLabel: 'Duración del show', weight: 10, isExcluding: false },
     { questionId: 'ent_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
     { questionId: 'ent_u_style', questionLabel: 'Estilo de entretenimiento', weight: 10, isExcluding: false },
-    { questionId: 'ent_u_audience', questionLabel: 'Tipo de audiencia', weight: 10, isExcluding: false },
+    { questionId: 'ent_u_audience', questionLabel: 'Tipo de audiencia', weight: 5, isExcluding: false },
+    { questionId: 'ent_u_space', questionLabel: 'Espacio para show', weight: 5, isExcluding: false },
     { questionId: 'ent_u_equipment', questionLabel: 'Equipo de sonido', weight: 5, isExcluding: false },
   ],
+  // === CAKES - Todas las preguntas de CAKES_USER_QUESTIONS ===
   cakes: [
     { questionId: 'cakes_u_type', questionLabel: 'Tipo de torta/dulces', weight: 25, isExcluding: false },
     { questionId: 'cakes_u_servings', questionLabel: 'Cantidad de porciones', weight: 15, isExcluding: false },
@@ -186,31 +206,36 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'cakes_u_tasting', questionLabel: 'Degustación previa', weight: 5, isExcluding: false },
     { questionId: 'cakes_u_delivery', questionLabel: 'Entrega y montaje', weight: 5, isExcluding: false },
   ],
+  // === TRANSPORT - Todas las preguntas de TRANSPORT_USER_QUESTIONS ===
   transport: [
     { questionId: 'transport_u_vehicle_type', questionLabel: 'Tipo de vehículo', weight: 25, isExcluding: false },
+    { questionId: 'transport_u_route', questionLabel: 'Ruta', weight: 20, isExcluding: false },
     { questionId: 'transport_u_hours', questionLabel: 'Horas de servicio', weight: 20, isExcluding: false },
-    { questionId: 'transport_u_budget', questionLabel: 'Presupuesto', weight: 25, isExcluding: false },
-    { questionId: 'transport_u_decoration', questionLabel: 'Decoración del vehículo', weight: 15, isExcluding: false },
-    { questionId: 'transport_u_driver', questionLabel: 'Chofer profesional', weight: 15, isExcluding: false },
+    { questionId: 'transport_u_budget', questionLabel: 'Presupuesto', weight: 20, isExcluding: false },
+    { questionId: 'transport_u_decoration', questionLabel: 'Decoración del vehículo', weight: 10, isExcluding: false },
+    { questionId: 'transport_u_driver', questionLabel: 'Chofer profesional', weight: 5, isExcluding: false },
   ],
+  // === INVITATIONS - Todas las preguntas de INVITATIONS_USER_QUESTIONS ===
   invitations: [
     { questionId: 'inv_u_type', questionLabel: 'Tipo de invitaciones', weight: 25, isExcluding: false },
+    { questionId: 'inv_u_quantity', questionLabel: 'Cantidad de invitaciones', weight: 15, isExcluding: false },
     { questionId: 'inv_u_style', questionLabel: 'Estilo de diseño', weight: 20, isExcluding: false },
     { questionId: 'inv_u_extras', questionLabel: 'Papelería adicional', weight: 15, isExcluding: false },
     { questionId: 'inv_u_budget', questionLabel: 'Presupuesto', weight: 15, isExcluding: false },
     { questionId: 'inv_u_paper', questionLabel: 'Tipo de papel', weight: 5, isExcluding: false },
     { questionId: 'inv_u_printing', questionLabel: 'Técnica de impresión', weight: 5, isExcluding: false },
-    { questionId: 'inv_u_timeline', questionLabel: 'Tiempo de entrega', weight: 10, isExcluding: false },
-    { questionId: 'inv_u_quantity', questionLabel: 'Cantidad de invitaciones', weight: 5, isExcluding: false },
+    { questionId: 'inv_u_timeline', questionLabel: 'Tiempo de entrega', weight: 5, isExcluding: false },
   ],
+  // === DRESS - Todas las preguntas de DRESS_USER_QUESTIONS ===
   dress: [
     { questionId: 'dress_u_need', questionLabel: 'Qué necesitas', weight: 25, isExcluding: false },
-    { questionId: 'dress_u_bride_style', questionLabel: 'Estilo vestido novia', weight: 15, isExcluding: false },
-    { questionId: 'dress_u_bride_silhouette', questionLabel: 'Silueta vestido novia', weight: 10, isExcluding: false },
-    { questionId: 'dress_u_groom_style', questionLabel: 'Estilo traje novio', weight: 10, isExcluding: false },
+    { questionId: 'dress_u_bride_style', questionLabel: 'Estilo vestido novia', weight: 20, isExcluding: false },
+    { questionId: 'dress_u_bride_silhouette', questionLabel: 'Silueta vestido novia', weight: 15, isExcluding: false },
+    { questionId: 'dress_u_groom_style', questionLabel: 'Estilo traje novio', weight: 15, isExcluding: false },
     { questionId: 'dress_u_service_type', questionLabel: 'Tipo de servicio', weight: 15, isExcluding: false },
     { questionId: 'dress_u_budget_bride', questionLabel: 'Presupuesto vestido novia', weight: 15, isExcluding: false },
-    { questionId: 'dress_u_budget_groom', questionLabel: 'Presupuesto traje novio', weight: 5, isExcluding: false },
+    { questionId: 'dress_u_budget_groom', questionLabel: 'Presupuesto traje novio', weight: 10, isExcluding: false },
+    { questionId: 'dress_u_timeline', questionLabel: 'Tiempo antes de la boda', weight: 5, isExcluding: false },
     { questionId: 'dress_u_accessories', questionLabel: 'Accesorios', weight: 5, isExcluding: false },
     { questionId: 'dress_u_fitting', questionLabel: 'Pruebas y ajustes', weight: 5, isExcluding: false },
   ],
