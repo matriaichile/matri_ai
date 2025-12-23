@@ -559,69 +559,45 @@ const CATERING_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
 
 // ============================================
 // CRITERIOS EXPLÍCITOS PARA VENUE
-// Pesos ajustados para sumar ~100%
-// Zona/Ubicación: 60%, Tipo/Setting: 15%, Presupuesto: 12%, Features: 13%
+// Actualizado con estructura de provincias (Región Metropolitana)
+// Pesos: Ubicación/Provincia: 25%, Tipo/Setting: 25%, Presupuesto: 15%, Features: 35%
 // ============================================
 const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
-  // ========== CRITERIOS DE ZONA Y UBICACIÓN (PRIORITARIOS - 60%) ==========
+  // ========== CRITERIOS DE UBICACIÓN (25%) ==========
   {
-    // Zona: Usuario elige múltiples zonas deseadas, proveedor tiene una zona
-    // Si la zona del proveedor está en las opciones del usuario → MATCH
+    // Provincia: Usuario elige múltiples provincias deseadas, proveedor tiene una provincia
+    // Si la provincia del proveedor está en las opciones del usuario → MATCH
     // NOTA: "no_preference" del usuario se filtra automáticamente en contains match
-    userQuestionId: 'venue_u_zone',
-    providerQuestionId: 'venue_p_zone',
-    weight: 25, // Peso muy alto - criterio principal de matchmaking
-    matchType: 'contains', // Usuario puede elegir múltiples zonas
+    userQuestionId: 'venue_u_province',
+    providerQuestionId: 'venue_p_province',
+    weight: 25, // Peso muy alto - criterio principal de matchmaking de ubicación
+    matchType: 'contains', // Usuario puede elegir múltiples provincias
   },
-  {
-    // Tipo de entorno: Match exacto entre entorno deseado y ofrecido
-    userQuestionId: 'venue_u_environment',
-    providerQuestionId: 'venue_p_environment',
-    weight: 20, // Peso alto
-    matchType: 'exact',
-  },
-  {
-    // Distancia: Validar que el proveedor esté dentro de la distancia máxima aceptada
-    // El proveedor indica su distancia, el usuario indica cuánto está dispuesto a viajar
-    userQuestionId: 'venue_u_travel_willingness',
-    providerQuestionId: 'venue_p_distance_from_santiago',
-    weight: 15, // Peso importante para validación
-    matchType: 'threshold_at_most', // Proveedor debe estar DENTRO de la distancia máxima
-    orderedMapping: {
-      // Mapeo ordenado: valores más bajos = más cerca
-      'within_santiago': 0,
-      'santiago_only': 0, // Usuario solo quiere Santiago
-      'up_to_1hr': 1,
-      'up_to_2hr': 2,
-      'over_2hr': 3,
-      'no_limit': 4, // Usuario acepta cualquier distancia
-    },
-  },
-  // ========== FIN CRITERIOS DE ZONA ==========
   
-  // ========== TIPO Y CONFIGURACIÓN (15%) ==========
+  // ========== TIPO Y CONFIGURACIÓN (25%) ==========
   {
-    // Tipo de lugar
+    // Tipo de lugar: Usuario puede elegir múltiples tipos, proveedor puede ser varios tipos
+    // Si al menos uno de los tipos del proveedor coincide con lo que quiere el usuario → MATCH
     userQuestionId: 'venue_u_type',
     providerQuestionId: 'venue_p_type',
-    weight: 8, // Ajustado para balancear con zona
-    matchType: 'contains', // Ambos son multiple ahora
+    weight: 15,
+    matchType: 'contains', // Ambos son multiple - basta que coincida uno
   },
   {
-    // Interior/Exterior
+    // Interior/Exterior: Usuario elige uno, proveedor ofrece múltiples opciones
     userQuestionId: 'venue_u_setting',
     providerQuestionId: 'venue_p_settings',
-    weight: 7,
+    weight: 10,
     matchType: 'single_in_multiple',
   },
   
-  // ========== PRESUPUESTO (12%) ==========
+  // ========== PRESUPUESTO (15%) ==========
   {
-    // Presupuesto
+    // Presupuesto: Superposición de rangos
     userQuestionId: 'venue_u_budget',
     providerQuestionId: 'venue_p_price_min',
     providerQuestionIdMax: 'venue_p_price_max',
-    weight: 12,
+    weight: 15,
     matchType: 'range_overlap',
     userRangeMapping: {
       'under_1m': { min: 0, max: 1000000 },
@@ -631,14 +607,13 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
       'over_7m': { min: 7000000, max: 20000000 },
     },
   },
-  // NOTA: venue_u_capacity fue eliminado porque se pregunta en el wizard de registro
   
-  // ========== CARACTERÍSTICAS Y SERVICIOS (13%) ==========
+  // ========== CARACTERÍSTICAS Y SERVICIOS (35%) ==========
   {
-    // Exclusividad
+    // Exclusividad: Si usuario la requiere, proveedor debe ofrecerla
     userQuestionId: 'venue_u_exclusivity',
     providerQuestionId: 'venue_p_exclusivity',
-    weight: 2,
+    weight: 5,
     matchType: 'preference_match',
     preferenceMapping: {
       'true': 1.0,
@@ -649,14 +624,14 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Espacio para ceremonia
     userQuestionId: 'venue_u_ceremony_space',
     providerQuestionId: 'venue_p_ceremony_space',
-    weight: 2,
+    weight: 5,
     matchType: 'boolean_match',
   },
   {
     // Estacionamiento
     userQuestionId: 'venue_u_parking',
     providerQuestionId: 'venue_p_parking',
-    weight: 2,
+    weight: 5,
     matchType: 'preference_match',
     preferenceMapping: {
       'yes_free': 1.0,
@@ -669,7 +644,7 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Alojamiento
     userQuestionId: 'venue_u_accommodation',
     providerQuestionId: 'venue_p_accommodation',
-    weight: 2,
+    weight: 3,
     matchType: 'preference_match',
     preferenceMapping: {
       'yes': 1.0,
@@ -681,14 +656,14 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Política de catering
     userQuestionId: 'venue_u_catering_policy',
     providerQuestionId: 'venue_p_catering_policy',
-    weight: 2,
+    weight: 5,
     matchType: 'exact',
   },
   {
     // Horario de término: venue debe permitir HASTA O MÁS TARDE de lo que el usuario necesita
     userQuestionId: 'venue_u_end_time',
     providerQuestionId: 'venue_p_end_time',
-    weight: 2,
+    weight: 5,
     matchType: 'threshold_at_least',
     orderedMapping: END_TIME_ORDER,
   },
@@ -696,11 +671,40 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Accesibilidad
     userQuestionId: 'venue_u_accessibility',
     providerQuestionId: 'venue_p_accessibility',
-    weight: 1,
+    weight: 2,
     matchType: 'boolean_match',
   },
+  {
+    // Pista de baile
+    userQuestionId: 'venue_u_dance_floor',
+    providerQuestionId: 'venue_p_dance_floor',
+    weight: 5,
+    matchType: 'boolean_match',
+  },
+  {
+    // Pieza para la novia
+    userQuestionId: 'venue_u_bridal_room',
+    providerQuestionId: 'venue_p_bridal_room',
+    weight: 2,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'true': 1.0,
+      'false': 0.0,
+    },
+  },
+  {
+    // Pieza para el novio
+    userQuestionId: 'venue_u_groom_room',
+    providerQuestionId: 'venue_p_groom_room',
+    weight: 3,
+    matchType: 'preference_match',
+    preferenceMapping: {
+      'true': 1.0,
+      'false': 0.0,
+    },
+  },
 ];
-// TOTAL PESOS: 25+20+15+8+7+12+2+2+2+2+2+2+1 = 100%
+// TOTAL PESOS: 25+15+10+15+5+5+5+3+5+5+2+5+2+3 = 105% (se normaliza automáticamente)
 
 // ============================================
 // CRITERIOS EXPLÍCITOS PARA DECORACIÓN

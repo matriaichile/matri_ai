@@ -2,88 +2,102 @@
  * Encuestas de Centro de Eventos
  * Matri.AI - Sistema de Matchmaking por Categoría
  * 
- * Actualizado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md
+ * Actualizado según especificaciones de preguntas por provincias (Región Metropolitana)
+ * Versión: Provincias de la RM + preguntas separadas para pieza novia/novio
  */
 
 import { SurveyQuestion } from './types';
 
-// Preguntas para USUARIOS sobre centro de eventos
+// ============================================
+// CONSTANTES DE PROVINCIAS DE LA REGIÓN METROPOLITANA
+// ============================================
+
+/**
+ * Provincias de la Región Metropolitana de Santiago
+ * Solo se habilita RM por ahora según especificaciones
+ */
+export const RM_PROVINCES = [
+  { id: 'santiago', label: 'Provincia de Santiago', description: 'Capital: Santiago (Gran Santiago)' },
+  { id: 'chacabuco', label: 'Provincia de Chacabuco', description: 'Capital: Colina (Lampa, Tiltil)' },
+  { id: 'cordillera', label: 'Provincia de Cordillera', description: 'Capital: Puente Alto (Pirque, San José de Maipo)' },
+  { id: 'maipo', label: 'Provincia de Maipo', description: 'Capital: San Bernardo (Buin, Calera de Tango, Paine)' },
+  { id: 'melipilla', label: 'Provincia de Melipilla', description: 'Capital: Melipilla (Alhué, Curacaví, María Pinto, San Pedro)' },
+  { id: 'talagante', label: 'Provincia de Talagante', description: 'Capital: Talagante (El Monte, Isla de Maipo, Padre Hurtado, Peñaflor)' },
+];
+
+// ============================================
+// PREGUNTAS PARA USUARIOS (NOVIOS) - CENTRO DE EVENTOS
+// ============================================
+
 export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
-  // ========== PREGUNTAS DE ZONA Y UBICACIÓN (INICIO) ==========
+  // ========== PREGUNTA 1: REGIÓN DEL MATRIMONIO ==========
   {
-    id: 'venue_u_zone',
-    question: '¿Dónde te gustaría hacer tu matrimonio?',
-    type: 'multiple', // Selección múltiple - preferencia principal
+    id: 'venue_u_region',
+    question: '¿En qué región será tu matrimonio?',
+    type: 'single',
     options: [
-      { id: 'cajon_del_maipo', label: 'Cajón del Maipo', description: 'Montaña y naturaleza' },
-      { id: 'valle_del_maipo', label: 'Valle del Maipo', description: 'Viñedos y campo' },
-      { id: 'costa', label: 'Costa', description: 'Valparaíso y alrededores' },
-      { id: 'santiago_urbano', label: 'Santiago', description: 'Zona urbana' }, // ID coincide con proveedor
-      { id: 'no_preference', label: 'No tengo preferencia', description: 'Estoy abierto/a a opciones' },
+      { id: 'rm', label: 'Región Metropolitana', description: 'Por ahora solo se habilita Región Metropolitana' },
+      // Otras regiones deshabilitadas por ahora
     ],
     required: true,
-    weight: 25, // Peso alto - campo principal para matching
+    weight: 10, // Peso bajo porque por ahora solo hay una opción
   },
+
+  // ========== PREGUNTA 2: PROVINCIA PREFERIDA ==========
   {
-    id: 'venue_u_environment',
-    question: '¿Qué tipo de entorno buscas?',
-    type: 'single', // Selección única
+    id: 'venue_u_province',
+    question: '¿En qué provincia te gustaría realizar tu matrimonio?',
+    type: 'multiple', // Selección múltiple
     options: [
-      { id: 'city', label: 'Ciudad', description: 'Entorno urbano' },
-      { id: 'countryside', label: 'Campo / viñedos', description: 'Naturaleza y tranquilidad' },
-      { id: 'mountain', label: 'Montaña / naturaleza', description: 'Paisajes naturales' },
+      { id: 'santiago', label: 'Provincia de Santiago', description: 'Capital: Santiago (Gran Santiago)' },
+      { id: 'chacabuco', label: 'Provincia de Chacabuco', description: 'Capital: Colina (Lampa, Tiltil)' },
+      { id: 'cordillera', label: 'Provincia de Cordillera', description: 'Capital: Puente Alto (Pirque, San José de Maipo)' },
+      { id: 'maipo', label: 'Provincia de Maipo', description: 'Capital: San Bernardo (Buin, Calera de Tango, Paine)' },
+      { id: 'melipilla', label: 'Provincia de Melipilla', description: 'Capital: Melipilla (Alhué, Curacaví, María Pinto, San Pedro)' },
+      { id: 'talagante', label: 'Provincia de Talagante', description: 'Capital: Talagante (El Monte, Isla de Maipo, Padre Hurtado, Peñaflor)' },
+      { id: 'no_preference', label: 'No tengo preferencia', description: 'Estoy abierto/a a cualquier provincia' },
     ],
     required: true,
-    weight: 20, // Peso importante para matching
+    weight: 25, // Peso alto - criterio principal de matchmaking de ubicación
   },
-  {
-    id: 'venue_u_travel_willingness',
-    question: '¿Cuánto estarían dispuestos a viajar?',
-    type: 'single', // Selección única
-    options: [
-      { id: 'santiago_only', label: 'Solo dentro de Santiago', description: 'Sin desplazamiento' },
-      { id: 'up_to_1hr', label: 'Hasta 1 hora', description: 'Distancia corta' },
-      { id: 'up_to_2hr', label: 'Hasta 2 horas', description: 'Distancia media' },
-      { id: 'no_limit', label: 'La distancia no es problema', description: 'Abierto a cualquier ubicación' },
-    ],
-    required: true,
-    weight: 15, // Peso para validar distancia máxima
-  },
-  // ========== FIN PREGUNTAS DE ZONA ==========
+
+  // ========== PREGUNTA 3: TIPO DE LUGAR PREFERIDO ==========
   {
     id: 'venue_u_type',
     question: '¿Qué tipo de lugar prefieres?',
-    type: 'multiple', // CAMBIO: era 'single'
+    type: 'multiple', // Selección múltiple
     options: [
-      { id: 'event_hall', label: 'Salón de eventos', description: 'Espacio dedicado a eventos' }, // NUEVO
-      { id: 'hacienda', label: 'Hacienda / Campo', description: 'Naturaleza y tradición' },
+      { id: 'event_hall', label: 'Salón de eventos', description: 'Espacio dedicado a eventos' },
+      { id: 'hacienda', label: 'Hacienda / campo', description: 'Naturaleza y tradición' },
       { id: 'hotel', label: 'Hotel', description: 'Comodidad y servicios' },
-      { id: 'restaurant', label: 'Restaurant', description: 'Gastronomía destacada' },
-      { id: 'garden', label: 'Jardín / Parque', description: 'Al aire libre' },
-      { id: 'beach', label: 'Playa', description: 'Frente al mar' },
+      { id: 'restaurant', label: 'Restaurante', description: 'Gastronomía destacada' },
+      { id: 'garden', label: 'Jardín / parque', description: 'Al aire libre' },
       { id: 'winery', label: 'Viña', description: 'Entre viñedos' },
-      { id: 'loft', label: 'Loft / Industrial', description: 'Moderno y urbano' },
-      { id: 'mansion', label: 'Casona / Mansión', description: 'Elegancia clásica' },
-    ],
-    required: true,
-    weight: 15, // Reducido de 20 para dar espacio a las nuevas preguntas
-  },
-  {
-    id: 'venue_u_setting',
-    question: '¿Interior o exterior?',
-    type: 'single',
-    options: [
-      { id: 'indoor', label: 'Interior', description: 'Climatizado' },
-      { id: 'outdoor', label: 'Exterior', description: 'Al aire libre' },
-      { id: 'both', label: 'Ambos / Mixto', description: 'Ceremonia afuera, fiesta adentro' },
-      // ELIMINADO: { id: 'flexible', label: 'Flexible según clima' },
+      { id: 'loft', label: 'Loft / industrial', description: 'Moderno y urbano' },
+      { id: 'mansion', label: 'Casona / mansión', description: 'Elegancia clásica' },
     ],
     required: true,
     weight: 15,
   },
+
+  // ========== PREGUNTA 4: TIPO DE ESPACIO ==========
+  {
+    id: 'venue_u_setting',
+    question: '¿Prefieres un espacio interior o exterior?',
+    type: 'single', // Selección única
+    options: [
+      { id: 'indoor', label: 'Interior', description: 'Climatizado' },
+      { id: 'outdoor', label: 'Exterior', description: 'Al aire libre' },
+      { id: 'both', label: 'Ambos / mixto', description: 'Ceremonia afuera, fiesta adentro' },
+    ],
+    required: true,
+    weight: 10,
+  },
+
+  // ========== PREGUNTA 5: PRESUPUESTO PARA EL LUGAR ==========
   {
     id: 'venue_u_budget',
-    question: '¿Cuál es tu presupuesto para el lugar?',
+    question: '¿Cuál es tu presupuesto aproximado para el lugar?',
     type: 'single',
     options: [
       { id: 'under_1m', label: 'Menos de $1.000.000' },
@@ -93,12 +107,13 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'over_7m', label: 'Más de $7.000.000' },
     ],
     required: true,
-    weight: 20,
+    weight: 15,
   },
-  // ELIMINADO: venue_u_capacity (ya se pregunta al crear usuario)
+
+  // ========== PREGUNTA 6: EXCLUSIVIDAD DEL LUGAR ==========
   {
     id: 'venue_u_exclusivity',
-    question: '¿Necesitas exclusividad del lugar?',
+    question: '¿Necesitas exclusividad del espacio?',
     type: 'single',
     options: [
       { id: 'required', label: 'Indispensable', description: 'Solo mi evento ese día' },
@@ -108,25 +123,31 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 7: ESPACIO PARA CEREMONIA ==========
   {
     id: 'venue_u_ceremony_space',
-    question: '¿Necesitas espacio para ceremonia?',
+    question: '¿Necesitas espacio para realizar la ceremonia?',
     type: 'boolean',
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 8: ESTACIONAMIENTO ==========
   {
     id: 'venue_u_parking',
-    question: '¿Necesitas estacionamiento?',
+    question: '¿Necesitas estacionamiento para invitados?',
     type: 'single',
     options: [
       { id: 'required', label: 'Indispensable' },
       { id: 'preferred', label: 'Preferible' },
-      { id: 'not_needed', label: 'No necesario' }, // CAMBIO: Eliminado "habrá valet"
+      { id: 'not_needed', label: 'No necesario' },
     ],
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 9: ALOJAMIENTO ==========
   {
     id: 'venue_u_accommodation',
     question: '¿Necesitas alojamiento para invitados?',
@@ -139,9 +160,11 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 3,
   },
+
+  // ========== PREGUNTA 10: CATERING ==========
   {
     id: 'venue_u_catering_policy',
-    question: '¿Preferencia de catering?',
+    question: '¿Tienes alguna preferencia de catering?',
     type: 'single',
     options: [
       { id: 'venue_only', label: 'Solo del lugar' },
@@ -151,6 +174,8 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 11: HORARIO DEL EVENTO ==========
   {
     id: 'venue_u_end_time',
     question: '¿Hasta qué hora necesitas el lugar?',
@@ -164,95 +189,107 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 12: ACCESIBILIDAD ==========
   {
     id: 'venue_u_accessibility',
-    question: '¿Necesitas accesibilidad especial?',
+    question: '¿Requieres condiciones especiales de accesibilidad?',
     type: 'boolean',
     required: true,
     weight: 2,
   },
+
+  // ========== PREGUNTA 13: PISTA DE BAILE ==========
   {
     id: 'venue_u_dance_floor',
-    question: '¿Necesitas que el lugar tenga pista de baile?',
+    question: '¿Necesitas pista de baile?',
     type: 'boolean',
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 14: PIEZA DE LA NOVIA ==========
   {
-    id: 'venue_u_bridal_suite',
-    question: '¿Necesitas que tenga pieza de novios?',
+    id: 'venue_u_bridal_room',
+    question: '¿Necesitas pieza para la novia?',
     type: 'single',
     options: [
       { id: 'yes', label: 'Sí' },
-      { id: 'no', label: 'No' },
-      { id: 'not_needed', label: 'No es necesario' },
+      { id: 'no', label: 'No / Preferible' },
     ],
     required: true,
-    weight: 3,
+    weight: 2,
+  },
+
+  // ========== PREGUNTA 15: PIEZA DEL NOVIO ==========
+  {
+    id: 'venue_u_groom_room',
+    question: '¿Necesitas pieza para el novio?',
+    type: 'single',
+    options: [
+      { id: 'yes', label: 'Sí' },
+      { id: 'no', label: 'No / Preferible' },
+    ],
+    required: true,
+    weight: 2,
   },
 ];
 
-// Preguntas para PROVEEDORES de centro de eventos
+// ============================================
+// PREGUNTAS PARA PROVEEDORES - CENTRO DE EVENTOS
+// ============================================
+
 export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
-  // ========== PREGUNTAS DE ZONA Y UBICACIÓN (INICIO) ==========
+  // ========== PREGUNTA 1: REGIÓN DEL CENTRO DE EVENTOS ==========
   {
-    id: 'venue_p_zone',
-    question: '¿En qué zona se encuentra tu centro de eventos?',
-    type: 'single', // Selección única - campo principal para matching
+    id: 'venue_p_region',
+    question: '¿En qué región se encuentra tu centro de eventos?',
+    type: 'single',
     options: [
-      { id: 'santiago_urbano', label: 'Santiago Urbano', description: 'Dentro de la ciudad' },
-      { id: 'cajon_del_maipo', label: 'Cajón del Maipo', description: 'Zona montañosa' },
-      { id: 'valle_del_maipo', label: 'Valle del Maipo', description: 'Viñedos y campo' },
-      { id: 'costa', label: 'Costa (Valparaíso y alrededores)', description: 'Zona costera' },
-      { id: 'otra_zona', label: 'Otra zona', description: 'Otra ubicación' },
+      { id: 'rm', label: 'Región Metropolitana' },
+      // Otras regiones deshabilitadas por ahora
     ],
     required: true,
-    weight: 25, // Peso alto - campo principal para matching
+    weight: 10,
   },
+
+  // ========== PREGUNTA 2: PROVINCIA DEL CENTRO DE EVENTOS ==========
   {
-    id: 'venue_p_environment',
-    question: '¿Cómo describirías el entorno del centro?',
-    type: 'single', // Selección única
+    id: 'venue_p_province',
+    question: '¿En qué provincia se encuentra tu centro de eventos?',
+    type: 'single', // Selección única - el proveedor está en UNA provincia
     options: [
-      { id: 'city', label: 'Ciudad', description: 'Entorno urbano' },
-      { id: 'countryside', label: 'Campo / viñedos', description: 'Entorno natural campestre' },
-      { id: 'mountain', label: 'Montaña / naturaleza', description: 'Rodeado de naturaleza' },
+      { id: 'santiago', label: 'Provincia de Santiago', description: 'Capital: Santiago (Gran Santiago)' },
+      { id: 'chacabuco', label: 'Provincia de Chacabuco', description: 'Capital: Colina (Lampa, Tiltil)' },
+      { id: 'cordillera', label: 'Provincia de Cordillera', description: 'Capital: Puente Alto (Pirque, San José de Maipo)' },
+      { id: 'maipo', label: 'Provincia de Maipo', description: 'Capital: San Bernardo (Buin, Calera de Tango, Paine)' },
+      { id: 'melipilla', label: 'Provincia de Melipilla', description: 'Capital: Melipilla (Alhué, Curacaví, María Pinto, San Pedro)' },
+      { id: 'talagante', label: 'Provincia de Talagante', description: 'Capital: Talagante (El Monte, Isla de Maipo, Padre Hurtado, Peñaflor)' },
     ],
     required: true,
-    weight: 20, // Peso importante para matching
+    weight: 25, // Peso alto - criterio principal de matchmaking de ubicación
   },
-  {
-    id: 'venue_p_distance_from_santiago',
-    question: '¿A qué distancia está desde Santiago?',
-    type: 'single', // Selección única
-    options: [
-      { id: 'within_santiago', label: 'Dentro de Santiago', description: 'Sin desplazamiento' },
-      { id: 'up_to_1hr', label: 'Hasta 1 hora', description: 'Distancia corta' },
-      { id: 'up_to_2hr', label: 'Hasta 2 horas', description: 'Distancia media' },
-      { id: 'over_2hr', label: 'Más de 2 horas', description: 'Distancia larga' },
-    ],
-    required: true,
-    weight: 15, // Peso para validar distancia
-  },
-  // ========== FIN PREGUNTAS DE ZONA ==========
+
+  // ========== PREGUNTA 3: TIPO DE LUGAR ==========
   {
     id: 'venue_p_type',
     question: '¿Qué tipo de lugar eres?',
-    type: 'multiple', // CAMBIO: era 'single' - para coincidir con usuarios
+    type: 'multiple', // Puede ser varios tipos
     options: [
-      { id: 'event_hall', label: 'Salón de eventos' }, // NUEVO
-      { id: 'hacienda', label: 'Hacienda / Campo' },
+      { id: 'event_hall', label: 'Salón de eventos' },
+      { id: 'hacienda', label: 'Hacienda / campo' },
       { id: 'hotel', label: 'Hotel' },
-      { id: 'restaurant', label: 'Restaurant' },
-      { id: 'garden', label: 'Jardín / Parque' },
-      { id: 'beach', label: 'Playa' },
+      { id: 'restaurant', label: 'Restaurante' },
+      { id: 'garden', label: 'Jardín / parque' },
       { id: 'winery', label: 'Viña' },
-      { id: 'loft', label: 'Loft / Industrial' },
-      { id: 'mansion', label: 'Casona / Mansión' },
+      { id: 'loft', label: 'Loft / industrial' },
+      { id: 'mansion', label: 'Casona / mansión' },
     ],
     required: true,
-    weight: 15, // Reducido de 20 para dar espacio a las nuevas preguntas
+    weight: 15,
   },
+
+  // ========== PREGUNTA 4: TIPO DE ESPACIO ==========
   {
     id: 'venue_p_settings',
     question: '¿Qué espacios ofreces?',
@@ -263,8 +300,10 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
       { id: 'both', label: 'Ambos' },
     ],
     required: true,
-    weight: 15,
+    weight: 10,
   },
+
+  // ========== PREGUNTAS DE PRECIO ==========
   {
     id: 'venue_p_price_min',
     question: 'Precio mínimo de arriendo (CLP)',
@@ -273,7 +312,7 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     max: 20000000,
     step: 100000,
     required: true,
-    weight: 20,
+    weight: 15,
   },
   {
     id: 'venue_p_price_max',
@@ -283,8 +322,10 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     max: 20000000,
     step: 100000,
     required: true,
-    weight: 0,
+    weight: 0, // El peso está en el mínimo para evitar duplicar
   },
+
+  // ========== PREGUNTAS DE CAPACIDAD ==========
   {
     id: 'venue_p_capacity_min',
     question: 'Capacidad mínima',
@@ -292,7 +333,7 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     min: 10,
     max: 500,
     required: true,
-    weight: 15,
+    weight: 10,
   },
   {
     id: 'venue_p_capacity_max',
@@ -303,6 +344,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 0,
   },
+
+  // ========== PREGUNTA 6: EXCLUSIVIDAD ==========
   {
     id: 'venue_p_exclusivity',
     question: '¿Ofreces exclusividad?',
@@ -310,6 +353,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 7: ESPACIO PARA CEREMONIA ==========
   {
     id: 'venue_p_ceremony_space',
     question: '¿Tienes espacio para ceremonia?',
@@ -317,6 +362,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 8: ESTACIONAMIENTO ==========
   {
     id: 'venue_p_parking',
     question: '¿Tienes estacionamiento?',
@@ -330,6 +377,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 9: ALOJAMIENTO ==========
   {
     id: 'venue_p_accommodation',
     question: '¿Ofreces alojamiento?',
@@ -342,6 +391,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 3,
   },
+
+  // ========== PREGUNTA 10: POLÍTICA DE CATERING ==========
   {
     id: 'venue_p_catering_policy',
     question: '¿Política de catering?',
@@ -355,6 +406,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 11: HORARIO DE TÉRMINO ==========
   {
     id: 'venue_p_end_time',
     question: '¿Hasta qué hora pueden estar?',
@@ -368,6 +421,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 12: ACCESIBILIDAD ==========
   {
     id: 'venue_p_accessibility',
     question: '¿Tienes accesibilidad?',
@@ -375,6 +430,8 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 2,
   },
+
+  // ========== PREGUNTA 13: PISTA DE BAILE ==========
   {
     id: 'venue_p_dance_floor',
     question: '¿Tienes pista de baile?',
@@ -382,13 +439,26 @@ export const VENUE_PROVIDER_QUESTIONS: SurveyQuestion[] = [
     required: true,
     weight: 5,
   },
+
+  // ========== PREGUNTA 14: PIEZA PARA NOVIA ==========
   {
-    id: 'venue_p_bridal_suite',
-    question: '¿Tienes pieza para novia y novio?',
+    id: 'venue_p_bridal_room',
+    question: '¿Tienes pieza para la novia?',
     type: 'boolean',
     required: true,
-    weight: 3,
+    weight: 2,
   },
+
+  // ========== PREGUNTA 15: PIEZA PARA NOVIO ==========
+  {
+    id: 'venue_p_groom_room',
+    question: '¿Tienes pieza para el novio?',
+    type: 'boolean',
+    required: true,
+    weight: 2,
+  },
+
+  // ========== SERVICIOS INCLUIDOS ==========
   {
     id: 'venue_p_included_services',
     question: '¿Qué servicios incluyes?',

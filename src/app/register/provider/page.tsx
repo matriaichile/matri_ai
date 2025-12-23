@@ -295,16 +295,22 @@ export default function ProviderRegisterPage() {
               />
             </div>
 
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={providerData.acceptsOutsideZone}
-                onChange={(e) => updateProviderData({ acceptsOutsideZone: e.target.checked })}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkboxCustom} />
-              <span>Acepto trabajos fuera de mi zona</span>
-            </label>
+            {/* 
+              Ocultar opción "Acepto trabajos fuera de mi zona" si SOLO se selecciona Banquetería.
+              La banquetería típicamente va al lugar del evento, no tiene "zona" propia.
+            */}
+            {!(providerData.categories.length === 1 && providerData.categories[0] === 'catering') && (
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={providerData.acceptsOutsideZone}
+                  onChange={(e) => updateProviderData({ acceptsOutsideZone: e.target.checked })}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkboxCustom} />
+                <span>Acepto trabajos fuera de mi zona</span>
+              </label>
+            )}
           </div>
         </WizardStep>
 

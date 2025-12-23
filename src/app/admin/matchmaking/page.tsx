@@ -121,25 +121,27 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'catering_u_setup', questionLabel: 'Montaje de mesas', weight: 2, isExcluding: false },
     { questionId: 'catering_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
   ],
-  // === VENUE - Todas las preguntas de VENUE_USER_QUESTIONS ===
+  // === VENUE - Todas las preguntas de VENUE_USER_QUESTIONS (actualizado con provincias) ===
   venue: [
-    // Criterios de zona y ubicación (prioritarios)
-    { questionId: 'venue_u_zone', questionLabel: 'Zona deseada', weight: 25, isExcluding: false },
-    { questionId: 'venue_u_environment', questionLabel: 'Tipo de entorno', weight: 20, isExcluding: false },
-    { questionId: 'venue_u_travel_willingness', questionLabel: 'Disposición a viajar', weight: 15, isExcluding: false },
-    // Resto de criterios
-    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 10, isExcluding: false },
-    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 8, isExcluding: false },
-    { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 10, isExcluding: false },
-    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 3, isExcluding: false },
-    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 3, isExcluding: false },
-    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 2, isExcluding: false },
-    { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 2, isExcluding: false },
-    { questionId: 'venue_u_catering_policy', questionLabel: 'Política catering', weight: 2, isExcluding: false },
+    // Criterios de ubicación (provincias RM)
+    { questionId: 'venue_u_region', questionLabel: 'Región del matrimonio', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_province', questionLabel: 'Provincia preferida', weight: 25, isExcluding: false },
+    // Tipo y configuración
+    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 15, isExcluding: false },
+    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 10, isExcluding: false },
+    // Presupuesto
+    { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 15, isExcluding: false },
+    // Características y servicios
+    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 3, isExcluding: false },
+    { questionId: 'venue_u_catering_policy', questionLabel: 'Preferencia catering', weight: 5, isExcluding: false },
     { questionId: 'venue_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
     { questionId: 'venue_u_accessibility', questionLabel: 'Accesibilidad', weight: 2, isExcluding: false },
     { questionId: 'venue_u_dance_floor', questionLabel: 'Pista de baile', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_bridal_suite', questionLabel: 'Pieza de novios', weight: 3, isExcluding: false },
+    { questionId: 'venue_u_bridal_room', questionLabel: 'Pieza de la novia', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_groom_room', questionLabel: 'Pieza del novio', weight: 3, isExcluding: false },
   ],
   // === DECORATION - Todas las preguntas de DECORATION_USER_QUESTIONS ===
   decoration: [
