@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WizardContainer, WizardStep, SelectionGrid, WizardInput, DatePicker, CustomDropdown, BudgetSlider } from '@/components/wizard';
-import { useWizardStore, CEREMONY_TYPES, EVENT_STYLES, PLANNING_PROGRESS, COMPLETED_ITEMS, PRIORITY_CATEGORIES, GUEST_COUNTS, REGIONS } from '@/store/wizardStore';
+import { useWizardStore, CEREMONY_TYPES, EVENT_STYLES, PLANNING_PROGRESS, COMPLETED_ITEMS, PRIORITY_CATEGORIES, REGIONS } from '@/store/wizardStore';
 import { playUiClick, playSuccessSound, playTransitionSound } from '@/utils/sound';
 import { registerUser, getAuthErrorMessage } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -114,7 +114,7 @@ export default function UserRegisterPage() {
   // Validaciones por paso (ahora son 9 pasos - se eliminó vinculación)
   const isStep1Valid = userData.coupleNames.trim().length >= 3 && userData.email.includes('@') && userData.password.length >= 6 && userData.phone.length >= 8;
   const isStep2Valid = userData.eventDate.length > 0;
-  const isStep3Valid = userData.budgetAmount > 0 && userData.guestCount.length > 0; // Presupuesto (slider) e invitados
+  const isStep3Valid = userData.budgetAmount > 0 && userData.guestCount > 0; // Presupuesto (slider) e invitados (número)
   const isStep4Valid = userData.region.length > 0; // Ubicación separada
   const isStep5Valid = userData.ceremonyTypes.length > 0;
   const isStep6Valid = userData.eventStyle.length > 0;
@@ -264,13 +264,31 @@ export default function UserRegisterPage() {
             
             <div className={styles.fieldSection}>
               <h3 className={styles.fieldTitle}>Número de invitados</h3>
-              <SelectionGrid
-                options={GUEST_COUNTS}
-                selected={userData.guestCount}
-                onSelect={(id) => handleSingleSelect('guestCount', id)}
-                columns={2}
-                cardSize="small"
-              />
+              <div className={styles.guestCountInput}>
+                <input
+                  type="number"
+                  min="10"
+                  max="1000"
+                  step="10"
+                  value={userData.guestCount || ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    updateUserData({ guestCount: Math.max(0, Math.min(1000, value)) });
+                  }}
+                  placeholder="Ej: 150"
+                  className={styles.numberInput}
+                />
+                <span className={styles.guestCountLabel}>personas</span>
+              </div>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={userData.isGuestCountApproximate}
+                  onChange={(e) => updateUserData({ isGuestCountApproximate: e.target.checked })}
+                  className={styles.checkbox}
+                />
+                <span>Es un número aproximado</span>
+              </label>
             </div>
           </div>
         </WizardStep>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   Check, 
   X, 
-  Star, 
+  Star,
   MapPin, 
   MapPinned,
   DollarSign, 
@@ -25,11 +25,12 @@ import {
   XCircle,
   BadgeCheck,
   RefreshCcw,
-  AlertTriangle
+  AlertTriangle,
+  Users
 } from 'lucide-react';
 import { useAuthStore, CategoryId, UserProfile, ProviderProfile, ProfileImageData } from '@/store/authStore';
 import { CATEGORY_INFO, getCategoryInfo } from '@/lib/surveys';
-import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads, getAvailableProvidersCountForUser } from '@/lib/firebase/firestore';
+import { getUserLeadsByCategory, Lead, updateLeadStatus, rejectLeadWithReason, approveLeadWithMetrics, generateNewMatchForUser, resetCategorySurveyAndLeads, getAvailableProvidersCountForUser, getProviderCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
 import { RejectReasonModal, ShowMoreButton } from '@/components/matches';
 import { PortfolioGallery } from '@/components/portfolio';
 import { registerSearchUsed, forceResetCategory, MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
@@ -56,10 +57,40 @@ import styles from './page.module.css';
  * Página de matches por categoría para usuarios.
  * Muestra los proveedores recomendados después de completar la encuesta.
  */
-// Interfaz extendida para incluir datos completos del proveedor
+// Interfaz extendida para incluir datos completos del proveedor y su encuesta
 interface ExtendedLead extends Lead {
   providerDetails?: ProviderProfile;
+  providerSurveyData?: ProviderCategorySurvey; // Datos de la encuesta del proveedor para esta categoría
 }
+
+// Función helper para formatear precios en CLP
+const formatPrice = (price: number): string => {
+  if (price >= 1000000) {
+    const millions = price / 1000000;
+    return `$${millions.toLocaleString('es-CL', { maximumFractionDigits: 1 })}M`;
+  }
+  return `$${price.toLocaleString('es-CL')}`;
+};
+
+// Función para obtener los campos de precio según la categoría
+const getPriceFieldsForCategory = (categoryId: CategoryId): { min: string; max: string; label: string } => {
+  const priceFields: Record<string, { min: string; max: string; label: string }> = {
+    venue: { min: 'venue_p_price_min', max: 'venue_p_price_max', label: 'Arriendo' },
+    catering: { min: 'catering_p_price_pp_min', max: 'catering_p_price_pp_max', label: 'Por persona' },
+    photography: { min: 'photo_p_price_min', max: 'photo_p_price_max', label: 'Servicio' },
+    video: { min: 'video_p_price_min', max: 'video_p_price_max', label: 'Servicio' },
+    dj: { min: 'dj_p_price_min', max: 'dj_p_price_max', label: 'Servicio' },
+    decoration: { min: 'deco_p_price_min', max: 'deco_p_price_max', label: 'Servicio' },
+    entertainment: { min: 'ent_p_price_min', max: 'ent_p_price_max', label: 'Servicio' },
+    makeup: { min: 'makeup_p_price_bride', max: 'makeup_p_price_bride', label: 'Novia' },
+    cakes: { min: 'cakes_p_price_min', max: 'cakes_p_price_max', label: 'Torta' },
+    transport: { min: 'transport_p_price_min', max: 'transport_p_price_max', label: 'Servicio' },
+    invitations: { min: 'inv_p_price_min', max: 'inv_p_price_max', label: 'Por invitación' },
+    dress: { min: 'dress_p_price_bride_min', max: 'dress_p_price_bride_max', label: 'Vestido novia' },
+    wedding_planner: { min: 'wp_p_price_min', max: 'wp_p_price_max', label: 'Servicio' },
+  };
+  return priceFields[categoryId] || { min: '', max: '', label: 'Precio' };
+};
 
 export default function CategoryMatchesPage() {
   const router = useRouter();
@@ -224,9 +255,15 @@ export default function CategoryMatchesPage() {
     try {
       setProcessingId(leadId);
       await approveLeadWithMetrics(leadId);
+      // Actualizar el estado en la lista de matches
       setMatches(prev => prev.map(m => 
         m.id === leadId ? { ...m, status: 'approved' as const } : m
       ));
+      // IMPORTANTE: También actualizar el selectedMatch si está abierto el modal
+      // para que se muestre la info de contacto inmediatamente
+      if (selectedMatch?.id === leadId) {
+        setSelectedMatch(prev => prev ? { ...prev, status: 'approved' as const } : null);
+      }
     } catch (error) {
       console.error('Error aprobando match:', error);
     } finally {
@@ -353,24 +390,41 @@ export default function CategoryMatchesPage() {
   const handleViewDetails = async (match: ExtendedLead) => {
     setSelectedMatch(match);
     
-    // Cargar detalles completos del proveedor si no los tenemos
-    if (!match.providerDetails) {
+    // Cargar detalles completos del proveedor y su encuesta si no los tenemos
+    if (!match.providerDetails || !match.providerSurveyData) {
       setLoadingProviderDetails(true);
       try {
-        const providerDoc = await getDoc(doc(db, 'providers', match.providerId));
-        if (providerDoc.exists()) {
-          const providerData = {
-            id: providerDoc.id,
-            type: 'provider' as const,
-            ...providerDoc.data(),
-          } as ProviderProfile;
-          
-          // Actualizar el match con los detalles del proveedor
-          setMatches(prev => prev.map(m => 
-            m.id === match.id ? { ...m, providerDetails: providerData } : m
-          ));
-          setSelectedMatch({ ...match, providerDetails: providerData });
+        let providerData = match.providerDetails;
+        let surveyData = match.providerSurveyData;
+        
+        // Cargar datos del proveedor si no los tenemos
+        if (!providerData) {
+          const providerDoc = await getDoc(doc(db, 'providers', match.providerId));
+          if (providerDoc.exists()) {
+            providerData = {
+              id: providerDoc.id,
+              type: 'provider' as const,
+              ...providerDoc.data(),
+            } as ProviderProfile;
+          }
         }
+        
+        // Cargar encuesta del proveedor para esta categoría
+        if (!surveyData) {
+          surveyData = await getProviderCategorySurvey(match.providerId, categoryId) || undefined;
+        }
+        
+        // Actualizar el match con los detalles del proveedor y la encuesta
+        const updatedMatch = { 
+          ...match, 
+          providerDetails: providerData,
+          providerSurveyData: surveyData 
+        };
+        
+        setMatches(prev => prev.map(m => 
+          m.id === match.id ? updatedMatch : m
+        ));
+        setSelectedMatch(updatedMatch);
       } catch (error) {
         console.error('Error cargando detalles del proveedor:', error);
       } finally {
@@ -851,156 +905,248 @@ export default function CategoryMatchesPage() {
         )}
       </main>
 
-      {/* Panel de detalles del proveedor */}
+      {/* Panel de detalles del proveedor - REDISEÑADO estilo matrimonios.cl */}
       {selectedMatch && (
-        <div className={styles.detailsOverlay} onClick={handleCloseDetails}>
-          <div className={styles.detailsPanel} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.closeButton} onClick={handleCloseDetails}>
-              <XCircle size={24} />
+        <div className={styles.providerModalOverlay} onClick={handleCloseDetails}>
+          <div className={styles.providerModal} onClick={(e) => e.stopPropagation()}>
+            {/* Botón cerrar - fijo */}
+            <button className={styles.providerModalClose} onClick={handleCloseDetails}>
+              <XCircle size={28} />
             </button>
 
             {loadingProviderDetails ? (
-              <div className={styles.detailsLoading}>
-                <Loader2 size={32} className={styles.buttonSpinner} />
+              <div className={styles.providerModalLoading}>
+                <Loader2 size={40} className={styles.buttonSpinner} />
                 <p>Cargando información del proveedor...</p>
               </div>
             ) : (
-              <>
-                {/* Header del panel */}
-                <div className={styles.detailsHeader}>
-                  <div 
-                    className={styles.detailsBadge}
-                    style={getMatchCategoryStylesLarge(selectedMatch.matchScore)}
-                  >
-                    {getMatchCategory(selectedMatch.matchScore).label}
-                  </div>
-                  <h2 className={styles.detailsTitle}>
-                    {selectedMatch.providerInfo.providerName}
-                  </h2>
-                  {/* CAMBIO: Badge de verificación - usa providerDetails o providerInfo como fallback */}
-                  {(selectedMatch.providerDetails?.isVerified || selectedMatch.providerInfo?.isVerified) && (
-                    <span className={styles.verifiedBadgeTextLarge}>
-                      <BadgeCheck size={14} />
-                      <span>Proveedor verificado</span>
-                    </span>
-                  )}
-                  <p className={styles.detailsSubtitle}>
-                    {categoryInfo?.name}
-                  </p>
-                </div>
-
-                {/* Información del proveedor */}
-                <div className={styles.detailsContent}>
-                  {/* Descripción - Arriba */}
-                  {selectedMatch.providerDetails?.description && (
-                    <div className={styles.detailsSection}>
-                      <h3>Sobre este proveedor</h3>
-                      <p className={styles.detailsDescription}>
-                        {selectedMatch.providerDetails.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Información básica - Arriba */}
-                  <div className={styles.detailsSection}>
-                    <h3>Información</h3>
-                    <div className={styles.detailsGrid}>
-                      <div className={styles.detailsItem}>
-                        <MapPin size={16} />
-                        <div>
-                          <span className={styles.detailsLabel}>Región principal</span>
-                          <span className={styles.detailsValue}>
-                            {getRegionLabel(selectedMatch.providerDetails?.workRegion || selectedMatch.userInfo.region)}
-                          </span>
-                        </div>
-                      </div>
-                      {selectedMatch.providerDetails?.acceptsOutsideZone && (
-                        <div className={styles.detailsItem}>
-                          <MapPinned size={16} />
-                          <div>
-                            <span className={styles.detailsLabel}>Cobertura</span>
-                            <span className={styles.detailsValue}>
-                              Disponible en otras regiones
-                            </span>
-                          </div>
-                        </div>
+              /* Todo el contenido es scrolleable */
+              <div className={styles.providerModalScrollContainer}>
+                {/* Layout de dos columnas */}
+                <div className={styles.providerModalLayout}>
+                  {/* Columna izquierda - Galería de imágenes */}
+                  <div className={styles.providerModalGallery}>
+                    {/* Imagen principal */}
+                    <div 
+                      className={styles.providerModalMainImage}
+                      onClick={() => {
+                        const hasPortfolio = selectedMatch.providerDetails?.portfolioImages && selectedMatch.providerDetails.portfolioImages.length > 0;
+                        if (hasPortfolio) {
+                          setGalleryMatch(selectedMatch);
+                        }
+                      }}
+                    >
+                      {selectedMatch.providerDetails?.profileImage?.url ? (
+                        <div 
+                          className={styles.providerModalProfileImage}
+                          style={{
+                            backgroundImage: `url(${selectedMatch.providerDetails.profileImage.url})`,
+                            ...calculateBackgroundStyles(selectedMatch.providerDetails.profileImage.cropData),
+                          }}
+                        />
+                      ) : selectedMatch.providerDetails?.portfolioImages?.[0]?.url ? (
+                        <img 
+                          src={selectedMatch.providerDetails.portfolioImages[0].url} 
+                          alt={selectedMatch.providerInfo.providerName}
+                        />
+                      ) : (
+                        <img 
+                          src={CATEGORY_IMAGES[categoryId] || CATEGORY_IMAGES.photography} 
+                          alt={selectedMatch.providerInfo.providerName}
+                        />
                       )}
-                      <div className={styles.detailsItem}>
-                        <DollarSign size={16} />
-                        <div>
-                          <span className={styles.detailsLabel}>Rango de precios</span>
-                          <span className={styles.detailsValue}>
-                            {getPriceLabel(selectedMatch.providerInfo.priceRange)}
-                          </span>
-                        </div>
+                      {/* Badge de compatibilidad sobre la imagen */}
+                      <div 
+                        className={styles.providerModalMatchBadge}
+                        style={getMatchCategoryStylesLarge(selectedMatch.matchScore)}
+                      >
+                        <Star size={14} />
+                        <span>{getMatchCategory(selectedMatch.matchScore).label}</span>
                       </div>
+                      {/* Botón ver todas */}
+                      {(selectedMatch.providerDetails?.portfolioImages?.length ?? 0) > 1 && (
+                        <button className={styles.providerModalViewAll}>
+                          Ver todas
+                        </button>
+                      )}
+                    </div>
+                    {/* Miniaturas */}
+                    {(selectedMatch.providerDetails?.portfolioImages?.length ?? 0) > 1 && (
+                      <div className={styles.providerModalThumbnails}>
+                        {selectedMatch.providerDetails?.portfolioImages?.slice(0, 4).map((img, idx) => (
+                          <div 
+                            key={img.key || idx} 
+                            className={styles.providerModalThumb}
+                            onClick={() => setGalleryMatch(selectedMatch)}
+                          >
+                            <img src={img.url} alt={`${selectedMatch.providerInfo.providerName} ${idx + 1}`} />
+                            {idx === 3 && (selectedMatch.providerDetails?.portfolioImages?.length ?? 0) > 4 && (
+                              <div className={styles.providerModalThumbMore}>
+                                +{(selectedMatch.providerDetails?.portfolioImages?.length ?? 0) - 4}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Columna derecha - Información */}
+                  <div className={styles.providerModalInfo}>
+                    {/* Header con nombre y verificación */}
+                    <div className={styles.providerModalHeader}>
+                      <h2 className={styles.providerModalName}>
+                        {selectedMatch.providerInfo.providerName}
+                      </h2>
+                      {(selectedMatch.providerDetails?.isVerified || selectedMatch.providerInfo?.isVerified) && (
+                        <span className={styles.providerModalVerified}>
+                          <BadgeCheck size={16} />
+                          <span>Verificado</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Categoría */}
+                    <p className={styles.providerModalCategory}>
+                      {categoryInfo?.name}
+                    </p>
+
+                    {/* Ubicación */}
+                    <div className={styles.providerModalLocation}>
+                      <MapPin size={16} />
+                      <span>{getRegionLabel(selectedMatch.providerDetails?.workRegion || selectedMatch.userInfo.region)}</span>
+                      {selectedMatch.providerDetails?.acceptsOutsideZone && (
+                        <span className={styles.providerModalLocationExtra}>
+                          · También en otras regiones
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Tarjetas de información rápida */}
+                    <div className={styles.providerModalQuickInfo}>
+                      {/* Precio - mostrar rango exacto de la encuesta si está disponible */}
+                      {(() => {
+                        const priceFields = getPriceFieldsForCategory(categoryId);
+                        const surveyResponses = selectedMatch.providerSurveyData?.responses;
+                        const priceMin = surveyResponses?.[priceFields.min] as number | undefined;
+                        const priceMax = surveyResponses?.[priceFields.max] as number | undefined;
+                        
+                        // Si tenemos precios de la encuesta, mostrar el rango exacto
+                        if (priceMin && priceMax && priceMin !== priceMax) {
+                          return (
+                            <div className={styles.providerModalInfoCard}>
+                              <DollarSign size={20} />
+                              <div>
+                                <span className={styles.providerModalInfoLabel}>{priceFields.label}</span>
+                                <span className={styles.providerModalInfoValue}>
+                                  {formatPrice(priceMin)} - {formatPrice(priceMax)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        } else if (priceMin) {
+                          return (
+                            <div className={styles.providerModalInfoCard}>
+                              <DollarSign size={20} />
+                              <div>
+                                <span className={styles.providerModalInfoLabel}>{priceFields.label}</span>
+                                <span className={styles.providerModalInfoValue}>
+                                  Desde {formatPrice(priceMin)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          // Fallback al rango descriptivo del perfil
+                          return (
+                            <div className={styles.providerModalInfoCard}>
+                              <DollarSign size={20} />
+                              <div>
+                                <span className={styles.providerModalInfoLabel}>Rango de precio</span>
+                                <span className={styles.providerModalInfoValue}>
+                                  {getPriceLabel(selectedMatch.providerInfo.priceRange)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
+                      {/* Capacidad del venue - si está disponible en la encuesta */}
+                      {categoryId === 'venue' && (() => {
+                        const surveyResponses = selectedMatch.providerSurveyData?.responses;
+                        const capacityMin = surveyResponses?.['venue_p_capacity_min'] as number | undefined;
+                        const capacityMax = surveyResponses?.['venue_p_capacity_max'] as number | undefined;
+                        
+                        if (capacityMin && capacityMax) {
+                          return (
+                            <div className={styles.providerModalInfoCard}>
+                              <Users size={20} />
+                              <div>
+                                <span className={styles.providerModalInfoLabel}>Capacidad</span>
+                                <span className={styles.providerModalInfoValue}>
+                                  {capacityMin} a {capacityMax} personas
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {/* Estilo */}
                       {selectedMatch.providerDetails?.serviceStyle && (
-                        <div className={styles.detailsItem}>
-                          <Sparkles size={16} />
+                        <div className={styles.providerModalInfoCard}>
+                          <Sparkles size={20} />
                           <div>
-                            <span className={styles.detailsLabel}>Estilo</span>
-                            <span className={styles.detailsValue}>
+                            <span className={styles.providerModalInfoLabel}>Estilo</span>
+                            <span className={styles.providerModalInfoValue}>
                               {getStyleLabel(selectedMatch.providerDetails.serviceStyle)}
                             </span>
                           </div>
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Portafolio - Sección separada que usa todo el ancho */}
-                  {(selectedMatch.providerDetails?.portfolioImages?.length ?? 0) > 0 && (
-                    <div className={styles.detailsPortfolioSection}>
-                      <h3>Portafolio</h3>
-                      <PortfolioGallery
-                        images={selectedMatch.providerDetails?.portfolioImages || []}
-                        providerName={selectedMatch.providerInfo.providerName}
-                      />
-                    </div>
-                  )}
-
-                  {/* Contacto - Solo visible si está aprobado */}
-                  {selectedMatch.status === 'approved' && (
-                    <div className={styles.detailsSection}>
-                      <h3>Contacto</h3>
-                      <div className={styles.contactButtons}>
-                        {selectedMatch.providerDetails?.email && (
-                          <a 
-                            href={`mailto:${selectedMatch.providerDetails.email}`}
-                            className={styles.contactButton}
-                          >
-                            <Mail size={18} />
-                            <span>{selectedMatch.providerDetails.email}</span>
-                          </a>
+                    {/* Botón principal de acción - NO cierra el modal */}
+                    {selectedMatch.status === 'pending' && (
+                      <button 
+                        className={styles.providerModalCTA}
+                        onClick={() => {
+                          handleApprove(selectedMatch.id);
+                          // NO cerrar el modal - actualizar el estado in-place
+                        }}
+                        disabled={processingId === selectedMatch.id}
+                      >
+                        {processingId === selectedMatch.id ? (
+                          <>
+                            <Loader2 size={18} className={styles.buttonSpinner} />
+                            <span>Procesando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Heart size={18} />
+                            <span>Solicitar presupuesto</span>
+                          </>
                         )}
-                        {selectedMatch.providerDetails?.phone && (
-                          <a 
-                            href={`tel:${selectedMatch.providerDetails.phone}`}
-                            className={styles.contactButton}
-                          >
-                            <Phone size={18} />
-                            <span>{selectedMatch.providerDetails.phone}</span>
-                          </a>
-                        )}
+                      </button>
+                    )}
+                    {selectedMatch.status === 'approved' && (
+                      <div className={styles.providerModalApprovedBadge}>
+                        <Heart size={16} />
+                        <span>¡Ya mostraste interés!</span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Redes sociales y web */}
-                  {(selectedMatch.providerDetails?.website || selectedMatch.providerDetails?.instagram) && (
-                    <div className={styles.detailsSection}>
-                      <h3>Conoce más</h3>
-                      <div className={styles.socialLinks}>
+                    {/* Redes sociales */}
+                    {(selectedMatch.providerDetails?.website || selectedMatch.providerDetails?.instagram) && (
+                      <div className={styles.providerModalSocial}>
                         {selectedMatch.providerDetails?.website && (
                           <a 
                             href={selectedMatch.providerDetails.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={styles.socialLink}
+                            className={styles.providerModalSocialLink}
                           >
                             <Globe size={18} />
-                            <span>Sitio web</span>
-                            <ExternalLink size={14} />
                           </a>
                         )}
                         {selectedMatch.providerDetails?.instagram && (
@@ -1008,59 +1154,97 @@ export default function CategoryMatchesPage() {
                             href={`https://instagram.com/${selectedMatch.providerDetails.instagram.replace('@', '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={styles.socialLink}
+                            className={styles.providerModalSocialLink}
                           >
                             <Instagram size={18} />
-                            <span>{selectedMatch.providerDetails.instagram}</span>
-                            <ExternalLink size={14} />
                           </a>
                         )}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Mensaje si no está aprobado */}
-                  {selectedMatch.status !== 'approved' && (
-                    <div className={styles.detailsNotice}>
-                      <Heart size={20} />
-                      <p>
-                        Marca este proveedor como &quot;Me interesa&quot; para ver su información de contacto completa.
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Acciones del panel */}
-                <div className={styles.detailsActions}>
+                {/* Descripción debajo de las columnas */}
+                {selectedMatch.providerDetails?.description && (
+                  <div className={styles.providerModalDescriptionSection}>
+                    <p className={styles.providerModalDescription}>
+                      {selectedMatch.providerDetails.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Servicios que ofrece */}
+                {selectedMatch.providerInfo.categories && selectedMatch.providerInfo.categories.length > 0 && (
+                  <div className={styles.providerModalSection}>
+                    <h3 className={styles.providerModalSectionTitle}>Servicios que ofrece</h3>
+                    <div className={styles.providerModalServices}>
+                      {selectedMatch.providerInfo.categories.map((cat) => {
+                        const catInfo = getCategoryInfo(cat as CategoryId);
+                        return catInfo ? (
+                          <span key={cat} className={styles.providerModalServiceTag}>
+                            {catInfo.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contacto - Solo visible si está aprobado */}
+                {selectedMatch.status === 'approved' && (
+                  <div className={styles.providerModalContactSection}>
+                    <h3 className={styles.providerModalSectionTitle}>Contacto</h3>
+                    <div className={styles.providerModalContactGrid}>
+                      {selectedMatch.providerDetails?.email && (
+                        <a 
+                          href={`mailto:${selectedMatch.providerDetails.email}`}
+                          className={styles.providerModalContactItem}
+                        >
+                          <Mail size={18} />
+                          <span>{selectedMatch.providerDetails.email}</span>
+                        </a>
+                      )}
+                      {selectedMatch.providerDetails?.phone && (
+                        <a 
+                          href={`tel:${selectedMatch.providerDetails.phone}`}
+                          className={styles.providerModalContactItem}
+                        >
+                          <Phone size={18} />
+                          <span>{selectedMatch.providerDetails.phone}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mensaje si no está aprobado */}
+                {selectedMatch.status !== 'approved' && (
+                  <div className={styles.providerModalNotice}>
+                    <Heart size={18} />
+                    <p>
+                      Solicita presupuesto para ver la información de contacto completa de este proveedor.
+                    </p>
+                  </div>
+                )}
+
+                {/* Footer con acciones secundarias */}
+                <div className={styles.providerModalFooter}>
                   {selectedMatch.status === 'pending' && (
-                    <>
-                      <button 
-                        className={styles.detailsRejectButton}
-                        onClick={() => {
-                          handleCloseDetails();
-                          handleRejectClick(selectedMatch);
-                        }}
-                        disabled={processingId === selectedMatch.id}
-                      >
-                        <X size={16} />
-                        <span>Descartar</span>
-                      </button>
-                      <button 
-                        className={styles.detailsApproveButton}
-                        onClick={() => {
-                          handleApprove(selectedMatch.id);
-                          handleCloseDetails();
-                        }}
-                        disabled={processingId === selectedMatch.id}
-                      >
-                        <Heart size={16} />
-                        <span>Me interesa</span>
-                      </button>
-                    </>
+                    <button 
+                      className={styles.providerModalSecondaryBtn}
+                      onClick={() => {
+                        handleCloseDetails();
+                        handleRejectClick(selectedMatch);
+                      }}
+                      disabled={processingId === selectedMatch.id}
+                    >
+                      <X size={16} />
+                      <span>No me interesa</span>
+                    </button>
                   )}
                   {selectedMatch.status === 'approved' && (
                     <button 
-                      className={styles.detailsRevertButton}
+                      className={styles.providerModalSecondaryBtn}
                       onClick={() => {
                         handleRevert(selectedMatch.id);
                         handleCloseDetails();
@@ -1073,11 +1257,9 @@ export default function CategoryMatchesPage() {
                   )}
                   {selectedMatch.status === 'rejected' && (
                     <button 
-                      className={`${styles.detailsRecoverButton} ${(!canAddMoreMatches || isModifyingActiveMatches) ? styles.detailsRecoverButtonDisabled : ''}`}
+                      className={`${styles.providerModalRecoverBtn} ${(!canAddMoreMatches || isModifyingActiveMatches) ? styles.providerModalRecoverBtnDisabled : ''}`}
                       onClick={() => {
-                        if (isModifyingActiveMatches) {
-                          return; // Bloquear si hay otra acción en curso
-                        }
+                        if (isModifyingActiveMatches) return;
                         if (!canAddMoreMatches) {
                           setShowLimitModal(true);
                           handleCloseDetails();
@@ -1087,14 +1269,13 @@ export default function CategoryMatchesPage() {
                         }
                       }}
                       disabled={processingId === selectedMatch.id || isModifyingActiveMatches}
-                      title={!canAddMoreMatches ? `Máximo ${MAX_ACTIVE_MATCHES_PER_CATEGORY} proveedores activos` : isModifyingActiveMatches ? 'Espera a que termine la acción actual' : 'Recuperar proveedor'}
                     >
                       <RotateCcw size={16} />
-                      <span>{isModifyingActiveMatches ? 'Procesando...' : canAddMoreMatches ? 'Recuperar proveedor' : `Límite de ${MAX_ACTIVE_MATCHES_PER_CATEGORY} alcanzado`}</span>
+                      <span>{isModifyingActiveMatches ? 'Procesando...' : canAddMoreMatches ? 'Recuperar proveedor' : `Límite alcanzado`}</span>
                     </button>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

@@ -329,8 +329,26 @@ function calculateExact(
   const userStr = String(userValue).toLowerCase();
   const providerStr = String(providerValue).toLowerCase();
   
+  // Si el usuario no tiene preferencia, cualquier opción del proveedor es perfecta
+  if (userStr === 'no_preference' || userStr === 'sin preferencia' || userStr === 'flexible') {
+    return { matches: true, score: 1.0, explanation: 'Sin requisito específico' };
+  }
+  
+  // Coincidencia exacta
   if (userStr === providerStr) {
     return { matches: true, score: 1.0, explanation: 'Coincidencia exacta' };
+  }
+  
+  // Caso especial para catering: si usuario quiere externo y proveedor lo permite
+  // "external_ok" del proveedor satisface "external_ok" del usuario
+  // "preferred" del proveedor (prefiere el suyo pero permite externo) también puede servir
+  if (userStr === 'external_ok' && (providerStr === 'external_ok' || providerStr === 'no_catering')) {
+    return { matches: true, score: 1.0, explanation: 'El proveedor permite catering externo' };
+  }
+  
+  // Si usuario quiere solo del lugar y proveedor tiene catering exclusivo o preferido
+  if (userStr === 'venue_only' && (providerStr === 'exclusive' || providerStr === 'preferred')) {
+    return { matches: true, score: 1.0, explanation: 'El proveedor ofrece su propio catering' };
   }
   
   if (userStr.includes(providerStr) || providerStr.includes(userStr)) {
@@ -354,12 +372,41 @@ function calculateSingleInMultiple(
     providerOptions = [String(providerValue).toLowerCase()];
   }
   
+  // Coincidencia directa
   if (providerOptions.includes(userOption)) {
     return { 
       matches: true, 
       score: 1.0, 
       explanation: 'El proveedor ofrece lo que buscas' 
     };
+  }
+  
+  // Caso especial: proveedor ofrece "both"/"ambos" que incluye "indoor"/"outdoor"
+  // Si el proveedor ofrece "both" o "ambos", cubre cualquier opción individual
+  if (providerOptions.includes('both') || providerOptions.includes('ambos')) {
+    // "both" cubre indoor, outdoor, y cualquier combinación
+    if (['indoor', 'outdoor', 'interior', 'exterior'].includes(userOption)) {
+      return { 
+        matches: true, 
+        score: 1.0, 
+        explanation: 'El proveedor ofrece ambas opciones' 
+      };
+    }
+  }
+  
+  // Caso especial: si el usuario elige "both"/"ambos", el proveedor debe ofrecer ambos
+  if (userOption === 'both' || userOption === 'ambos') {
+    const hasIndoor = providerOptions.includes('indoor') || providerOptions.includes('interior');
+    const hasOutdoor = providerOptions.includes('outdoor') || providerOptions.includes('exterior');
+    const hasBoth = providerOptions.includes('both') || providerOptions.includes('ambos');
+    
+    if (hasBoth || (hasIndoor && hasOutdoor)) {
+      return { 
+        matches: true, 
+        score: 1.0, 
+        explanation: 'El proveedor ofrece ambas opciones' 
+      };
+    }
   }
   
   return { 
@@ -370,6 +417,9 @@ function calculateSingleInMultiple(
 }
 
 // Usuario elige varios, proveedor ofrece varios - verificar cobertura
+// IMPORTANTE: La lógica aquí es que el PROVEEDOR debe estar DENTRO de lo que el usuario busca
+// Si el usuario busca "Hacienda, Viña, Casona" y el proveedor ES "Hacienda", es 100% match
+// porque el proveedor ES uno de los tipos que el usuario quiere
 function calculateContains(
   userValue: string | string[] | number | boolean,
   providerValue: string | string[] | number | boolean
@@ -384,32 +434,28 @@ function calculateContains(
   
   // Filtrar opciones vacías o "none"
   const filteredUserArray = userArray.filter(v => v !== 'none' && v !== '' && v !== 'no_preference');
+  const filteredProviderArray = providerArray.filter(v => v !== 'none' && v !== '' && v !== 'no_preference');
   
   if (filteredUserArray.length === 0) {
     return { matches: true, score: 1.0, explanation: 'Sin requisitos específicos' };
   }
   
-  const matchedItems = filteredUserArray.filter(uv => providerArray.includes(uv));
-  const matchRatio = matchedItems.length / filteredUserArray.length;
+  // Verificar si ALGUNO de lo que ofrece el proveedor está en lo que busca el usuario
+  // Esto es lo correcto: si el usuario busca varios tipos y el proveedor ES uno de ellos, es match perfecto
+  const providerMatchesUserPreference = filteredProviderArray.some(pv => filteredUserArray.includes(pv));
   
-  if (matchRatio >= 0.7) {
+  if (providerMatchesUserPreference) {
     return { 
       matches: true, 
-      score: matchRatio, 
-      explanation: `Cubre ${Math.round(matchRatio * 100)}% de tus preferencias` 
-    };
-  } else if (matchRatio > 0) {
-    return { 
-      matches: true, 
-      score: matchRatio, 
-      explanation: `Cubre parcialmente (${Math.round(matchRatio * 100)}%)` 
+      score: 1.0, 
+      explanation: 'El proveedor ofrece lo que buscas' 
     };
   }
   
   return { 
     matches: false, 
     score: 0.0, 
-    explanation: 'No cubre tus preferencias' 
+    explanation: 'No coincide con tus preferencias' 
   };
 }
 

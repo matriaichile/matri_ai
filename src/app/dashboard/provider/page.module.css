@@ -2644,6 +2644,12 @@
   color: var(--color-text);
 }
 
+.approximateLabel {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
 /* Details List */
 .detailsList {
   display: flex;

@@ -30,7 +30,7 @@ import { SurveyResponses, SurveyQuestion } from '@/lib/surveys/types';
 // Datos del wizard del usuario (novios)
 export interface UserWizardProfile {
   budget: string;
-  guestCount: string;
+  guestCount: number | string; // Número exacto de invitados (o string legacy)
   region: string;
   eventStyle: string;
   ceremonyTypes: string[];

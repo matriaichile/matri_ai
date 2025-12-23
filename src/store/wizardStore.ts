@@ -18,7 +18,8 @@ export interface UserWizardData {
   // Paso 3: Detalles del evento
   budget: string; // Campo legacy para compatibilidad
   budgetAmount: number; // Nuevo: presupuesto numérico en CLP
-  guestCount: string;
+  guestCount: number; // Número exacto de invitados
+  isGuestCountApproximate: boolean; // Si el número es aproximado
   region: string;
   
   // Paso 4: Tipo de ceremonia
@@ -134,7 +135,8 @@ const initialUserData: UserWizardData = {
   isDateTentative: true,
   budget: '', // Campo legacy
   budgetAmount: 0, // Nuevo campo numérico
-  guestCount: '',
+  guestCount: 0, // Número exacto de invitados
+  isGuestCountApproximate: true, // Por defecto es aproximado
   region: '',
   ceremonyTypes: [],
   eventStyle: '',

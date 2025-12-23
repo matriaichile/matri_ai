@@ -140,7 +140,8 @@ const COUPLE_NAMES = [
 ];
 
 const BUDGET_OPTIONS = ['5m_10m', '10m_15m', '15m_20m', '20m_30m', '30m_50m', 'over_50m'];
-const GUEST_OPTIONS = ['intimate', 'small', 'medium', 'large', 'xlarge'];
+// Números de invitados para datos de prueba (ahora es numérico)
+const GUEST_COUNT_OPTIONS = [50, 80, 100, 120, 150, 180, 200, 250, 300];
 const CEREMONY_OPTIONS = ['civil', 'religious', 'symbolic'];
 const EVENT_STYLES = ['classic', 'rustic', 'modern', 'romantic', 'glamorous', 'vintage'];
 const PLANNING_PROGRESS = ['nothing', 'little', 'half', 'most'];
@@ -719,7 +720,8 @@ async function createUsers(auth, db) {
         eventDate: randomDate(),
         isDateTentative: Math.random() > 0.5,
         budget: randomItem(BUDGET_OPTIONS),
-        guestCount: randomItem(GUEST_OPTIONS),
+        guestCount: randomItem(GUEST_COUNT_OPTIONS),
+        isGuestCountApproximate: Math.random() > 0.3, // 70% son aproximados
         region,
         ceremonyTypes: randomItems(CEREMONY_OPTIONS, 1, 2),
         eventStyle: randomItem(EVENT_STYLES),
@@ -931,6 +933,9 @@ async function createLeads(db, users, providers, userSurveys, providerSurveys) {
             region: user.region,
             email: user.email,
             phone: user.phone,
+            // Campos adicionales del perfil del usuario
+            guestCount: user.guestCount || 0,
+            isGuestCountApproximate: user.isGuestCountApproximate ?? true,
           },
           providerInfo: {
             providerName: provider.providerName,

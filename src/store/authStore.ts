@@ -66,7 +66,8 @@ export interface UserProfile {
   isDateTentative: boolean;
   budget: string; // Campo legacy para compatibilidad
   budgetAmount: number; // Nuevo: presupuesto numérico en CLP
-  guestCount: string;
+  guestCount: number; // Número exacto de invitados
+  isGuestCountApproximate: boolean; // Si el número es aproximado
   region: string;
   ceremonyTypes: string[];
   eventStyle: string;

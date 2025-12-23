@@ -72,6 +72,9 @@ export interface Lead {
     region: string;
     email: string;
     phone: string;
+    // Campos adicionales del perfil del usuario (para mostrar en modal del proveedor)
+    guestCount?: number; // Número exacto de invitados
+    isGuestCountApproximate?: boolean; // Si es aproximado
   };
   providerInfo: {
     providerName: string;
@@ -218,7 +221,8 @@ export const createUserProfile = async (
       isDateTentative: userData.isDateTentative,
       budget: userData.budget, // Campo legacy
       budgetAmount: userData.budgetAmount || 0, // Nuevo campo numérico en CLP
-      guestCount: userData.guestCount,
+      guestCount: userData.guestCount || 0, // Número exacto de invitados
+      isGuestCountApproximate: userData.isGuestCountApproximate ?? true, // Si es aproximado
       region: userData.region,
       ceremonyTypes: userData.ceremonyTypes,
       eventStyle: userData.eventStyle,
@@ -1680,7 +1684,7 @@ export const generateMatchesForUserSurvey = async (
     // 6. Preparar datos del wizard del usuario
     const userWizardProfile = {
       budget: (userProfile as UserProfile).budget || '',
-      guestCount: (userProfile as UserProfile).guestCount || '',
+      guestCount: (userProfile as UserProfile).guestCount || 0,
       region: (userProfile as UserProfile).region || region,
       eventStyle: (userProfile as UserProfile).eventStyle || '',
       ceremonyTypes: (userProfile as UserProfile).ceremonyTypes || [],
@@ -1756,6 +1760,9 @@ export const generateMatchesForUserSurvey = async (
             region: (userProfile as UserProfile).region || region,
             email: userProfile.email,
             phone: (userProfile as UserProfile).phone || '',
+            // Campos adicionales del perfil para mostrar en modal del proveedor
+            guestCount: (userProfile as UserProfile).guestCount || 0,
+            isGuestCountApproximate: (userProfile as UserProfile).isGuestCountApproximate ?? true,
           },
           {
             providerName: provider.providerName,
@@ -1802,7 +1809,7 @@ async function generateMatchesWithWizardOnly(
 
   const userWizardProfile = {
     budget: userProfile.budget || '',
-    guestCount: userProfile.guestCount || '',
+    guestCount: userProfile.guestCount || 0,
     region: userProfile.region || '',
     eventStyle: userProfile.eventStyle || '',
     ceremonyTypes: userProfile.ceremonyTypes || [],
@@ -1941,7 +1948,7 @@ export const generateNewMatchForUser = async (
     // 6. Preparar datos del wizard del usuario
     const userWizardProfile = {
       budget: userProfile.budget || '',
-      guestCount: userProfile.guestCount || '',
+      guestCount: userProfile.guestCount || 0,
       region: userRegion,
       eventStyle: userProfile.eventStyle || '',
       ceremonyTypes: userProfile.ceremonyTypes || [],

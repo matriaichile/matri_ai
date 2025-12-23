@@ -79,6 +79,9 @@ interface Lead {
     region: string;
     email: string;
     phone: string;
+    // Campos adicionales del perfil del usuario
+    guestCount?: number; // Número exacto de invitados
+    isGuestCountApproximate?: boolean; // Si es aproximado
   };
   // IDs de encuestas para acceso seguro
   userSurveyId?: string;
@@ -119,27 +122,8 @@ const BUDGET_LABELS: Record<string, string> = {
   'over_50m': 'Más de $50M',
 };
 
-// Labels de cantidad de invitados
-const GUEST_COUNT_LABELS: Record<string, string> = {
-  'under_50': 'Menos de 50',
-  '50_100': '50 - 100',
-  '100_150': '100 - 150',
-  '150_200': '150 - 200',
-  '200_300': '200 - 300',
-  'over_300': 'Más de 300',
-};
-
-// Labels de estilos
-const EVENT_STYLE_LABELS: Record<string, string> = {
-  'classic': 'Clásico/Tradicional',
-  'modern': 'Moderno/Minimalista',
-  'romantic': 'Romántico',
-  'rustic': 'Rústico/Campestre',
-  'bohemian': 'Bohemio',
-  'luxury': 'Lujo/Glamour',
-  'beach': 'Playero',
-  'vintage': 'Vintage',
-};
+// Categorías donde mostrar número de invitados (relevante para capacidad/servicios)
+const CATEGORIES_SHOWING_GUESTS = ['venue', 'catering', 'dj', 'decoration', 'entertainment', 'cakes', 'wedding_planner'];
 
 /**
  * Dashboard del proveedor.
@@ -285,11 +269,12 @@ export default function ProviderDashboardPage() {
         budget: lead.userInfo.budget,
         budgetAmount: 0, // No disponible en userInfo denormalizada
         region: lead.userInfo.region,
-        // Campos que no tenemos en userInfo - se mostrarán como vacíos
+        // Campos adicionales del perfil que ahora vienen en el lead
         isDateTentative: false,
-        guestCount: '',
+        guestCount: lead.userInfo.guestCount || 0,
+        isGuestCountApproximate: lead.userInfo.isGuestCountApproximate ?? true,
         ceremonyTypes: [],
-        eventStyle: '',
+        eventStyle: '', // Ya no se usa - cada categoría tiene su propio estilo en la encuesta
         planningProgress: '',
         completedItems: [],
         priorityCategories: [],
@@ -1785,20 +1770,22 @@ export default function ProviderDashboardPage() {
                           )}
                           {extendedUserInfo && (
                             <>
-                              <div className={styles.infoItem}>
-                                <Users size={16} />
-                                <div>
-                                  <span className={styles.infoLabel}>Invitados</span>
-                                  <span className={styles.infoValue}>{GUEST_COUNT_LABELS[extendedUserInfo.guestCount] || extendedUserInfo.guestCount}</span>
+                              {/* Mostrar invitados solo en categorías donde es relevante (capacidad/servicios) */}
+                              {extendedUserInfo.guestCount > 0 && CATEGORIES_SHOWING_GUESTS.includes(selectedLead.category) && (
+                                <div className={styles.infoItem}>
+                                  <Users size={16} />
+                                  <div>
+                                    <span className={styles.infoLabel}>Invitados</span>
+                                    <span className={styles.infoValue}>
+                                      {extendedUserInfo.guestCount} personas
+                                      {extendedUserInfo.isGuestCountApproximate && (
+                                        <span className={styles.approximateLabel}> (aprox.)</span>
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className={styles.infoItem}>
-                                <Sparkles size={16} />
-                                <div>
-                                  <span className={styles.infoLabel}>Estilo del evento</span>
-                                  <span className={styles.infoValue}>{EVENT_STYLE_LABELS[extendedUserInfo.eventStyle] || extendedUserInfo.eventStyle}</span>
-                                </div>
-                              </div>
+                              )}
+                              {/* El estilo específico de cada categoría se muestra en la comparativa de preferencias */}
                               {extendedUserInfo.ceremonyTypes && extendedUserInfo.ceremonyTypes.length > 0 && (
                                 <div className={styles.infoItem}>
                                   <Heart size={16} />
