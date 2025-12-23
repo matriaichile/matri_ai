@@ -560,10 +560,11 @@ const CATERING_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
 // ============================================
 // CRITERIOS EXPLÍCITOS PARA VENUE
 // Actualizado con estructura de provincias (Región Metropolitana)
-// Pesos: Ubicación/Provincia: 25%, Tipo/Setting: 25%, Presupuesto: 15%, Features: 35%
+// Total: 100% (25+12+8+15+4+4+4+3+4+4+2+4+3+3 = 95% + 5% región = 100%)
+// Pesos: Ubicación: 30%, Tipo/Setting: 20%, Presupuesto: 15%, Features: 35%
 // ============================================
 const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
-  // ========== CRITERIOS DE UBICACIÓN (25%) ==========
+  // ========== CRITERIOS DE UBICACIÓN (30%) ==========
   {
     // Provincia: Usuario elige múltiples provincias deseadas, proveedor tiene una provincia
     // Si la provincia del proveedor está en las opciones del usuario → MATCH
@@ -574,20 +575,20 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     matchType: 'contains', // Usuario puede elegir múltiples provincias
   },
   
-  // ========== TIPO Y CONFIGURACIÓN (25%) ==========
+  // ========== TIPO Y CONFIGURACIÓN (20%) ==========
   {
     // Tipo de lugar: Usuario puede elegir múltiples tipos, proveedor puede ser varios tipos
     // Si al menos uno de los tipos del proveedor coincide con lo que quiere el usuario → MATCH
     userQuestionId: 'venue_u_type',
     providerQuestionId: 'venue_p_type',
-    weight: 15,
+    weight: 12,
     matchType: 'contains', // Ambos son multiple - basta que coincida uno
   },
   {
     // Interior/Exterior: Usuario elige uno, proveedor ofrece múltiples opciones
     userQuestionId: 'venue_u_setting',
     providerQuestionId: 'venue_p_settings',
-    weight: 10,
+    weight: 8,
     matchType: 'single_in_multiple',
   },
   
@@ -613,7 +614,7 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Exclusividad: Si usuario la requiere, proveedor debe ofrecerla
     userQuestionId: 'venue_u_exclusivity',
     providerQuestionId: 'venue_p_exclusivity',
-    weight: 5,
+    weight: 4,
     matchType: 'preference_match',
     preferenceMapping: {
       'true': 1.0,
@@ -624,14 +625,14 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Espacio para ceremonia
     userQuestionId: 'venue_u_ceremony_space',
     providerQuestionId: 'venue_p_ceremony_space',
-    weight: 5,
+    weight: 4,
     matchType: 'boolean_match',
   },
   {
     // Estacionamiento
     userQuestionId: 'venue_u_parking',
     providerQuestionId: 'venue_p_parking',
-    weight: 5,
+    weight: 4,
     matchType: 'preference_match',
     preferenceMapping: {
       'yes_free': 1.0,
@@ -656,14 +657,14 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Política de catering
     userQuestionId: 'venue_u_catering_policy',
     providerQuestionId: 'venue_p_catering_policy',
-    weight: 5,
+    weight: 4,
     matchType: 'exact',
   },
   {
     // Horario de término: venue debe permitir HASTA O MÁS TARDE de lo que el usuario necesita
     userQuestionId: 'venue_u_end_time',
     providerQuestionId: 'venue_p_end_time',
-    weight: 5,
+    weight: 4,
     matchType: 'threshold_at_least',
     orderedMapping: END_TIME_ORDER,
   },
@@ -678,14 +679,14 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     // Pista de baile
     userQuestionId: 'venue_u_dance_floor',
     providerQuestionId: 'venue_p_dance_floor',
-    weight: 5,
+    weight: 4,
     matchType: 'boolean_match',
   },
   {
     // Pieza para la novia
     userQuestionId: 'venue_u_bridal_room',
     providerQuestionId: 'venue_p_bridal_room',
-    weight: 2,
+    weight: 3,
     matchType: 'preference_match',
     preferenceMapping: {
       'true': 1.0,
@@ -704,7 +705,7 @@ const VENUE_MATCHING_CRITERIA: ExplicitMatchCriterion[] = [
     },
   },
 ];
-// TOTAL PESOS: 25+15+10+15+5+5+5+3+5+5+2+5+2+3 = 105% (se normaliza automáticamente)
+// TOTAL PESOS: 25+12+8+15+4+4+4+3+4+4+2+4+3+3 = 95% (venue_u_region no tiene criterio de matching porque solo hay RM)
 
 // ============================================
 // CRITERIOS EXPLÍCITOS PARA DECORACIÓN

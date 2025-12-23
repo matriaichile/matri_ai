@@ -122,25 +122,26 @@ const DEFAULT_MATCHING_CONFIGS: Record<CategoryId, QuestionMatchingConfig[]> = {
     { questionId: 'catering_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
   ],
   // === VENUE - Todas las preguntas de VENUE_USER_QUESTIONS (actualizado con provincias) ===
+  // Total: 100% (5+25+12+8+15+4+4+4+3+4+4+2+4+3+3)
   venue: [
-    // Criterios de ubicación (provincias RM)
+    // Criterios de ubicación (provincias RM) - 30%
     { questionId: 'venue_u_region', questionLabel: 'Región del matrimonio', weight: 5, isExcluding: false },
     { questionId: 'venue_u_province', questionLabel: 'Provincia preferida', weight: 25, isExcluding: false },
-    // Tipo y configuración
-    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 15, isExcluding: false },
-    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 10, isExcluding: false },
-    // Presupuesto
+    // Tipo y configuración - 20%
+    { questionId: 'venue_u_type', questionLabel: 'Tipo de lugar', weight: 12, isExcluding: false },
+    { questionId: 'venue_u_setting', questionLabel: 'Interior/Exterior', weight: 8, isExcluding: false },
+    // Presupuesto - 15%
     { questionId: 'venue_u_budget', questionLabel: 'Presupuesto', weight: 15, isExcluding: false },
-    // Características y servicios
-    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 5, isExcluding: false },
+    // Características y servicios - 35%
+    { questionId: 'venue_u_exclusivity', questionLabel: 'Exclusividad', weight: 4, isExcluding: false },
+    { questionId: 'venue_u_ceremony_space', questionLabel: 'Espacio ceremonia', weight: 4, isExcluding: false },
+    { questionId: 'venue_u_parking', questionLabel: 'Estacionamiento', weight: 4, isExcluding: false },
     { questionId: 'venue_u_accommodation', questionLabel: 'Alojamiento', weight: 3, isExcluding: false },
-    { questionId: 'venue_u_catering_policy', questionLabel: 'Preferencia catering', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_end_time', questionLabel: 'Hora de término', weight: 5, isExcluding: false },
+    { questionId: 'venue_u_catering_policy', questionLabel: 'Preferencia catering', weight: 4, isExcluding: false },
+    { questionId: 'venue_u_end_time', questionLabel: 'Hora de término', weight: 4, isExcluding: false },
     { questionId: 'venue_u_accessibility', questionLabel: 'Accesibilidad', weight: 2, isExcluding: false },
-    { questionId: 'venue_u_dance_floor', questionLabel: 'Pista de baile', weight: 5, isExcluding: false },
-    { questionId: 'venue_u_bridal_room', questionLabel: 'Pieza de la novia', weight: 2, isExcluding: false },
+    { questionId: 'venue_u_dance_floor', questionLabel: 'Pista de baile', weight: 4, isExcluding: false },
+    { questionId: 'venue_u_bridal_room', questionLabel: 'Pieza de la novia', weight: 3, isExcluding: false },
     { questionId: 'venue_u_groom_room', questionLabel: 'Pieza del novio', weight: 3, isExcluding: false },
   ],
   // === DECORATION - Todas las preguntas de DECORATION_USER_QUESTIONS ===

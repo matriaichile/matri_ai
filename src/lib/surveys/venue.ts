@@ -29,6 +29,7 @@ export const RM_PROVINCES = [
 // PREGUNTAS PARA USUARIOS (NOVIOS) - CENTRO DE EVENTOS
 // ============================================
 
+// Total de pesos: 100% (5+25+12+8+15+4+4+4+3+4+4+2+4+3+3)
 export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
   // ========== PREGUNTA 1: REGIÓN DEL MATRIMONIO ==========
   {
@@ -40,7 +41,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       // Otras regiones deshabilitadas por ahora
     ],
     required: true,
-    weight: 10, // Peso bajo porque por ahora solo hay una opción
+    weight: 5, // Peso bajo porque por ahora solo hay una opción
   },
 
   // ========== PREGUNTA 2: PROVINCIA PREFERIDA ==========
@@ -77,7 +78,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'mansion', label: 'Casona / mansión', description: 'Elegancia clásica' },
     ],
     required: true,
-    weight: 15,
+    weight: 12,
   },
 
   // ========== PREGUNTA 4: TIPO DE ESPACIO ==========
@@ -91,7 +92,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'both', label: 'Ambos / mixto', description: 'Ceremonia afuera, fiesta adentro' },
     ],
     required: true,
-    weight: 10,
+    weight: 8,
   },
 
   // ========== PREGUNTA 5: PRESUPUESTO PARA EL LUGAR ==========
@@ -121,7 +122,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'not_needed', label: 'No necesario' },
     ],
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 7: ESPACIO PARA CEREMONIA ==========
@@ -130,7 +131,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Necesitas espacio para realizar la ceremonia?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 8: ESTACIONAMIENTO ==========
@@ -144,7 +145,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'not_needed', label: 'No necesario' },
     ],
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 9: ALOJAMIENTO ==========
@@ -172,7 +173,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'no_preference', label: 'Sin preferencia' },
     ],
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 11: HORARIO DEL EVENTO ==========
@@ -187,7 +188,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'over_5am', label: '+5:00 am' },
     ],
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 12: ACCESIBILIDAD ==========
@@ -205,7 +206,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
     question: '¿Necesitas pista de baile?',
     type: 'boolean',
     required: true,
-    weight: 5,
+    weight: 4,
   },
 
   // ========== PREGUNTA 14: PIEZA DE LA NOVIA ==========
@@ -218,7 +219,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'no', label: 'No / Preferible' },
     ],
     required: true,
-    weight: 2,
+    weight: 3,
   },
 
   // ========== PREGUNTA 15: PIEZA DEL NOVIO ==========
@@ -231,7 +232,7 @@ export const VENUE_USER_QUESTIONS: SurveyQuestion[] = [
       { id: 'no', label: 'No / Preferible' },
     ],
     required: true,
-    weight: 2,
+    weight: 3,
   },
 ];
 
