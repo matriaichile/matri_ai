@@ -1,5 +1,5 @@
 /**
- * Encuestas de Invitaciones
+ * Encuestas de Papelería
  * Matri.AI - Sistema de Matchmaking por Categoría
  * 
  * Creado según especificaciones de AJUSTES_ENCUESTAS_Y_NUEVAS_CATEGORIAS.md

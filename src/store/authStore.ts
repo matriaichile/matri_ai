@@ -19,7 +19,7 @@ export type CategoryId =
   | 'makeup'          // 8. Maquillaje
   | 'cakes'           // 9. Tortas (NUEVA)
   | 'transport'       // 10. Transporte (NUEVA)
-  | 'invitations'     // 11. Invitaciones (NUEVA)
+  | 'invitations'     // 11. Papelería (NUEVA)
   | 'dress'           // 12. Vestuario
   | 'wedding_planner';// 13. Wedding Planner
 
@@ -312,7 +312,7 @@ export const CATEGORY_INFO: Record<CategoryId, { id: CategoryId; name: string; i
   makeup: { id: 'makeup', name: 'Maquillaje & Peinado', icon: 'sparkles' },
   cakes: { id: 'cakes', name: 'Tortas & Dulces', icon: 'cake' },           // NUEVA
   transport: { id: 'transport', name: 'Auto de Novios', icon: 'car' },      // Renombrado
-  invitations: { id: 'invitations', name: 'Invitaciones', icon: 'mail' },  // NUEVA
+  invitations: { id: 'invitations', name: 'Papelería', icon: 'mail' },  // NUEVA
   dress: { id: 'dress', name: 'Vestidos & Trajes', icon: 'dress' },
   wedding_planner: { id: 'wedding_planner', name: 'Wedding Planner', icon: 'clipboard' },
 };
@@ -329,7 +329,7 @@ export const ALL_CATEGORIES: CategoryId[] = [
   'makeup',          // 8. Maquillaje
   'cakes',           // 9. Tortas (NUEVA)
   'transport',       // 10. Transporte (NUEVA)
-  'invitations',     // 11. Invitaciones (NUEVA)
+  'invitations',     // 11. Papelería (NUEVA)
   'dress',           // 12. Vestuario
   'wedding_planner', // 13. Wedding Planner
 ];

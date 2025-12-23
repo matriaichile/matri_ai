@@ -294,7 +294,7 @@ export const PRIORITY_CATEGORIES: WizardOption[] = [
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
   { id: 'cakes', label: 'Tortas & Dulces', iconType: 'cake' },
   { id: 'transport', label: 'Auto de Novios', iconType: 'car' },
-  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
+  { id: 'invitations', label: 'Papelería', iconType: 'mail' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
   { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
 ];
@@ -359,7 +359,7 @@ export const PROVIDER_CATEGORIES: WizardOption[] = [
   { id: 'makeup', label: 'Maquillaje & Peinado', iconType: 'sparkles' },
   { id: 'cakes', label: 'Tortas & Dulces', iconType: 'cake' },
   { id: 'transport', label: 'Auto de Novios', iconType: 'car' },
-  { id: 'invitations', label: 'Invitaciones', iconType: 'mail' },
+  { id: 'invitations', label: 'Papelería', iconType: 'mail' },
   { id: 'dress', label: 'Vestidos & Trajes', iconType: 'dress' },
   { id: 'wedding_planner', label: 'Wedding Planner', iconType: 'clipboard' },
 ];

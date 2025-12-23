@@ -78,7 +78,7 @@ export const CATEGORY_INFO: Record<CategoryId, { name: string; description: stri
     icon: 'car',
   },
   invitations: {
-    name: 'Invitaciones',
+    name: 'Papelería',
     description: 'Invitaciones y papelería de boda',
     icon: 'mail',
   },
@@ -168,8 +168,8 @@ export const CATEGORY_SURVEYS: Record<CategoryId, CategorySurveyConfig> = {
   },
   invitations: {
     categoryId: 'invitations',
-    categoryName: 'Invitaciones',
-    description: 'Cuéntanos sobre tus preferencias de invitaciones',
+    categoryName: 'Papelería',
+    description: 'Cuéntanos sobre tus preferencias de papelería',
     userQuestions: INVITATIONS_USER_QUESTIONS,
     providerQuestions: INVITATIONS_PROVIDER_QUESTIONS,
   },
