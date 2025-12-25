@@ -408,7 +408,6 @@ export default function UserDashboardPage() {
 
   // Obtener labels
   const getBudgetLabel = (id: string) => BUDGET_RANGES.find((b) => b.id === id)?.label || id;
-  const getGuestLabel = (id: string) => GUEST_COUNTS.find((g) => g.id === id)?.label || id;
   const getRegionLabel = (id: string) => REGIONS.find((r) => r.id === id)?.label || id;
   const getCategoryLabel = (id: string) => PRIORITY_CATEGORIES.find((c) => c.id === id)?.label || id;
   const getPriceLabel = (id: string) => PRICE_RANGES_PROVIDER.find((p) => p.id === id)?.label || id;
@@ -996,7 +995,7 @@ export default function UserDashboardPage() {
                       </select>
                     ) : (
                       <span className={styles.fieldValue}>
-                        {profile?.guestCount ? getGuestLabel(profile.guestCount) : 'Por definir'}
+                        {profile?.guestCount ? `${profile.guestCount} personas` : 'Por definir'}
                       </span>
                     )}
                   </div>
