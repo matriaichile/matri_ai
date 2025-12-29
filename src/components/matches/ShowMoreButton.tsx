@@ -1,14 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RefreshCw, Plus, AlertCircle, SearchX } from 'lucide-react';
-import { 
-  canSearchMoreProviders, 
-  getRemainingSearches, 
-  getSearchesUsedCount,
-  EXTRA_SEARCH_LIMIT,
-  MAX_ACTIVE_MATCHES_PER_CATEGORY
-} from '@/utils/matchLimits';
+import { MAX_ACTIVE_MATCHES_PER_CATEGORY } from '@/utils/matchLimits';
 import styles from './ShowMoreButton.module.css';
 
 interface ShowMoreButtonProps {
@@ -25,12 +19,10 @@ interface ShowMoreButtonProps {
 
 /**
  * Botón para solicitar un nuevo proveedor.
- * Límite: 2 búsquedas extra por categoría (PERMANENTE, solo se resetea al rehacer encuesta).
- * Los 3 leads iniciales de la encuesta NO cuentan contra este límite.
+ * SIN LÍMITE de búsquedas - puede buscar las veces que quiera.
+ * El único límite es tener máximo 3 matches activos al mismo tiempo.
  */
 export default function ShowMoreButton({
-  userId,
-  categoryId,
   onRequestNewMatch,
   isLoading = false,
   activeMatchesCount = 0,
@@ -39,9 +31,6 @@ export default function ShowMoreButton({
   availableProvidersCount,
   isLoadingAvailableCount = false,
 }: ShowMoreButtonProps) {
-  const [canSearch, setCanSearch] = useState(false);
-  const [remainingSearches, setRemainingSearches] = useState(0);
-  const [searchesUsed, setSearchesUsed] = useState(0);
   const [requesting, setRequesting] = useState(false);
   const [noMoreProviders, setNoMoreProviders] = useState(false);
   
@@ -50,34 +39,14 @@ export default function ShowMoreButton({
   // Si es 0, definitivamente no hay más proveedores
   const hasAvailableProviders = availableProvidersCount === undefined || availableProvidersCount > 0;
 
-  // Actualizar estado de límites
-  const updateLimitsState = () => {
-    if (!userId || !categoryId) return;
-    
-    const canDo = canSearchMoreProviders(userId, categoryId);
-    const remaining = getRemainingSearches(userId, categoryId);
-    const used = getSearchesUsedCount(userId, categoryId);
-    
-    setCanSearch(canDo);
-    setRemainingSearches(remaining);
-    setSearchesUsed(used);
-  };
-
-  // Actualizar al montar y cuando cambian las props
-  useEffect(() => {
-    updateLimitsState();
-  }, [userId, categoryId]);
-
   // Manejar click en el botón
   const handleClick = async () => {
-    if (!canSearch || requesting || isLoading || noMoreProviders || isBlocked) return;
+    if (requesting || isLoading || noMoreProviders || isBlocked) return;
     
     setRequesting(true);
     try {
       const success = await onRequestNewMatch();
       if (success) {
-        // Actualizar estado después de generar nuevo match
-        updateLimitsState();
         setNoMoreProviders(false);
       } else {
         // No se encontraron más proveedores disponibles
@@ -93,8 +62,8 @@ export default function ShowMoreButton({
   // Verificar si tiene el máximo de matches activos
   const hasReachedActiveLimit = activeMatchesCount >= maxActiveMatches;
   
-  // Puede buscar si: tiene búsquedas disponibles Y no tiene máximo de activos Y no está bloqueado Y hay proveedores disponibles
-  const canRequestNew = canSearch && !hasReachedActiveLimit && !isBlocked && hasAvailableProviders;
+  // Puede buscar si: no tiene máximo de activos Y no está bloqueado Y hay proveedores disponibles
+  const canRequestNew = !hasReachedActiveLimit && !isBlocked && hasAvailableProviders;
 
   // NUEVO: Si está cargando el conteo de proveedores disponibles, mostrar loading
   if (isLoadingAvailableCount) {
@@ -108,8 +77,7 @@ export default function ShowMoreButton({
     );
   }
 
-  // NUEVO: Si sabemos que no hay más proveedores disponibles (conteo = 0), no mostrar el botón
-  // Esto evita que el usuario gaste búsquedas innecesariamente
+  // Si no hay más proveedores disponibles
   if (availableProvidersCount === 0 || noMoreProviders) {
     return (
       <div className={styles.limitReached}>
@@ -126,37 +94,9 @@ export default function ShowMoreButton({
     );
   }
 
-  // Si ya usó las 2 búsquedas extra permitidas
-  if (!canSearch) {
-    return (
-      <div className={styles.limitReached}>
-        <div className={styles.limitIcon}>
-          <AlertCircle size={20} />
-        </div>
-        <div className={styles.limitContent}>
-          <p className={styles.limitTitle}>Búsquedas extra agotadas</p>
-          <p className={styles.limitText}>
-            Has usado tus {EXTRA_SEARCH_LIMIT} búsquedas extra en esta categoría.
-          </p>
-          <p className={styles.limitText}>
-            Para obtener más búsquedas, puedes <strong>rehacer la encuesta</strong> desde el botón en la parte superior.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.container}>
-      {/* Mostrar búsquedas disponibles */}
-      <div className={styles.slotsInfo}>
-        <span className={styles.slotsCount}>
-          {remainingSearches} / {EXTRA_SEARCH_LIMIT}
-        </span>
-        <span className={styles.slotsText}>búsquedas extra disponibles</span>
-      </div>
-      
-      {/* Botón para buscar nuevo proveedor */}
+      {/* Botón para buscar nuevo proveedor - SIN LÍMITE de búsquedas */}
       {canRequestNew && (
         <button
           type="button"

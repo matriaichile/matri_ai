@@ -1048,6 +1048,104 @@ export const updateLeadStatus = async (
 };
 
 /**
+ * Migrar leads existentes para agregar userSurveyId
+ * Esta función busca la encuesta del usuario y actualiza el lead con el ID
+ * Útil para leads creados antes de que se implementara el campo userSurveyId
+ */
+export const migrateLeadWithUserSurveyId = async (leadId: string): Promise<boolean> => {
+  try {
+    const now = Timestamp.now();
+    
+    // Obtener el lead
+    const leadDoc = await getDoc(doc(db, COLLECTIONS.LEADS, leadId));
+    if (!leadDoc.exists()) {
+      console.error('Lead no encontrado:', leadId);
+      return false;
+    }
+    
+    const leadData = leadDoc.data();
+    
+    // Si ya tiene userSurveyId, no hacer nada
+    if (leadData.userSurveyId) {
+      console.log('Lead ya tiene userSurveyId:', leadId);
+      return true;
+    }
+    
+    const userId = leadData.userId;
+    const category = leadData.category as CategoryId;
+    
+    // Buscar la encuesta del usuario para esta categoría
+    const userSurvey = await getUserCategorySurvey(userId, category);
+    
+    if (!userSurvey) {
+      console.warn(`No se encontró encuesta para usuario ${userId} en categoría ${category}`);
+      return false;
+    }
+    
+    // Actualizar el lead con el userSurveyId
+    await updateDoc(doc(db, COLLECTIONS.LEADS, leadId), {
+      userSurveyId: userSurvey.id,
+      updatedAt: now,
+    });
+    
+    console.log(`✅ Lead ${leadId} migrado con userSurveyId: ${userSurvey.id}`);
+    return true;
+  } catch (error) {
+    console.error('Error al migrar lead:', error);
+    return false;
+  }
+};
+
+/**
+ * Migrar todos los leads de un proveedor para agregar userSurveyId
+ * Útil para actualizar todos los leads existentes de un proveedor
+ */
+export const migrateProviderLeadsWithUserSurveyId = async (providerId: string): Promise<{
+  total: number;
+  migrated: number;
+  alreadyMigrated: number;
+  failed: number;
+}> => {
+  const result = { total: 0, migrated: 0, alreadyMigrated: 0, failed: 0 };
+  
+  try {
+    // Obtener todos los leads del proveedor
+    const leadsQuery = query(
+      collection(db, COLLECTIONS.LEADS),
+      where('providerId', '==', providerId)
+    );
+    const snapshot = await getDocs(leadsQuery);
+    
+    result.total = snapshot.docs.length;
+    console.log(`📊 Migrando ${result.total} leads del proveedor ${providerId}`);
+    
+    for (const leadDoc of snapshot.docs) {
+      const leadData = leadDoc.data();
+      
+      // Si ya tiene userSurveyId, contar como ya migrado
+      if (leadData.userSurveyId) {
+        result.alreadyMigrated++;
+        continue;
+      }
+      
+      // Intentar migrar
+      const success = await migrateLeadWithUserSurveyId(leadDoc.id);
+      if (success) {
+        result.migrated++;
+      } else {
+        result.failed++;
+      }
+    }
+    
+    console.log(`✅ Migración completada: ${result.migrated} migrados, ${result.alreadyMigrated} ya tenían ID, ${result.failed} fallaron`);
+    return result;
+  } catch (error) {
+    console.error('Error en migración de leads del proveedor:', error);
+    return result;
+  }
+};
+
+/**
  * Rechazar un lead con justificación
  * CAMBIO: Solo actualiza métricas si es la primera decisión del usuario para este lead
  * Si el usuario cambia de opinión (aprobado -> rechazado), decrementamos "me interesa" e incrementamos "no me interesa"
@@ -1657,12 +1755,14 @@ export const generateMatchesForUserSurvey = async (
       }
       
       // Generar matches solo con datos del wizard
+      // IMPORTANTE: Pasar userSurveyId para que el proveedor pueda ver la comparativa
       return await generateMatchesWithWizardOnly(
         userId,
         userProfile as UserProfile,
         fallbackProviders,
         category,
-        maxMatches
+        maxMatches,
+        userSurvey.id // Pasar el ID de la encuesta del usuario
       );
     }
 
@@ -1797,13 +1897,15 @@ export const generateMatchesForUserSurvey = async (
 /**
  * Genera matches usando solo datos del wizard cuando no hay encuestas de proveedores
  * Esto asegura que siempre mostremos opciones al usuario
+ * @param userSurveyId - ID de la encuesta del usuario para que el proveedor pueda ver la comparativa
  */
 async function generateMatchesWithWizardOnly(
   userId: string,
   userProfile: UserProfile,
   providers: ProviderProfile[],
   category: CategoryId,
-  maxMatches: number
+  maxMatches: number,
+  userSurveyId?: string // Agregado para pasar al lead y permitir la comparativa
 ): Promise<Lead[]> {
   const { calculateWizardMatchScore } = await import('@/lib/matching/matchingService');
 
@@ -1851,6 +1953,7 @@ async function generateMatchesWithWizardOnly(
 
   for (const { provider, score } of topMatches) {
     try {
+      // IMPORTANTE: Pasar userSurveyId para que el proveedor pueda ver la comparativa
       const lead = await createCategoryLead(
         userId,
         provider.id,
@@ -1869,7 +1972,9 @@ async function generateMatchesWithWizardOnly(
           categories: provider.categories || [],
           priceRange: provider.priceRange || '',
           isVerified: provider.isVerified || false,
-        }
+        },
+        undefined, // matchCriteria
+        userSurveyId // userSurveyId - necesario para que el proveedor vea la comparativa
       );
 
       createdLeads.push(lead);
@@ -1963,6 +2068,7 @@ export const generateNewMatchForUser = async (
       data: ProviderProfile;
       score: number;
       isVerified: boolean;
+      providerSurveyId?: string; // ID de la encuesta del proveedor para la comparativa
     }> = [];
 
     console.log(`\n🔍 ========== GENERANDO NUEVO MATCH (CON FILTROS CONSISTENTES) ==========`);
@@ -2056,6 +2162,7 @@ export const generateNewMatchForUser = async (
         data: providerData,
         score: matchResult.score,
         isVerified,
+        providerSurveyId: providerSurvey?.id, // Guardar ID para la comparativa
       });
     }
 
@@ -2089,6 +2196,7 @@ export const generateNewMatchForUser = async (
     console.log(`\n✅ Proveedor seleccionado: ${selectedProvider.data.providerName} (score: ${selectedProvider.score}${selectedProvider.isVerified ? ' ⭐ VERIFICADO' : ''})`);
 
     // 10. Crear el nuevo lead - createCategoryLead re-valida los créditos con datos frescos
+    // IMPORTANTE: Pasar userSurveyId para que el proveedor pueda ver la comparativa de preferencias
     const newLead = await createCategoryLead(
       userId,
       selectedProvider.id,
@@ -2107,7 +2215,10 @@ export const generateNewMatchForUser = async (
         categories: selectedProvider.data.categories || [],
         priceRange: selectedProvider.data.priceRange || '',
         isVerified: selectedProvider.isVerified,
-      }
+      },
+      undefined, // matchCriteria
+      userSurvey?.id, // userSurveyId - necesario para que el proveedor vea la comparativa
+      selectedProvider.providerSurveyId // providerSurveyId
     );
 
     // 11. Incrementar métrica de timesOffered del proveedor

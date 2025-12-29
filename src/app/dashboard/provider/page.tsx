@@ -58,7 +58,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, SurveyQuestion } from '@/lib/surveys';
-import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey } from '@/lib/firebase/firestore';
+import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey, migrateLeadWithUserSurveyId } from '@/lib/firebase/firestore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 import { CATEGORY_MATCHING_CRITERIA, calculateCriterionMatch } from '@/lib/matching/comparisonUtils';
 import { PortfolioUploader, ProfileImageEditor } from '@/components/portfolio';
@@ -143,6 +143,7 @@ export default function ProviderDashboardPage() {
   const [loadingModal, setLoadingModal] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
+  const [migratingLead, setMigratingLead] = useState(false); // Estado para migración de leads sin userSurveyId
   
   // Estados para edición de perfil
   const [isEditing, setIsEditing] = useState(false);
@@ -290,13 +291,26 @@ export default function ProviderDashboardPage() {
       // de usuarios que son sus leads (tiene el ID específico)
       if (lead.userSurveyId) {
         try {
+          console.log('🔍 Intentando cargar encuesta del usuario con ID:', lead.userSurveyId);
           const userSurvey = await getUserCategorySurveyById(lead.userSurveyId);
           if (userSurvey) {
+            console.log('✅ Encuesta del usuario cargada exitosamente:', userSurvey.id);
             extendedInfo.categorySurvey = userSurvey;
+          } else {
+            console.warn('⚠️ La encuesta del usuario no existe o está vacía. ID:', lead.userSurveyId);
           }
         } catch (surveyError) {
-          console.warn('No se pudo cargar la encuesta del usuario:', surveyError);
+          // Capturamos el error específico para mejor diagnóstico
+          console.error('❌ Error al cargar la encuesta del usuario:', {
+            surveyId: lead.userSurveyId,
+            error: surveyError,
+            errorMessage: surveyError instanceof Error ? surveyError.message : 'Error desconocido',
+            // Si es error de permisos de Firebase, tendrá un código específico
+            errorCode: (surveyError as { code?: string })?.code || 'N/A'
+          });
         }
+      } else {
+        console.warn('⚠️ El lead no tiene userSurveyId. Lead ID:', lead.id, 'Categoría:', lead.category);
       }
       
       setExtendedUserInfo(extendedInfo);
@@ -333,6 +347,32 @@ export default function ProviderDashboardPage() {
       [section]: !prev[section]
     }));
   }, []);
+
+  // Función para migrar leads que no tienen userSurveyId
+  const handleMigrateLead = useCallback(async () => {
+    if (!selectedLead) return;
+    
+    setMigratingLead(true);
+    try {
+      const success = await migrateLeadWithUserSurveyId(selectedLead.id);
+      if (success) {
+        // Actualizar el lead local para que tenga el userSurveyId (evitar mostrar el botón de nuevo)
+        // Necesitamos obtener el userSurveyId que se asignó
+        const updatedLead = { ...selectedLead, userSurveyId: 'migrated' }; // Marcamos como migrado
+        setSelectedLead(updatedLead);
+        
+        // Recargar la información del lead para obtener la encuesta
+        await loadExtendedUserInfo(updatedLead);
+        console.log('✅ Lead migrado exitosamente');
+      } else {
+        console.error('❌ No se pudo migrar el lead - la encuesta del usuario no existe');
+      }
+    } catch (error) {
+      console.error('Error al migrar lead:', error);
+    } finally {
+      setMigratingLead(false);
+    }
+  }, [selectedLead, loadExtendedUserInfo]);
 
   const handleLogout = async () => {
     try {
@@ -1958,8 +1998,20 @@ export default function ProviderDashboardPage() {
                         <p>
                           {!providerSurvey 
                             ? 'Completa tu encuesta de esta categoría para ver la comparativa detallada.'
-                            : 'La pareja aún no ha completado la encuesta de esta categoría.'}
+                            : !selectedLead?.userSurveyId
+                              ? 'Este match fue creado antes de la actualización del sistema.'
+                              : 'Error al cargar la encuesta del usuario. Por favor revisa la consola del navegador (F12) para más detalles.'}
                         </p>
+                        {/* Botón para migrar lead si no tiene userSurveyId */}
+                        {providerSurvey && !selectedLead?.userSurveyId && (
+                          <button
+                            onClick={handleMigrateLead}
+                            disabled={migratingLead}
+                            className={styles.migrateSurveyButton}
+                          >
+                            {migratingLead ? 'Cargando comparativa...' : 'Cargar comparativa'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

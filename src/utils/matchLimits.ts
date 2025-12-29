@@ -3,16 +3,15 @@
  * Implementación 100% local con localStorage.
  * 
  * Reglas:
- * - Al completar encuesta: se generan 3 leads iniciales (NO cuentan contra el límite)
- * - Máximo 2 "buscar nuevo proveedor" por categoría (PERMANENTE, no se resetea por tiempo)
+ * - Al completar encuesta: se generan 3 leads iniciales
+ * - SIN LÍMITE de búsquedas "mostrar nuevo proveedor" (puede buscar las veces que quiera)
  * - Máximo 3 matches ACTIVOS al mismo tiempo (approved + pending)
- * - Al rehacer encuesta: se reinicia el contador de búsquedas para esa categoría
- * - NO hay reset automático por tiempo - solo al rehacer encuesta
+ * - Si tiene 3 activos, debe descartar al menos 1 para poder buscar otro
  */
 
 // Constantes del sistema
-export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales al completar encuesta (NO cuentan contra límite)
-export const EXTRA_SEARCH_LIMIT = 2; // Máximo "buscar nuevo proveedor" por categoría (PERMANENTE)
+export const INITIAL_MATCHES_COUNT = 3; // Matches iniciales al completar encuesta
+export const EXTRA_SEARCH_LIMIT = Infinity; // SIN LÍMITE de búsquedas extra
 
 // Máximo de matches ACTIVOS (approved + pending) que puede tener un usuario por categoría
 // Los rejected NO cuentan. Si tiene 3 activos, NO puede agregar más ni recuperar descartados.
@@ -99,11 +98,12 @@ export function getMatchLimits(userId: string, categoryId: string): CategoryMatc
 
 /**
  * Verificar si puede buscar más proveedores en una categoría.
- * El límite es PERMANENTE (no se resetea por tiempo, solo al rehacer encuesta).
+ * Ya no hay límite de búsquedas - siempre retorna true.
+ * El único límite es tener máximo 3 matches activos al mismo tiempo.
  */
-export function canSearchMoreProviders(userId: string, categoryId: string): boolean {
-  const limits = getMatchLimits(userId, categoryId);
-  return limits.searchesUsed < EXTRA_SEARCH_LIMIT;
+export function canSearchMoreProviders(_userId: string, _categoryId: string): boolean {
+  // Sin límite de búsquedas - siempre puede buscar más
+  return true;
 }
 
 // Alias para compatibilidad
@@ -111,8 +111,7 @@ export const canShowMoreProviders = canSearchMoreProviders;
 
 /**
  * Registrar que el usuario usó una búsqueda de "nuevo proveedor".
- * Solo llamar cuando el usuario hace clic en "Mostrar nuevo proveedor".
- * NO llamar para los 3 leads iniciales de la encuesta.
+ * Ya no hay límite, pero mantenemos el registro para estadísticas.
  */
 export function registerSearchUsed(userId: string, categoryId: string): void {
   const allLimits = getAllLimits(userId);
@@ -122,7 +121,7 @@ export function registerSearchUsed(userId: string, categoryId: string): void {
   allLimits[categoryId] = categoryLimit;
   saveAllLimits(userId, allLimits);
   
-  console.log(`✓ Búsqueda registrada para ${categoryId} (${categoryLimit.searchesUsed}/${EXTRA_SEARCH_LIMIT}) - PERMANENTE`);
+  console.log(`✓ Búsqueda registrada para ${categoryId} (total: ${categoryLimit.searchesUsed}) - SIN LÍMITE`);
 }
 
 // Alias para compatibilidad (aunque ya no guarda providerId)
@@ -140,11 +139,11 @@ export function unregisterProviderShown(_userId: string, _categoryId: string, _p
 
 /**
  * Obtener cantidad de búsquedas restantes para esta categoría.
- * El límite es PERMANENTE hasta rehacer encuesta.
+ * Ya no hay límite - siempre retorna Infinity.
  */
-export function getRemainingSearches(userId: string, categoryId: string): number {
-  const limits = getMatchLimits(userId, categoryId);
-  return Math.max(0, EXTRA_SEARCH_LIMIT - limits.searchesUsed);
+export function getRemainingSearches(_userId: string, _categoryId: string): number {
+  // Sin límite de búsquedas
+  return Infinity;
 }
 
 // Alias para compatibilidad

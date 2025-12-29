@@ -325,7 +325,7 @@ export default function CategoryMatchesPage() {
       const newLead = await generateNewMatchForUser(firebaseUser.uid, categoryId);
       
       if (newLead) {
-        // Registrar que se usó una búsqueda (máximo 2 por día)
+        // Registrar que se usó una búsqueda (para estadísticas, sin límite)
         registerSearchUsed(firebaseUser.uid, categoryId);
         
         // Agregar el nuevo lead a la lista
@@ -834,7 +834,7 @@ export default function CategoryMatchesPage() {
               </section>
             )}
             
-            {/* Botón para buscar nuevo proveedor (máximo 2 por día) */}
+            {/* Botón para buscar nuevo proveedor (sin límite de búsquedas, máximo 3 activos) */}
             {firebaseUser?.uid && (
               <section className={styles.section}>
                 <ShowMoreButton
