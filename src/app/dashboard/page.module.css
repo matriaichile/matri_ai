@@ -3144,6 +3144,48 @@
 @media (max-width: 768px) {
   .content {
     padding: 0.75rem;
+    /* Espacio adicional para el menú hamburguesa */
+    padding-top: 0.5rem;
+  }
+
+  /* Ajustar el header del perfil en móvil */
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .profileInfo {
+    align-items: center;
+  }
+
+  .profileGreeting {
+    font-size: 1.35rem;
+    text-align: center;
+  }
+
+  .profileDateRow {
+    justify-content: center;
+  }
+
+  /* Ajustar stats en móvil */
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .statCard {
+    padding: 0.875rem;
+  }
+
+  .statCardTitle {
+    font-size: 0.6rem;
+  }
+
+  .statCardValue {
+    font-size: 0.85rem;
   }
 
   /* Matches responsive */

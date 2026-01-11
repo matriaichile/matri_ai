@@ -37,9 +37,12 @@
   }
 }
 
-@media (max-width: 640px) {
+/* En móvil, el contenido ocupa todo el ancho */
+@media (max-width: 768px) {
   .mainContent {
     margin-left: 0;
     width: 100%;
+    /* Espacio para el header y el botón hamburguesa */
+    padding-top: 0;
   }
 }

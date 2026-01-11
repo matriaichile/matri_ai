@@ -56,7 +56,7 @@ import { PROVIDER_CATEGORIES, REGIONS, PRICE_RANGES_PROVIDER, SERVICE_STYLES } f
 import { useToast } from '@/components/ui/Toast';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
+import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState, MobileMenu } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS, getSurveyQuestions, SurveyQuestion } from '@/lib/surveys';
 import { updateProviderProfile, getUserCategorySurveyById, getProviderCategorySurvey, UserCategorySurvey, ProviderCategorySurvey, migrateLeadWithUserSurveyId } from '@/lib/firebase/firestore';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
@@ -771,6 +771,16 @@ export default function ProviderDashboardPage() {
         />
       }
     >
+      {/* Menú hamburguesa para móvil */}
+      <MobileMenu
+        variant="provider"
+        userName={profile?.providerName}
+        isVerified={profile?.isVerified}
+        onLogout={handleLogout}
+        activeSection={activeSection}
+        onSectionChange={(section) => setActiveSection(section as 'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile')}
+      />
+
       {/* Banner de estado */}
       {isPending && (
         <div className={styles.statusBanner}>

@@ -1,0 +1,318 @@
+/* ====================================
+   ADMIN MOBILE MENU - Hamburger Navigation
+   Matri.AI - Solo visible en móvil < 768px
+   ==================================== */
+
+/* ====================================
+   HAMBURGER BUTTON
+   ==================================== */
+.hamburgerButton {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: var(--admin-card-bg, #1a1a2e);
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  color: var(--admin-text, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hamburgerButton:hover {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+}
+
+.hamburgerButton:active {
+  transform: scale(0.95);
+}
+
+/* ====================================
+   OVERLAY
+   ==================================== */
+.overlay {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1001;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ====================================
+   MENU PANEL
+   ==================================== */
+.menuPanel {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 85vw;
+  background: var(--admin-bg, #0f0f1a);
+  border-right: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  z-index: 1002;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.menuPanelOpen {
+  transform: translateX(0);
+}
+
+/* ====================================
+   MENU HEADER
+   ==================================== */
+.menuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), transparent);
+}
+
+.menuHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+.adminBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  color: #a855f7;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* ====================================
+   MENU CONTENT
+   ==================================== */
+.menuContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.navSection {
+  padding: 0 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.navSectionTitle {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ====================================
+   NAV ITEMS
+   ==================================== */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.navItemActive {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
+.navItemActive .navIcon {
+  color: #a855f7;
+}
+
+.navItemActive .navArrow {
+  opacity: 1;
+  color: #a855f7;
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.navItem:hover .navIcon {
+  color: #a855f7;
+}
+
+.navLabel {
+  flex: 1;
+}
+
+.navArrow {
+  color: rgba(255, 255, 255, 0.3);
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover .navArrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* ====================================
+   MENU FOOTER
+   ==================================== */
+.menuFooter {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  color: #f87171;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ====================================
+   RESPONSIVE - Mostrar solo en móvil
+   ==================================== */
+@media (max-width: 768px) {
+  .hamburgerButton {
+    display: flex;
+  }
+
+  .overlay {
+    display: block;
+  }
+
+  .menuPanel {
+    display: flex;
+  }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 380px) {
+  .menuPanel {
+    width: 100%;
+    max-width: 100%;
+    border-right: none;
+  }
+
+  .menuHeader {
+    padding: 1rem;
+  }
+
+  .navItem {
+    padding: 0.7rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

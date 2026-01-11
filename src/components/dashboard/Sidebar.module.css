@@ -446,16 +446,9 @@
   }
 }
 
-@media (max-width: 640px) {
+/* Ocultar sidebar en móvil - Se reemplaza por menú hamburguesa */
+@media (max-width: 768px) {
   .sidebar {
-    --sidebar-collapsed-width: 0px;
-    left: -56px;
-    opacity: 0;
-  }
-  
-  .sidebar:hover,
-  .sidebarExpanded {
-    left: 0;
-    opacity: 1;
+    display: none !important;
   }
 }

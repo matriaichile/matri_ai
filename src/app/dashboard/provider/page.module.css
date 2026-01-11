@@ -2896,6 +2896,8 @@
 @media (max-width: 768px) {
   .content {
     padding: 1rem;
+    /* Espacio para el menú hamburguesa */
+    padding-top: 0.5rem;
   }
 
   .statusBanner {
@@ -2903,7 +2905,49 @@
   }
 
   .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .statCard {
+    padding: 1rem;
+  }
+
+  .statValue {
+    font-size: 1.25rem;
+  }
+
+  .statLabel {
+    font-size: 0.7rem;
+  }
+
+  .statIcon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  /* Sección de métricas */
+  .metricsSection {
+    padding: 1rem;
+  }
+
+  /* Leads grid */
+  .leadsGrid {
     grid-template-columns: 1fr;
+  }
+
+  /* Lead cards */
+  .leadCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .leadCardActions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   .profileGrid {

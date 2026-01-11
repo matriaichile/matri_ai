@@ -297,13 +297,31 @@
 @media (max-width: 768px) {
   .header {
     padding: 1rem;
+    /* Espacio para el botón hamburguesa a la izquierda */
+    padding-left: 4rem;
   }
 
   .pageTitle {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+  }
+
+  .pageSubtitle {
+    font-size: 0.7rem;
   }
 
   .headerRight {
+    /* Ocultar elementos del header en móvil - están en el menú hamburguesa */
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding-left: 3.75rem;
+    height: 56px;
+  }
+
+  .pageTitle {
+    font-size: 1rem;
   }
 }

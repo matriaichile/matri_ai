@@ -38,6 +38,7 @@ import {
 } from '@/lib/firebase/admin-firestore';
 import { AdminStats } from '@/store/adminStore';
 import { PROVIDER_CATEGORIES, REGIONS } from '@/store/wizardStore';
+import AdminMobileMenu from './AdminMobileMenu';
 import styles from './page.module.css';
 
 // Tipo para las secciones del sidebar
@@ -365,6 +366,14 @@ export default function AdminDashboardPage() {
 
   return (
     <div className={styles.adminLayout}>
+      {/* Menú hamburguesa para móvil */}
+      <AdminMobileMenu
+        isSuperAdmin={isSuperAdmin}
+        onLogout={handleLogout}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
+
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>

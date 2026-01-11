@@ -54,7 +54,7 @@ import { PortfolioGallery } from '@/components/portfolio';
 import { BUDGET_RANGES, GUEST_COUNTS, REGIONS, PRIORITY_CATEGORIES, CEREMONY_TYPES, EVENT_STYLES, PRICE_RANGES_PROVIDER, SERVICE_STYLES } from '@/store/wizardStore';
 import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState } from '@/components/dashboard';
+import { Sidebar, DashboardHeader, DashboardLayout, EmptyState, LoadingState, MobileMenu } from '@/components/dashboard';
 import { CATEGORY_INFO, getCategoryInfo, CATEGORY_SURVEYS } from '@/lib/surveys';
 import { getMatchCategory, getMatchCategoryStyles, getMatchCategoryStylesCompact, getMatchCategoryStylesLarge } from '@/lib/matching/matchCategories';
 import styles from './page.module.css';
@@ -468,6 +468,15 @@ export default function UserDashboardPage() {
         />
       }
     >
+      {/* Menú hamburguesa para móvil */}
+      <MobileMenu
+        variant="user"
+        userName={profile?.coupleNames}
+        onLogout={handleLogout}
+        activeSection={activeSection}
+        onSectionChange={(section) => setActiveSection(section as 'matches' | 'surveys' | 'profile')}
+      />
+
       <DashboardHeader
         title={headerConfig[activeSection].title}
         subtitle={headerConfig[activeSection].subtitle}
