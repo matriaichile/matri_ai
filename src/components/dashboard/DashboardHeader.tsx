@@ -54,7 +54,10 @@ export default function DashboardHeader({
         {onMenuClick && (
           <button 
             className={styles.menuButton}
-            onClick={onMenuClick}
+            onClick={() => {
+              console.log('Menu button clicked');
+              onMenuClick();
+            }}
             aria-label="Abrir menú"
           >
             <Menu size={24} />

@@ -78,11 +78,15 @@ export default function MobileMenu({
 
   // Cerrar menú al cambiar de ruta
   useEffect(() => {
-    onClose();
-  }, [pathname, onClose]);
+    if (isOpen) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
+    console.log('MobileMenu isOpen changed:', isOpen);
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
