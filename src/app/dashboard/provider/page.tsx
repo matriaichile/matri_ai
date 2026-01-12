@@ -770,17 +770,17 @@ export default function ProviderDashboardPage() {
           completedSurveysCount={completedSurveysCount}
         />
       }
+      mobileMenu={
+        <MobileMenu
+          variant="provider"
+          userName={profile?.providerName}
+          isVerified={profile?.isVerified}
+          onLogout={handleLogout}
+          activeSection={activeSection}
+          onSectionChange={(section) => setActiveSection(section as 'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile')}
+        />
+      }
     >
-      {/* Menú hamburguesa para móvil */}
-      <MobileMenu
-        variant="provider"
-        userName={profile?.providerName}
-        isVerified={profile?.isVerified}
-        onLogout={handleLogout}
-        activeSection={activeSection}
-        onSectionChange={(section) => setActiveSection(section as 'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile')}
-      />
-
       {/* Banner de estado */}
       {isPending && (
         <div className={styles.statusBanner}>

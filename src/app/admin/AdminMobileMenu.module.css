@@ -9,20 +9,20 @@
 .hamburgerButton {
   display: none; /* Oculto por defecto */
   position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 1000;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 9999; /* Z-index muy alto para estar encima de todo */
   width: 44px;
   height: 44px;
   align-items: center;
   justify-content: center;
-  background: var(--admin-card-bg, #1a1a2e);
-  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: var(--admin-text, #ffffff);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .hamburgerButton:hover {
@@ -287,7 +287,7 @@
    ==================================== */
 @media (max-width: 768px) {
   .hamburgerButton {
-    display: flex;
+    display: flex !important;
   }
 
   .overlay {
@@ -296,6 +296,13 @@
 
   .menuPanel {
     display: flex;
+  }
+}
+
+/* También mostrar en tablets pequeñas */
+@media (max-width: 900px) and (max-height: 1400px) and (orientation: portrait) {
+  .hamburgerButton {
+    display: flex !important;
   }
 }
 

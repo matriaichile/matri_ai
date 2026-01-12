@@ -467,16 +467,16 @@ export default function UserDashboardPage() {
           approvedCount={approvedMatches.length}
         />
       }
+      mobileMenu={
+        <MobileMenu
+          variant="user"
+          userName={profile?.coupleNames}
+          onLogout={handleLogout}
+          activeSection={activeSection}
+          onSectionChange={(section) => setActiveSection(section as 'matches' | 'surveys' | 'profile')}
+        />
+      }
     >
-      {/* Menú hamburguesa para móvil */}
-      <MobileMenu
-        variant="user"
-        userName={profile?.coupleNames}
-        onLogout={handleLogout}
-        activeSection={activeSection}
-        onSectionChange={(section) => setActiveSection(section as 'matches' | 'surveys' | 'profile')}
-      />
-
       <DashboardHeader
         title={headerConfig[activeSection].title}
         subtitle={headerConfig[activeSection].subtitle}

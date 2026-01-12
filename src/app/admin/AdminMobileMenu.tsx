@@ -16,7 +16,7 @@ import {
   Shield,
   Sparkles
 } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeStore } from '@/store/themeStore';
 import styles from './AdminMobileMenu.module.css';
 
 // Tipo de sección del admin
@@ -40,7 +40,7 @@ export default function AdminMobileMenu({
   onSectionChange
 }: AdminMobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useThemeStore();
 
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {

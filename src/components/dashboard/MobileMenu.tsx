@@ -27,7 +27,7 @@ import {
   Shield,
   TrendingUp
 } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeStore } from '@/store/themeStore';
 import styles from './MobileMenu.module.css';
 
 // Tipo de variante del menú
@@ -68,7 +68,7 @@ export default function MobileMenu({
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useThemeStore();
 
   // Email de contacto
   const CONTACT_EMAIL = 'matrimatch.chile@gmail.com';
