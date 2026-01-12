@@ -11,12 +11,9 @@ import {
   Users,
   LogOut,
   ChevronRight,
-  Sun,
-  Moon,
   Shield,
   Sparkles
 } from 'lucide-react';
-import { useThemeStore } from '@/store/themeStore';
 import styles from './AdminMobileMenu.module.css';
 
 // Tipo de sección del admin
@@ -40,7 +37,6 @@ export default function AdminMobileMenu({
   onSectionChange
 }: AdminMobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, toggleTheme } = useThemeStore();
 
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
@@ -142,22 +138,6 @@ export default function AdminMobileMenu({
             </ul>
           </div>
 
-          {/* Configuración */}
-          <div className={styles.navSection}>
-            <span className={styles.navSectionTitle}>Configuración</span>
-            <ul className={styles.navList}>
-              <li>
-                <button className={styles.navItem} onClick={toggleTheme}>
-                  <span className={styles.navIcon}>
-                    {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                  </span>
-                  <span className={styles.navLabel}>
-                    {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
-                  </span>
-                </button>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* Footer con logout */}

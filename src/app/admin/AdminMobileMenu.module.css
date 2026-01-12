@@ -9,7 +9,7 @@
 .hamburgerButton {
   display: none; /* Oculto por defecto */
   position: fixed;
-  top: 0.75rem;
+  top: 1.25rem; /* Más espacio arriba para no estar pegado al borde */
   left: 0.75rem;
   z-index: 9999; /* Z-index muy alto para estar encima de todo */
   width: 44px;
@@ -90,8 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  padding-top: 4.5rem; /* Espacio para el botón hamburguesa que está encima */
+  padding: 1.25rem;
   border-bottom: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
   background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), transparent);
 }
