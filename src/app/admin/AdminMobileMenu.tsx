@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Menu,
   X,
   LayoutDashboard,
   Store,
@@ -24,20 +23,23 @@ interface AdminMobileMenuProps {
   onLogout: () => void;
   activeSection: SectionType;
   onSectionChange: (section: SectionType) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 /**
  * Componente de menú hamburguesa para el dashboard de admin en móvil.
  * Solo visible en pantallas < 768px.
+ * El botón hamburguesa está en el header del admin.
  */
 export default function AdminMobileMenu({
   isSuperAdmin = false,
   onLogout,
   activeSection,
-  onSectionChange
+  onSectionChange,
+  isOpen,
+  onClose
 }: AdminMobileMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
     if (isOpen) {
@@ -53,7 +55,7 @@ export default function AdminMobileMenu({
   // Manejar clic en sección
   const handleSectionClick = (section: SectionType) => {
     onSectionChange(section);
-    setIsOpen(false);
+    onClose();
   };
 
   // Items de navegación del admin
@@ -65,20 +67,11 @@ export default function AdminMobileMenu({
 
   return (
     <>
-      {/* Botón hamburguesa - se oculta cuando el menú está abierto */}
-      <button
-        className={`${styles.hamburgerButton} ${isOpen ? styles.hamburgerButtonHidden : ''}`}
-        onClick={() => setIsOpen(true)}
-        aria-label="Abrir menú"
-      >
-        <Menu size={24} />
-      </button>
-
       {/* Overlay */}
       {isOpen && (
         <div
           className={styles.overlay}
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
 
@@ -97,7 +90,7 @@ export default function AdminMobileMenu({
           </div>
           <button
             className={styles.closeButton}
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             aria-label="Cerrar menú"
           >
             <X size={22} />

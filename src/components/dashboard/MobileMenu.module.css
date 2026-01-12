@@ -5,44 +5,6 @@
    ==================================== */
 
 /* ====================================
-   HAMBURGER BUTTON
-   ==================================== */
-.hamburgerButton {
-  display: none; /* Oculto por defecto en desktop */
-  position: fixed;
-  top: 1.25rem; /* Más espacio arriba para no estar pegado al borde */
-  left: 0.75rem;
-  z-index: 9999; /* Z-index muy alto para estar encima de todo */
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-background-elevated, #1a1a2e);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
-  border-radius: 10px;
-  color: var(--color-text, #ffffff);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.hamburgerButton:hover {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-border-accent);
-  color: var(--color-primary);
-}
-
-.hamburgerButton:active {
-  transform: scale(0.95);
-}
-
-/* Ocultar el botón cuando el menú está abierto */
-.hamburgerButtonHidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ====================================
    OVERLAY
    ==================================== */
 .overlay {
@@ -441,23 +403,12 @@
    RESPONSIVE - Mostrar solo en móvil
    ==================================== */
 @media (max-width: 768px) {
-  .hamburgerButton {
-    display: flex !important;
-  }
-
   .overlay {
     display: block;
   }
 
   .menuPanel {
     display: flex;
-  }
-}
-
-/* También mostrar en tablets pequeñas */
-@media (max-width: 900px) and (max-height: 1400px) and (orientation: portrait) {
-  .hamburgerButton {
-    display: flex !important;
   }
 }
 

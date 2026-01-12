@@ -4,13 +4,11 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Menu,
   X,
   Home,
   FileText,
   Heart,
   User,
-  Settings,
   LogOut,
   ChevronRight,
   Mail,
@@ -24,7 +22,6 @@ import {
   ImageIcon,
   Users,
   BarChart3,
-  Shield,
   TrendingUp
 } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
@@ -49,12 +46,15 @@ interface MobileMenuProps {
   onLogout: () => void;
   activeSection?: string;
   onSectionChange?: (section: string) => void;
+  isOpen: boolean; // Controlado desde el padre
+  onClose: () => void; // Callback para cerrar
 }
 
 /**
  * Componente de menú hamburguesa para dispositivos móviles.
  * Se muestra solo en pantallas pequeñas (< 768px).
  * Soporta tres variantes: user (novios), provider (proveedores), admin.
+ * El botón hamburguesa está en el DashboardHeader.
  */
 export default function MobileMenu({
   variant,
@@ -62,9 +62,10 @@ export default function MobileMenu({
   isVerified = false,
   onLogout,
   activeSection,
-  onSectionChange
+  onSectionChange,
+  isOpen,
+  onClose
 }: MobileMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const pathname = usePathname();
@@ -75,8 +76,8 @@ export default function MobileMenu({
 
   // Cerrar menú al cambiar de ruta
   useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+    onClose();
+  }, [pathname, onClose]);
 
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function MobileMenu({
     if (onSectionChange) {
       onSectionChange(sectionId);
     }
-    setIsOpen(false);
+    onClose();
   };
 
   // Items de navegación según la variante
@@ -166,20 +167,11 @@ export default function MobileMenu({
 
   return (
     <>
-      {/* Botón hamburguesa - Solo visible en móvil, se oculta cuando el menú está abierto */}
-      <button
-        className={`${styles.hamburgerButton} ${isOpen ? styles.hamburgerButtonHidden : ''}`}
-        onClick={() => setIsOpen(true)}
-        aria-label="Abrir menú"
-      >
-        <Menu size={24} />
-      </button>
-
       {/* Overlay oscuro */}
       {isOpen && (
         <div
           className={styles.overlay}
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
 
@@ -202,7 +194,7 @@ export default function MobileMenu({
           </div>
           <button
             className={styles.closeButton}
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             aria-label="Cerrar menú"
           >
             <X size={22} />

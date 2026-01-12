@@ -135,6 +135,7 @@ export default function ProviderDashboardPage() {
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   // CAMBIO: Agregada sección 'availability'
   const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile'>('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -778,6 +779,8 @@ export default function ProviderDashboardPage() {
           onLogout={handleLogout}
           activeSection={activeSection}
           onSectionChange={(section) => setActiveSection(section as 'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile')}
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
         />
       }
     >
@@ -808,6 +811,7 @@ export default function ProviderDashboardPage() {
         userName={profile?.providerName}
         showUserBadge
         isVerified={profile?.isVerified || false}
+        onMenuClick={() => setIsMobileMenuOpen(true)}
       />
 
       <div className={styles.content}>

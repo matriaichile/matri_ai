@@ -23,6 +23,7 @@ import {
   Calendar,
   Settings,
   Sliders,
+  Menu,
 } from 'lucide-react';
 import { useAuthStore, UserProfile, ProviderProfile, ProviderStatus, CategoryId } from '@/store/authStore';
 import { logout } from '@/lib/firebase/auth';
@@ -58,6 +59,7 @@ export default function AdminDashboardPage() {
   
   // Sección activa
   const [activeSection, setActiveSection] = useState<SectionType>('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Datos
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -372,6 +374,8 @@ export default function AdminDashboardPage() {
         onLogout={handleLogout}
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Sidebar */}
@@ -449,6 +453,23 @@ export default function AdminDashboardPage() {
 
       {/* Contenido Principal */}
       <main className={styles.mainContent}>
+        {/* Header móvil con botón hamburguesa */}
+        <div className={styles.mobileHeader}>
+          <button 
+            className={styles.mobileMenuButton}
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Abrir menú"
+          >
+            <Menu size={24} />
+          </button>
+          <div className={styles.mobileHeaderTitle}>
+            <h1 className={styles.mobileTitle}>
+              {activeSection === 'overview' ? 'Resumen' : 
+               activeSection === 'providers' ? 'Proveedores' : 'Usuarios'}
+            </h1>
+          </div>
+        </div>
+
         {/* OVERVIEW */}
         {activeSection === 'overview' && (
           <>

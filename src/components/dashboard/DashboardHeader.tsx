@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, X, Copy, Check, BadgeCheck } from 'lucide-react';
+import { Mail, X, Copy, Check, BadgeCheck, Menu } from 'lucide-react';
 import styles from './DashboardHeader.module.css';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -11,6 +11,7 @@ interface DashboardHeaderProps {
   userName?: string;
   showUserBadge?: boolean;
   isVerified?: boolean; // NUEVO: Para mostrar badge de verificación
+  onMenuClick?: () => void; // Para abrir el menú móvil
 }
 
 /**
@@ -25,7 +26,8 @@ export default function DashboardHeader({
   subtitle, 
   userName, 
   showUserBadge = false,
-  isVerified = false
+  isVerified = false,
+  onMenuClick
 }: DashboardHeaderProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -47,6 +49,17 @@ export default function DashboardHeader({
   return (
     <>
       <header className={styles.header}>
+        {/* Botón hamburguesa - solo visible en móvil */}
+        {onMenuClick && (
+          <button 
+            className={styles.mobileMenuButton}
+            onClick={onMenuClick}
+            aria-label="Abrir menú"
+          >
+            <Menu size={24} />
+          </button>
+        )}
+        
         <div className={styles.headerLeft}>
           <h1 className={styles.pageTitle}>{title}</h1>
           <p className={styles.pageSubtitle}>{subtitle}</p>

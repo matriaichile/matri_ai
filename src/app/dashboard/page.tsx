@@ -140,6 +140,7 @@ export default function UserDashboardPage() {
   const router = useRouter();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'matches' | 'surveys' | 'profile'>('matches');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [matches, setMatches] = useState<LeadMatch[]>([]);
   const [providers, setProviders] = useState<Record<string, Provider>>({});
   const [loadingMatches, setLoadingMatches] = useState(true);
@@ -474,12 +475,15 @@ export default function UserDashboardPage() {
           onLogout={handleLogout}
           activeSection={activeSection}
           onSectionChange={(section) => setActiveSection(section as 'matches' | 'surveys' | 'profile')}
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
         />
       }
     >
       <DashboardHeader
         title={headerConfig[activeSection].title}
         subtitle={headerConfig[activeSection].subtitle}
+        onMenuClick={() => setIsMobileMenuOpen(true)}
       />
 
       <div className={styles.content}>
