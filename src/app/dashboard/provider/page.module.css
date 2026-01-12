@@ -2896,8 +2896,8 @@
 @media (max-width: 768px) {
   .content {
     padding: 1rem;
-    /* Espacio para el menú hamburguesa */
-    padding-top: 0.5rem;
+    /* NO necesita padding-top extra porque el DashboardHeader ya tiene el espacio */
+    padding-top: 1rem;
   }
 
   .statusBanner {

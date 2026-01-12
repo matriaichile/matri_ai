@@ -3144,8 +3144,8 @@
 @media (max-width: 768px) {
   .content {
     padding: 0.75rem;
-    /* Espacio adicional para el menú hamburguesa */
-    padding-top: 0.5rem;
+    /* NO necesita padding-top extra porque el DashboardHeader ya tiene el espacio */
+    padding-top: 0.75rem;
   }
 
   /* Ajustar el header del perfil en móvil */

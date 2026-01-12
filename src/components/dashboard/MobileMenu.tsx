@@ -166,9 +166,9 @@ export default function MobileMenu({
 
   return (
     <>
-      {/* Botón hamburguesa - Solo visible en móvil */}
+      {/* Botón hamburguesa - Solo visible en móvil, se oculta cuando el menú está abierto */}
       <button
-        className={styles.hamburgerButton}
+        className={`${styles.hamburgerButton} ${isOpen ? styles.hamburgerButtonHidden : ''}`}
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menú"
       >

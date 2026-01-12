@@ -297,8 +297,10 @@
 @media (max-width: 768px) {
   .header {
     padding: 1rem;
-    /* Espacio para el botón hamburguesa a la izquierda */
-    padding-left: 4rem;
+    /* Espacio amplio para el botón hamburguesa a la izquierda (44px botón + 12px left + 12px gap) */
+    padding-left: 4.5rem;
+    height: auto;
+    min-height: 56px;
   }
 
   .pageTitle {

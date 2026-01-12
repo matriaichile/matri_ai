@@ -69,9 +69,9 @@ export default function AdminMobileMenu({
 
   return (
     <>
-      {/* Botón hamburguesa */}
+      {/* Botón hamburguesa - se oculta cuando el menú está abierto */}
       <button
-        className={styles.hamburgerButton}
+        className={`${styles.hamburgerButton} ${isOpen ? styles.hamburgerButtonHidden : ''}`}
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menú"
       >

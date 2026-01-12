@@ -36,6 +36,12 @@
   transform: scale(0.95);
 }
 
+/* Ocultar el botón cuando el menú está abierto */
+.hamburgerButtonHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ====================================
    OVERLAY
    ==================================== */
@@ -86,6 +92,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
+  padding-top: 4.5rem; /* Espacio para el botón hamburguesa que está encima */
   border-bottom: 1px solid var(--color-border);
   background: linear-gradient(180deg, var(--color-primary-subtle), transparent);
 }
