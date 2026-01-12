@@ -46,8 +46,10 @@ interface MobileMenuProps {
   onLogout: () => void;
   activeSection?: string;
   onSectionChange?: (section: string) => void;
-  isOpen: boolean; // Controlado desde el padre
-  onClose: () => void; // Callback para cerrar
+  /** Estado del menú - controlado desde el padre */
+  isOpen: boolean;
+  /** Callback para cerrar el menú */
+  onClose: () => void;
 }
 
 /**

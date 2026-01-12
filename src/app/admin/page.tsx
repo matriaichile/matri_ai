@@ -59,7 +59,6 @@ export default function AdminDashboardPage() {
   
   // Sección activa
   const [activeSection, setActiveSection] = useState<SectionType>('overview');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Datos
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -89,6 +88,9 @@ export default function AdminDashboardPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isViewUserMatchesModalOpen, setIsViewUserMatchesModalOpen] = useState(false);
   const [userMatches, setUserMatches] = useState<Lead[]>([]);
+  
+  // Estado para el menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Verificar acceso admin
   const verifyAdminAccess = useCallback(async () => {
@@ -453,22 +455,14 @@ export default function AdminDashboardPage() {
 
       {/* Contenido Principal */}
       <main className={styles.mainContent}>
-        {/* Header móvil con botón hamburguesa */}
-        <div className={styles.mobileHeader}>
-          <button 
-            className={styles.mobileMenuButton}
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Abrir menú"
-          >
-            <Menu size={24} />
-          </button>
-          <div className={styles.mobileHeaderTitle}>
-            <h1 className={styles.mobileTitle}>
-              {activeSection === 'overview' ? 'Resumen' : 
-               activeSection === 'providers' ? 'Proveedores' : 'Usuarios'}
-            </h1>
-          </div>
-        </div>
+        {/* Botón hamburguesa para móvil - visible en todas las secciones */}
+        <button 
+          className={styles.mobileMenuButton}
+          onClick={() => setIsMobileMenuOpen(true)}
+          aria-label="Abrir menú"
+        >
+          <Menu size={24} />
+        </button>
 
         {/* OVERVIEW */}
         {activeSection === 'overview' && (

@@ -135,7 +135,6 @@ export default function ProviderDashboardPage() {
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   // CAMBIO: Agregada sección 'availability'
   const [activeSection, setActiveSection] = useState<'overview' | 'leads' | 'surveys' | 'portfolio' | 'availability' | 'profile'>('overview');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -171,6 +170,9 @@ export default function ProviderDashboardPage() {
   // Estados para dropdowns personalizados
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  
+  // Estado para el menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Cerrar dropdowns al hacer click fuera
   useEffect(() => {

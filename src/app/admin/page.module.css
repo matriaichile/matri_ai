@@ -221,56 +221,31 @@
   max-width: calc(100vw - var(--admin-sidebar-width));
 }
 
-/* Header móvil - solo visible en móvil */
-.mobileHeader {
-  display: none;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--admin-bg);
-  border-bottom: 1px solid var(--admin-border);
-  padding: 0 1rem;
-  height: 60px;
-  align-items: center;
-  gap: 0.75rem;
-  margin: -1rem -1rem 1rem -1rem;
-  width: calc(100% + 2rem);
-}
-
+/* Botón hamburguesa para móvil - integrado en el header */
 .mobileMenuButton {
-  display: flex;
+  display: none; /* Oculto por defecto en desktop */
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: var(--admin-bg-card);
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--admin-text);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  margin-bottom: 1rem;
 }
 
 .mobileMenuButton:hover {
-  background: var(--admin-bg-hover);
-  border-color: var(--admin-border-light);
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #a855f7;
 }
 
-.mobileHeaderTitle {
-  flex: 1;
-  min-width: 0;
-}
-
-.mobileTitle {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--admin-text);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.mobileMenuButton:active {
+  transform: scale(0.95);
 }
 
 .pageHeader {
@@ -1293,15 +1268,10 @@
   .sidebar {
     display: none !important;
   }
-
-  /* Mostrar header móvil */
-  .mobileHeader {
+  
+  /* Mostrar botón hamburguesa en móvil */
+  .mobileMenuButton {
     display: flex;
-  }
-
-  /* Ocultar pageHeader en móvil (ya está en mobileHeader) */
-  .pageHeader {
-    display: none;
   }
   
   .mainContent {

@@ -11,7 +11,8 @@ interface DashboardHeaderProps {
   userName?: string;
   showUserBadge?: boolean;
   isVerified?: boolean; // NUEVO: Para mostrar badge de verificación
-  onMenuClick?: () => void; // Para abrir el menú móvil
+  /** Callback para abrir el menú móvil */
+  onMenuClick?: () => void;
 }
 
 /**
@@ -52,14 +53,13 @@ export default function DashboardHeader({
         {/* Botón hamburguesa - solo visible en móvil */}
         {onMenuClick && (
           <button 
-            className={styles.mobileMenuButton}
+            className={styles.menuButton}
             onClick={onMenuClick}
             aria-label="Abrir menú"
           >
             <Menu size={24} />
           </button>
         )}
-        
         <div className={styles.headerLeft}>
           <h1 className={styles.pageTitle}>{title}</h1>
           <p className={styles.pageSubtitle}>{subtitle}</p>

@@ -140,7 +140,6 @@ export default function UserDashboardPage() {
   const router = useRouter();
   const { isAuthenticated, userProfile, userType, isLoading, firebaseUser, setUserProfile } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'matches' | 'surveys' | 'profile'>('matches');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [matches, setMatches] = useState<LeadMatch[]>([]);
   const [providers, setProviders] = useState<Record<string, Provider>>({});
   const [loadingMatches, setLoadingMatches] = useState(true);
@@ -165,6 +164,9 @@ export default function UserDashboardPage() {
   
   // Estado para la galería de portafolio (al hacer click en imagen de tarjeta)
   const [galleryProviderId, setGalleryProviderId] = useState<string | null>(null);
+  
+  // Estado para el menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Verificar autenticación y tipo de usuario
   useEffect(() => {

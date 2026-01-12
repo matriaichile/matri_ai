@@ -23,7 +23,9 @@ interface AdminMobileMenuProps {
   onLogout: () => void;
   activeSection: SectionType;
   onSectionChange: (section: SectionType) => void;
+  /** Estado del menú - controlado desde el padre */
   isOpen: boolean;
+  /** Callback para cerrar el menú */
   onClose: () => void;
 }
 
@@ -40,6 +42,7 @@ export default function AdminMobileMenu({
   isOpen,
   onClose
 }: AdminMobileMenuProps) {
+
   // Prevenir scroll del body cuando el menú está abierto
   useEffect(() => {
     if (isOpen) {
