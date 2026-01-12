@@ -325,8 +325,7 @@
 
 @media (max-width: 768px) {
   .header {
-    padding: 0.75rem;
-    padding-left: 0.75rem; /* Menos padding a la izquierda */
+    padding: 0.75rem 1rem;
     height: auto;
     min-height: 56px;
     gap: 0.75rem;
@@ -334,11 +333,6 @@
 
   .menuButton {
     display: flex;
-    margin-right: 0.5rem; /* Pequeño espacio entre el botón y el texto */
-  }
-
-  .headerLeft {
-    flex: 0 1 auto; /* No expandir innecesariamente */
   }
 
   .pageTitle {
