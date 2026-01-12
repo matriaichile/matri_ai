@@ -309,6 +309,8 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
   order: -1; /* Colocar al inicio */
+  margin: 0; /* Sin margen extra */
+  padding: 0; /* Sin padding extra */
 }
 
 .menuButton:hover {
@@ -323,7 +325,8 @@
 
 @media (max-width: 768px) {
   .header {
-    padding: 1rem;
+    padding: 0.75rem;
+    padding-left: 0.75rem; /* Menos padding a la izquierda */
     height: auto;
     min-height: 56px;
     gap: 0.75rem;
@@ -331,6 +334,11 @@
 
   .menuButton {
     display: flex;
+    margin-right: 0.5rem; /* Pequeño espacio entre el botón y el texto */
+  }
+
+  .headerLeft {
+    flex: 0 1 auto; /* No expandir innecesariamente */
   }
 
   .pageTitle {
